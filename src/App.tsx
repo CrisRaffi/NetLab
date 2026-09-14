@@ -1,0 +1,32 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Layout } from './components/layout/Layout';
+import { DashboardPage } from './pages/DashboardPage';
+import { LearningMapPage } from './pages/LearningMapPage';
+import { SimulatorPage } from './pages/SimulatorPage';
+import { LabsPage } from './pages/LabsPage';
+import { LabViewPage } from './pages/LabViewPage';
+import { TroubleshootingPage } from './pages/TroubleshootingPage';
+import { ProvaPage } from './pages/ProvaPage';
+import { AchievementsPage } from './pages/AchievementsPage';
+import { ConfigPage } from './pages/ConfigPage';
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route element={<Layout />}>
+          <Route path="/" element={<DashboardPage />} />
+          <Route path="/mapa" element={<LearningMapPage />} />
+          <Route path="/simulador" element={<SimulatorPage />} />
+          <Route path="/labs" element={<LabsPage />} />
+          <Route path="/labs/:id" element={<LabViewPage />} />
+          <Route path="/troubleshooting" element={<TroubleshootingPage />} />
+          <Route path="/prova" element={<ProvaPage />} />
+          <Route path="/conquistas" element={<AchievementsPage />} />
+          <Route path="/config" element={<ConfigPage />} />
+          <Route path="*" element={<div className="text-center py-20 text-slate-500">Página não encontrada</div>} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
+}
