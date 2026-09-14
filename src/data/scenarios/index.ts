@@ -1,6 +1,10 @@
-import type { NetworkInterface, Device, Connection, DeviceType } from '../../types';
+import type { NetworkInterface, Device, Connection, DeviceType, Route } from '../../types';
 import { normalizeTopology } from '../../engine/lab';
-import type { BreakScenario, FaultType } from '../../engine/faults';
+import type { BreakScenario, FaultVariant, FaultType } from '../../engine/faults';
+
+function route(destination: string, mask: string, gateway: string): Route {
+  return { destination, mask, gateway, metric: 1, interfaceName: '' };
+}
 
 function iface(id: string, ip?: string, opts: { mask?: string; gw?: string; dns?: string } = {}): NetworkInterface {
   const mac = 'BA:DB:EE:0' + String(id.length % 10) + ':' + String(id.charCodeAt(0) % 100).padStart(2, '0') + ':01';
@@ -13,19 +17,19 @@ function iface(id: string, ip?: string, opts: { mask?: string; gw?: string; dns?
     subnetMask: opts.mask,
     gateway: opts.gw,
     dns: opts.dns,
-    status: 'up',
+    status: 'up' as const,
     speed: 100,
   };
 }
 
-function device(id: string, type: DeviceType, name: string, x: number, y: number, interfaces: NetworkInterface[]): Device {
+function device(id: string, type: DeviceType, name: string, x: number, y: number, interfaces: NetworkInterface[], routes: Route[] = []): Device {
   return {
     id,
     type,
     name,
     position: { x, y },
     interfaces,
-    config: { hostname: name, routes: [] },
+    config: { hostname: name, routes },
   };
 }
 
@@ -36,18 +40,22 @@ function conn(a: string, ia: string, b: string, ib: string): Connection {
     interfaceId1: ia,
     deviceId2: b,
     interfaceId2: ib,
-    type: 'ethernet',
-    status: 'connected',
+    type: 'ethernet' as const,
+    status: 'connected' as const,
     bandwidth: 100,
     latency: 1,
   };
 }
 
-function variant(id: string, type: FaultType, symptom: string, fix: string, extra: Partial<ConstructorParameters<typeof Object>[0]> = {}): import('../../engine/faults').FaultVariant {
+interface ScenarioDraft extends Omit<BreakScenario, 'health'> {
+  rawHealth: BreakScenario['health'];
+}
+
+function variant(id: string, type: FaultType, symptom: string, fix: string, extra: Partial<Omit<FaultVariant, 'id' | 'type' | 'symptom' | 'fix'>> = {}): FaultVariant {
   return { id, type, symptom, fix, ...extra };
 }
 
-export const SCENARIO_OFFICE: BreakScenario = {
+const OFFICE: ScenarioDraft = {
   id: 'brk-office',
   title: 'Escritório',
   description: 'Uma pequena rede de escritório: dois computadores e um servidor em uma mesma sub-rede.',
@@ -60,7 +68,7 @@ export const SCENARIO_OFFICE: BreakScenario = {
     'Compare IPs e máscaras entre os dispositivos da mesma rede.',
     'Teste a comunicação gradativamente: ping para o gateway/broadcast, depois para o destino.',
   ],
-  health: {
+  rawHealth: {
     id: 'brk-office-health',
     name: 'Escritório (sadio)',
     devices: [
@@ -74,7 +82,7 @@ export const SCENARIO_OFFICE: BreakScenario = {
       conn('sw1', 'f0/2', 'pc-b', 'eth0'),
       conn('sw1', 'f0/3', 'srv', 'eth0'),
     ],
-  } as never,
+  },
   validation: [
     { type: 'config', target: 'pc-a/eth0/ip', expected: '192.168.1.10', description: 'PC-A deve ter IP 192.168.1.10' },
     { type: 'config', target: 'pc-b/eth0/ip', expected: '192.168.1.20', description: 'PC-B deve ter IP 192.168.1.20' },
@@ -90,7 +98,7 @@ export const SCENARIO_OFFICE: BreakScenario = {
   ],
 };
 
-export const SCENARIO_SECTORS: BreakScenario = {
+const SECTORS: ScenarioDraft = {
   id: 'brk-sectors',
   title: 'Dois Setores',
   description: 'Dois setores separados por um roteador: cada um em uma sub-rede /24.',
@@ -103,7 +111,7 @@ export const SCENARIO_SECTORS: BreakScenario = {
     'Pinga primeiro o gateway local; depois tente cruzar o roteador.',
     'Gateway e rota só funcionam se apontarem para um IP real e ativo.',
   ],
-  health: {
+  rawHealth: {
     id: 'brk-sectors-health',
     name: 'Dois Setores (sadio)',
     devices: [
@@ -122,7 +130,7 @@ export const SCENARIO_SECTORS: BreakScenario = {
       conn('r1', 'eth1', 'sw-b', 'f0/1'),
       conn('sw-b', 'f0/2', 'pc-b', 'eth0'),
     ],
-  } as never,
+  },
   validation: [
     { type: 'config', target: 'pc-a/eth0/ip', expected: '192.168.1.10', description: 'PC-A deve ter IP 192.168.1.10' },
     { type: 'config', target: 'pc-a/eth0/gateway', expected: '192.168.1.1', description: 'Gateway de PC-A deve ser 192.168.1.1' },
@@ -138,7 +146,7 @@ export const SCENARIO_SECTORS: BreakScenario = {
   ],
 };
 
-export const SCENARIO_INTERNET: BreakScenario = {
+const INTERNET: ScenarioDraft = {
   id: 'brk-internet',
   title: 'Gateway da Internet',
   description: 'Um roteador e um firewall entregam a internet a uma rede interna. Rota de ida e rota de volta precisam existir.',
@@ -151,7 +159,7 @@ export const SCENARIO_INTERNET: BreakScenario = {
     'Confira as rotas com route print em R-01 e FW-01.',
     'Tráfego de ida e de volta dependem de rotas em ambos os lados.',
   ],
-  health: {
+  rawHealth: {
     id: 'brk-internet-health',
     name: 'Gateway da Internet (sadio)',
     devices: [
@@ -160,11 +168,11 @@ export const SCENARIO_INTERNET: BreakScenario = {
       device('r1', 'router', 'R-01', 400, 100, [
         iface('eth0', '192.168.1.1', { mask: '255.255.255.0' }),
         iface('eth1', '10.0.0.1', { mask: '255.255.255.0' }),
-      ]),
+      ], [route('203.0.113.0', '255.255.255.0', '10.0.0.2')]),
       device('fw', 'firewall', 'FW-01', 560, 100, [
         iface('eth0', '10.0.0.2', { mask: '255.255.255.0' }),
         iface('eth1', '203.0.113.1', { mask: '255.255.255.0' }),
-      ]),
+      ], [route('192.168.0.0', '255.255.0.0', '10.0.0.1')]),
       device('net', 'cloud', 'INTERNET', 720, 100, [iface('eth0', '203.0.113.10', { mask: '255.255.255.0', gw: '203.0.113.1' })]),
     ],
     connections: [
@@ -173,13 +181,13 @@ export const SCENARIO_INTERNET: BreakScenario = {
       conn('r1', 'eth1', 'fw', 'eth0'),
       conn('fw', 'eth1', 'net', 'eth0'),
     ],
-  } as never,
-  healing: undefined,
+  },
   validation: [
     { type: 'config', target: 'pc1/eth0/ip', expected: '192.168.1.10', description: 'PC-01 deve ter IP 192.168.1.10' },
     { type: 'route', target: 'r1|203.0.113.0', expected: '10.0.0.2', description: 'R-01 deve ter rota para a internet via FW' },
     { type: 'route', target: 'fw|192.168.0.0', expected: '10.0.0.1', description: 'FW-01 deve ter rota de retorno para as redes internas' },
     { type: 'connectivity', target: 'pc1 -> net', expected: 'success', description: 'PC-01 deve alcançar a internet (203.0.113.10)' },
+    { type: 'connectivity', target: 'net -> 192.168.1.10', expected: 'success', description: 'A resposta da internet deve voltar até PC-01' },
   ],
   variants: [
     variant('missing-route-r1', 'missing-route', 'PC-01 não alcança a internet: R-01 não sabe a rota para fora.', 'Adicione em R-01 a rota estática 203.0.113.0/24 via 10.0.0.2.', { target: { deviceId: 'r1' }, routeDest: '203.0.113.0' }),
@@ -189,7 +197,7 @@ export const SCENARIO_INTERNET: BreakScenario = {
   ],
 };
 
-export const SCENARIO_ROUTING: BreakScenario = {
+const ROUTING: ScenarioDraft = {
   id: 'brk-routing',
   title: 'Cadeia de Roteadores',
   description: 'Dois roteadores em sequência. Redes diretas conhecidas, redes distantes dependem de rotas estáticas nos dois lados.',
@@ -202,7 +210,7 @@ export const SCENARIO_ROUTING: BreakScenario = {
     'Route print revela quais redes cada roteador conhece.',
     'Toda rede distante precisa de uma rota de ida e uma de volta.',
   ],
-  health: {
+  rawHealth: {
     id: 'brk-routing-health',
     name: 'Cadeia de Roteadores (sadio)',
     devices: [
@@ -210,11 +218,11 @@ export const SCENARIO_ROUTING: BreakScenario = {
       device('r1', 'router', 'R-1', 300, 160, [
         iface('eth0', '10.0.0.1', { mask: '255.255.255.0' }),
         iface('eth1', '172.16.0.1', { mask: '255.255.255.252' }),
-      ]),
+      ], [route('192.168.2.0', '255.255.255.0', '172.16.0.2')]),
       device('r2', 'router', 'R-2', 520, 160, [
         iface('eth0', '172.16.0.2', { mask: '255.255.255.252' }),
         iface('eth1', '192.168.2.1', { mask: '255.255.255.0' }),
-      ]),
+      ], [route('10.0.0.0', '255.255.255.0', '172.16.0.1')]),
       device('pc2', 'pc', 'PC-02', 740, 160, [iface('eth0', '192.168.2.20', { mask: '255.255.255.0', gw: '192.168.2.1' })]),
     ],
     connections: [
@@ -222,10 +230,10 @@ export const SCENARIO_ROUTING: BreakScenario = {
       conn('r1', 'eth1', 'r2', 'eth0'),
       conn('r2', 'eth1', 'pc2', 'eth0'),
     ],
-  } as never,
-  healing: undefined,
+  },
   validation: [
     { type: 'config', target: 'pc1/eth0/gateway', expected: '10.0.0.1', description: 'PC-01 deve apontar o gateway para 10.0.0.1' },
+    { type: 'config', target: 'r1/eth1/ip', expected: '172.16.0.1', description: 'A interface eth1 de R-1 deve ser 172.16.0.1' },
     { type: 'route', target: 'r1|192.168.2.0', expected: '172.16.0.2', description: 'R-1 deve ter rota para 192.168.2.0/24 via R-2' },
     { type: 'route', target: 'r2|10.0.0.0', expected: '172.16.0.1', description: 'R-2 deve ter rota de volta para 10.0.0.0/24 via R-1' },
     { type: 'connectivity', target: 'pc1 -> pc2', expected: 'success', description: 'PC-01 deve pingar PC-02' },
@@ -238,12 +246,18 @@ export const SCENARIO_ROUTING: BreakScenario = {
   ],
 };
 
-export const BREAK_SCENARIOS: BreakScenario[] = [
-  normalizeTopology(SCENARIO_OFFICE.health) && (SCENARIO_OFFICE.health),
-  normalizeTopology(SCENARIO_SECTORS.health) && (SCENARIO_SECTORS.health),
-  normalizeTopology(SCENARIO_INTERNET.health) && (SCENARIO_INTERNET.health),
-  normalizeTopology(SCENARIO_ROUTING.health) && (SCENARIO_ROUTING.health),
-].map((health, i) => ({
-  ...([SCENARIO_OFFICE, SCENARIO_SECTORS, SCENARIO_INTERNET, SCENARIO_ROUTING] as BreakScenario[])[i]!,
-  health: normalizeTopology(([SCENARIO_OFFICE, SCENARIO_SECTORS, SCENARIO_INTERNET, SCENARIO_ROUTING] as BreakScenario[])[i]!.health),
+const DRAFTS = [OFFICE, SECTORS, INTERNET, ROUTING];
+
+export const BREAK_SCENARIOS: BreakScenario[] = DRAFTS.map(d => ({
+  id: d.id,
+  title: d.title,
+  description: d.description,
+  difficulty: d.difficulty,
+  concepts: d.concepts,
+  estimatedTime: d.estimatedTime,
+  xpReward: d.xpReward,
+  generalHints: d.generalHints,
+  validation: d.validation,
+  variants: d.variants,
+  health: normalizeTopology(d.rawHealth),
 }));

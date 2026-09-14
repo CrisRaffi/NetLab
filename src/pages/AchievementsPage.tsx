@@ -8,6 +8,8 @@ const ALL_ACHIEVEMENTS = [
   { id: 'subnet-master', name: 'Subnet Master', description: 'Complete o laboratório de sub-redes', icon: '🌐', xpReward: 25 },
   { id: 'gateway-hero', name: 'Gateway Hero', description: 'Resolva o problema de gateway', icon: '🚀', xpReward: 25 },
   { id: 'streak-3', name: 'Sequência 3', description: 'Estude 3 dias seguidos', icon: '🔥', xpReward: 25 },
+  { id: 'troubleshooter', name: 'Quebra-Redes', description: 'Resolva seu primeiro desafio de troubleshooting', icon: '🔧', xpReward: 25 },
+  { id: 'firefighter', name: 'Bombeiro de Redes', description: 'Resolva 5 desafios de troubleshooting', icon: '🚒', xpReward: 50 },
 ];
 
 export function AchievementsPage() {

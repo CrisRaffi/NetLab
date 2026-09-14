@@ -4,7 +4,7 @@ import { Header } from './Header';
 
 export function Layout() {
   const { pathname } = useLocation();
-  const fullBleed = pathname.startsWith('/simulador');
+  const fullBleed = pathname.startsWith('/simulador') || pathname.startsWith('/troubleshooting');
 
   return (
     <div className="flex h-full w-full">

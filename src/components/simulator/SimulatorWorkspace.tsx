@@ -30,6 +30,7 @@ interface SimulatorWorkspaceProps {
   resetTopologyTo?: Topology;
   evaluationTab?: { label: string; content: React.ReactNode } | null;
   flashHint?: boolean;
+  defaultBottomTab?: 'console' | 'packets' | 'evaluation';
 }
 
 export function SimulatorWorkspace({
@@ -41,6 +42,7 @@ export function SimulatorWorkspace({
   resetTopologyTo,
   evaluationTab,
   flashHint,
+  defaultBottomTab,
 }: SimulatorWorkspaceProps) {
   const addDevice = useSimulatorStore(s => s.addDevice);
   const resetTopology = useSimulatorStore(s => s.resetTopology);
@@ -58,8 +60,8 @@ export function SimulatorWorkspace({
 
   const [connectMode, setConnectMode] = useState(false);
   const [showHelp, setShowHelp] = useState(true);
-  const [bottomTab, setBottomTab] = useState<'console' | 'packets' | 'evaluation'>('console');
-  const [bottomExpanded, setBottomExpanded] = useState(false);
+  const [bottomTab, setBottomTab] = useState<'console' | 'packets' | 'evaluation'>(defaultBottomTab ?? 'console');
+  const [bottomExpanded, setBottomExpanded] = useState(Boolean(defaultBottomTab));
 
   const terminalOpen = useTerminalStore(s => s.open);
   const terminalDeviceId = useTerminalStore(s => s.deviceId);

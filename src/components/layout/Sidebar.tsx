@@ -94,7 +94,7 @@ export function Sidebar() {
         <div className="hidden lg:flex items-center gap-2 px-4 py-3 text-xs text-slate-600 mt-1">
           <div className="flex h-6 w-6 rounded-md bg-slate-800 items-center justify-center text-slate-500 font-mono text-[10px]">?</div>
           <span className="flex-1">
-            {progress.completedExercises.length} labs concluídos
+            {progress.completedExercises.filter(id => !id.startsWith('brk-')).length} labs concluídos
           </span>
           <ChevronRight size={12} />
         </div>

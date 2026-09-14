@@ -1027,13 +1027,13 @@ TROUBLESHOOTING
 
 **Entregável:** 10 labs completos, validação, dicas, progresso.
 
-### FASE 5 — TROUBLESHOOTING
+### FASE 5 — TROUBLESHOOTING ✅ (concluída)
 
-- [ ] Criar motor de falhas
-- [ ] Implementar tipos de falha (IP, máscara, gateway, etc)
-- [ ] Criar modo "Quebrei a Rede"
-- [ ] Problemas aleatórios
-- [ ] Sistema de diagnóstico
+- [x] Criar motor de falhas
+- [x] Implementar tipos de falha (IP, máscara, gateway, etc)
+- [x] Criar modo "Quebrei a Rede"
+- [x] Problemas aleatórios
+- [x] Sistema de diagnóstico
 
 **Entregável:** Modo troubleshooting com problemas gerados aleatoriamente.
 
