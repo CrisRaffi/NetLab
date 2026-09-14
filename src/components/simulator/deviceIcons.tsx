@@ -25,17 +25,18 @@ export const DEVICE_ICONS: Record<DeviceType, React.ComponentType<{ size?: numbe
   cloud: Cloud,
 };
 
+/** Node card colors: accent stroke, translucent fill, icon/text tone. */
 export const DEVICE_COLORS: Record<DeviceType, { stroke: string; fill: string; text: string }> = {
-  pc: { stroke: '#3b82f6', fill: 'rgba(59,130,246,0.12)', text: '#93c5fd' },
-  server: { stroke: '#22c55e', fill: 'rgba(34,197,94,0.12)', text: '#86efac' },
-  switch: { stroke: '#eab308', fill: 'rgba(234,179,8,0.12)', text: '#fde047' },
-  router: { stroke: '#a855f7', fill: 'rgba(168,85,247,0.12)', text: '#d8b4fe' },
-  access_point: { stroke: '#06b6d4', fill: 'rgba(6,182,212,0.12)', text: '#67e8f9' },
-  firewall: { stroke: '#ef4444', fill: 'rgba(239,68,68,0.12)', text: '#fca5a5' },
-  printer: { stroke: '#64748b', fill: 'rgba(100,116,139,0.12)', text: '#cbd5e1' },
-  ip_camera: { stroke: '#f97316', fill: 'rgba(249,115,22,0.12)', text: '#fdba74' },
-  ip_phone: { stroke: '#8b5cf6', fill: 'rgba(139,92,246,0.12)', text: '#c4b5fd' },
-  cloud: { stroke: '#38bdf8', fill: 'rgba(56,189,248,0.12)', text: '#7dd3fc' },
+  pc: { stroke: '#008CFF', fill: 'rgba(0,140,255,0.14)', text: '#66BDFF' },
+  server: { stroke: '#27C66A', fill: 'rgba(39,198,106,0.14)', text: '#5FE08F' },
+  switch: { stroke: '#F5B301', fill: 'rgba(245,179,1,0.13)', text: '#FFD75E' },
+  router: { stroke: '#8B7CF6', fill: 'rgba(139,124,246,0.14)', text: '#B3A8FF' },
+  access_point: { stroke: '#00A8FF', fill: 'rgba(0,168,255,0.13)', text: '#5CC9FF' },
+  firewall: { stroke: '#F0485C', fill: 'rgba(240,72,92,0.13)', text: '#FF8493' },
+  printer: { stroke: '#7891AA', fill: 'rgba(120,145,170,0.14)', text: '#A9BFD6' },
+  ip_camera: { stroke: '#F5901E', fill: 'rgba(245,144,30,0.13)', text: '#FFB95E' },
+  ip_phone: { stroke: '#00C9FF', fill: 'rgba(0,201,255,0.13)', text: '#5ED9FF' },
+  cloud: { stroke: '#4E9EF5', fill: 'rgba(78,158,245,0.13)', text: '#8CC2FF' },
 };
 
 export const DEVICE_ORDER: DeviceType[] = [

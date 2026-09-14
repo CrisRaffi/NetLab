@@ -1,12 +1,41 @@
-import { Trash2, Power, Cable, Info, TerminalSquare, Plus, X, Route } from 'lucide-react';
+import {
+  Trash2,
+  Power,
+  Cable,
+  Info,
+  TerminalSquare,
+  Plus,
+  X,
+  Route,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Settings2,
+  Network,
+  Cpu,
+  Link2,
+} from 'lucide-react';
 import { useSimulatorStore } from '../../stores/useSimulatorStore';
 import { DEVICE_LABELS } from '../../stores/useSimulatorStore';
 import { useTerminalStore } from '../../stores/useTerminalStore';
 import { DEVICE_ICONS, DEVICE_COLORS } from './deviceIcons';
 import { isValidIp, isValidMask } from '../../utils/ip';
-import type { NetworkInterface, Device, Route as NetworkRoute } from '../../types';
+import type { NetworkInterface, Device, Route as NetworkRoute, DeviceType } from '../../types';
 import { clsx } from 'clsx';
 import { useState } from 'react';
+
+type PanelTab = 'config' | 'interfaces' | 'ports' | 'rotas';
+
+function getTabs(type: DeviceType): PanelTab[] {
+  switch (type) {
+    case 'switch':
+      return ['config', 'ports'];
+    case 'router':
+    case 'firewall':
+      return ['config', 'interfaces', 'rotas'];
+    default:
+      return ['config', 'interfaces'];
+  }
+}
 
 function Field({
   label,
@@ -25,21 +54,44 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="text-[10px] uppercase tracking-wide text-slate-500">{label}</span>
+      <span className="text-[9px] uppercase tracking-wider text-[--color-text-muted]">{label}</span>
       <input
         value={value}
         placeholder={placeholder}
         onChange={e => onChange(e.target.value)}
         className={clsx(
-          'mt-1 w-full bg-[--color-bg-input] border rounded-md px-2.5 py-1.5 text-xs text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-1',
+          'mt-1 w-full bg-[#061525] border rounded-lg px-2.5 py-1.5 text-xs text-[--color-text-primary] placeholder:text-[--color-text-muted]/60 focus:outline-none focus:ring-1 transition-colors',
           mono && 'font-mono',
           invalid
-            ? 'border-red-500/60 focus:border-red-500 focus:ring-red-500/20'
-            : 'border-[--color-border-primary] focus:border-blue-500 focus:ring-blue-500/20'
+            ? 'border-[--color-accent-red]/60 focus:border-[--color-accent-red] focus:ring-[--color-accent-red]/20'
+            : 'border-[--color-border-primary]/70 focus:border-[--color-accent-blue] focus:ring-[--color-accent-blue]/20'
         )}
       />
     </label>
   );
+}
+
+function Section({ title, icon, children, action }: { title: string; icon?: React.ReactNode; children: React.ReactNode; action?: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border border-[--color-border-primary]/50 bg-[#071A2C]/40 p-3">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-1.5 text-[9px] uppercase tracking-wider text-[--color-text-muted] font-semibold">
+          {icon}
+          {title}
+        </div>
+        {action}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function interfaceStatus(device: Device): { label: string; color: string } {
+  const primary = device.interfaces.find(i => i.ip);
+  const up = device.interfaces.some(i => i.status === 'up');
+  if (!up) return { label: 'Inativo', color: 'text-[--color-text-muted] border-[--color-text-muted]/30 bg-[--color-text-muted]/10' };
+  if (!primary) return { label: 'Atenção', color: 'text-[--color-accent-yellow] border-[--color-accent-yellow]/30 bg-[--color-accent-yellow]/10' };
+  return { label: 'Online', color: 'text-[--color-status-connected] border-[--color-status-connected]/30 bg-[--color-status-connected]/10' };
 }
 
 function InterfaceConfig({ device, iface }: { device: Device; iface: NetworkInterface }) {
@@ -52,31 +104,28 @@ function InterfaceConfig({ device, iface }: { device: Device; iface: NetworkInte
   const dnsInvalid = !!iface.dns && !isValidIp(iface.dns);
 
   return (
-    <div className="rounded-md border border-[--color-border-primary] bg-[--color-bg-tertiary] p-3">
+    <div className="rounded-xl border border-[--color-border-primary]/50 bg-[#071A2C]/40 p-3">
       <div className="flex items-center justify-between mb-2.5">
-        <div className="flex items-center gap-1.5">
-          <Cable size={12} className="text-slate-500" />
-          <span className="text-xs font-medium text-slate-300">{iface.name}</span>
+        <div className="flex items-center gap-1.5 min-w-0">
+          <Cable size={12} className="text-[--color-text-muted] shrink-0" />
+          <span className="text-[11px] font-semibold text-[--color-text-primary] truncate">{iface.name}</span>
+          <span className="text-[9px] font-mono text-[--color-text-muted] truncate">{iface.mac}</span>
         </div>
         <button
           onClick={() => toggleInterfaceStatus(device.id, iface.id)}
           className={clsx(
-            'flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium border cursor-pointer',
+            'flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold border cursor-pointer transition-colors shrink-0',
             iface.status === 'up'
-              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
-              : 'border-slate-600 bg-slate-800 text-slate-500'
+              ? 'border-[--color-status-connected]/30 bg-[--color-status-connected]/10 text-[--color-status-connected]'
+              : 'border-[--color-border-secondary] bg-[#0A2037] text-[--color-text-muted]'
           )}
         >
-          <Power size={10} />
+          <Power size={9} />
           {iface.status === 'up' ? 'UP' : 'DOWN'}
         </button>
       </div>
 
-      <div className="space-y-2">
-        <div className="flex items-center justify-between text-[10px] text-slate-500">
-          <span>MAC</span>
-          <span className="font-mono text-slate-400">{iface.mac}</span>
-        </div>
+      <div className="space-y-2.5">
         <Field
           label="Endereço IP"
           value={iface.ip ?? ''}
@@ -117,10 +166,7 @@ function SwitchPorts({ device }: { device: Device }) {
   const toggleInterfaceStatus = useSimulatorStore(s => s.toggleInterfaceStatus);
 
   return (
-    <div className="rounded-md border border-[--color-border-primary] bg-[--color-bg-tertiary] p-3">
-      <div className="text-[10px] uppercase tracking-wide text-slate-500 mb-2">
-        Portas ({device.interfaces.length})
-      </div>
+    <div className="rounded-xl border border-[--color-border-primary]/50 bg-[#071A2C]/40 p-3">
       <div className="grid grid-cols-2 gap-1.5">
         {device.interfaces.map(iface => {
           const conn = topology.connections.find(
@@ -140,31 +186,31 @@ function SwitchPorts({ device }: { device: Device }) {
               key={iface.id}
               onClick={() => toggleInterfaceStatus(device.id, iface.id)}
               className={clsx(
-                'flex items-center gap-1.5 px-2 py-1.5 rounded border text-left cursor-pointer transition-colors',
+                'flex items-center gap-1.5 px-2 py-1.5 rounded-lg border text-left cursor-pointer transition-all duration-150',
                 linked
-                  ? 'border-emerald-500/30 bg-emerald-500/5 hover:bg-emerald-500/10'
+                  ? 'border-[--color-status-connected]/30 bg-[--color-status-connected]/5 hover:bg-[--color-status-connected]/10'
                   : iface.status === 'down'
-                  ? 'border-slate-700 bg-slate-800/50 opacity-60'
-                  : 'border-slate-700 bg-slate-800/50 hover:bg-slate-800'
+                  ? 'border-[--color-border-primary]/60 bg-[#061525]/60 opacity-55 hover:opacity-80'
+                  : 'border-[--color-border-primary]/60 bg-[#061525]/60 hover:bg-[--color-bg-hover]/50'
               )}
             >
               <span
                 className={clsx(
                   'w-1.5 h-1.5 rounded-full shrink-0',
-                  linked ? 'bg-emerald-500' : iface.status === 'down' ? 'bg-red-500' : 'bg-slate-600'
+                  linked ? 'bg-[--color-status-connected]' : iface.status === 'down' ? 'bg-[--color-accent-red]' : 'bg-[--color-text-muted]/50'
                 )}
               />
               <div className="min-w-0">
-                <p className="text-[10px] font-mono text-slate-400 truncate">
+                <p className="text-[10px] font-mono text-[--color-text-secondary] truncate">
                   {iface.name.replace('FastEthernet', 'Fa')}
                 </p>
-                {peer && <p className="text-[9px] text-slate-500 truncate">{peer.name}</p>}
+                {peer && <p className="text-[9px] text-[--color-text-muted] truncate">{peer.name}</p>}
               </div>
             </button>
           );
         })}
       </div>
-      <p className="text-[10px] text-slate-600 mt-2">Clique numa porta para ativá-la/desativá-la.</p>
+      <p className="text-[9px] text-[--color-text-muted]/70 mt-2">Clique numa porta para ativá-la/desativá-la.</p>
     </div>
   );
 }
@@ -173,23 +219,22 @@ function ArpTable({ deviceId }: { deviceId: string }) {
   const arpTable = useSimulatorStore(s => s.arpTables[deviceId] ?? []);
 
   return (
-    <div className="rounded-md border border-[--color-border-primary] bg-[--color-bg-tertiary] p-3">
-      <div className="text-[10px] uppercase tracking-wide text-slate-500 mb-2">Tabela ARP</div>
+    <Section title="Tabela ARP">
       {arpTable.length === 0 ? (
-        <p className="text-[10px] text-slate-600">
-          Vazia. Faça um <span className="font-mono">ping</span> para popular.
+        <p className="text-[10px] text-[--color-text-muted]">
+          Vazia. Faça um <span className="font-mono text-[--color-text-secondary]">ping</span> para popular.
         </p>
       ) : (
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           {arpTable.map(entry => (
-            <div key={entry.ip} className="flex items-center justify-between gap-2 text-[10px] font-mono">
-              <span className="text-slate-300">{entry.ip}</span>
-              <span className="text-slate-500 truncate">{entry.mac}</span>
+            <div key={entry.ip} className="flex items-center justify-between gap-2 text-[10px] font-mono px-1.5 py-1 rounded bg-[#061525]/60 border border-[--color-border-primary]/40">
+              <span className="text-[--color-text-primary]">{entry.ip}</span>
+              <span className="text-[--color-text-muted] truncate">{entry.mac}</span>
             </div>
           ))}
         </div>
       )}
-    </div>
+    </Section>
   );
 }
 
@@ -225,24 +270,20 @@ function RouteEditor({ device }: { device: Device }) {
   };
 
   return (
-    <div className="rounded-md border border-[--color-border-primary] bg-[--color-bg-tertiary] p-3">
-      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-slate-500 mb-2">
-        <Route size={11} /> Rotas estáticas
-      </div>
-
+    <Section title="Rotas estáticas" icon={<Route size={10} />}>
       {routes.length > 0 && (
         <div className="space-y-1 mb-2">
           {routes.map((r, i) => (
-            <div key={i} className="flex items-center justify-between gap-2 rounded bg-[--color-bg-input] border border-[--color-border-primary] px-2 py-1">
-              <div className="min-w-0 font-mono text-[10px] text-slate-300 leading-tight">
+            <div key={i} className="flex items-center justify-between gap-2 rounded-lg bg-[#061525]/70 border border-[--color-border-primary]/50 px-2 py-1.5">
+              <div className="min-w-0 font-mono text-[10px] text-[--color-text-secondary] leading-tight">
                 <p className="truncate">
                   {r.destination}/{r.mask.replace('0.0.0.', '')}
                 </p>
-                <p className="text-slate-500 truncate">via {r.gateway}</p>
+                <p className="text-[--color-text-muted] truncate">via {r.gateway}</p>
               </div>
               <button
                 onClick={() => removeRoute(i)}
-                className="p-1 rounded text-slate-500 hover:text-red-400 hover:bg-red-500/10 cursor-pointer shrink-0"
+                className="p-1 rounded text-[--color-text-muted] hover:text-[--color-accent-red] hover:bg-[--color-accent-red]/10 cursor-pointer shrink-0"
                 title="Remover rota"
               >
                 <X size={12} />
@@ -257,35 +298,40 @@ function RouteEditor({ device }: { device: Device }) {
           value={destination}
           onChange={e => setDestination(e.target.value)}
           placeholder="Destino"
-          className="bg-[--color-bg-input] border border-[--color-border-primary] rounded px-2 py-1 text-[10px] font-mono text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-blue-500"
+          className="bg-[#061525] border border-[--color-border-primary]/70 rounded-lg px-2 py-1.5 text-[10px] font-mono text-[--color-text-primary] placeholder:text-[--color-text-muted]/60 focus:outline-none focus:border-[--color-accent-blue]"
         />
         <input
           value={mask}
           onChange={e => setMask(e.target.value)}
           placeholder="Máscara"
-          className="bg-[--color-bg-input] border border-[--color-border-primary] rounded px-2 py-1 text-[10px] font-mono text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-blue-500"
+          className="bg-[#061525] border border-[--color-border-primary]/70 rounded-lg px-2 py-1.5 text-[10px] font-mono text-[--color-text-primary] placeholder:text-[--color-text-muted]/60 focus:outline-none focus:border-[--color-accent-blue]"
         />
         <input
           value={gateway}
           onChange={e => setGateway(e.target.value)}
           placeholder="Gateway (próximo salto)"
-          className="bg-[--color-bg-input] border border-[--color-border-primary] rounded px-2 py-1 text-[10px] font-mono text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-blue-500 col-span-2"
+          className="bg-[#061525] border border-[--color-border-primary]/70 rounded-lg px-2 py-1.5 text-[10px] font-mono text-[--color-text-primary] placeholder:text-[--color-text-muted]/60 focus:outline-none focus:border-[--color-accent-blue] col-span-2"
         />
       </div>
       <button
         onClick={addRoute}
-        className="mt-1.5 w-full flex items-center justify-center gap-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-medium px-2 py-1.5 cursor-pointer"
+        className="mt-1.5 w-full flex items-center justify-center gap-1 rounded-lg bg-[#0A2037] hover:bg-[#123B61] text-[--color-text-secondary] hover:text-[--color-text-primary] text-[10px] font-medium px-2 py-1.5 cursor-pointer transition-colors"
       >
         <Plus size={11} /> Adicionar rota
       </button>
-      <p className="text-[9px] text-slate-600 mt-1.5">
+      <p className="text-[9px] text-[--color-text-muted]/70 mt-1.5">
         Ex.: destino 192.168.5.0, máscara 255.255.255.0, gateway 172.16.0.2
       </p>
-    </div>
+    </Section>
   );
 }
 
-export function PropertyPanel() {
+interface PropertyPanelProps {
+  open: boolean;
+  onToggle: () => void;
+}
+
+export function PropertyPanel({ open, onToggle }: PropertyPanelProps) {
   const topology = useSimulatorStore(s => s.topology);
   const selectedDeviceId = useSimulatorStore(s => s.selectedDeviceId);
   const selectedConnectionId = useSimulatorStore(s => s.selectedConnectionId);
@@ -297,28 +343,78 @@ export function PropertyPanel() {
   const device = topology.devices.find(d => d.id === selectedDeviceId);
   const connection = topology.connections.find(c => c.id === selectedConnectionId);
 
+  const [tab, setTab] = useState<PanelTab>('config');
+
+  if (!open) {
+    const peerLabel = connection
+      ? `${topology.devices.find(d => d.id === connection.deviceId1)?.name} ↔ ${topology.devices.find(d => d.id === connection.deviceId2)?.name}`
+      : device?.name;
+    return (
+      <div className="w-9 shrink-0 border-l border-[--color-border-primary]/50 bg-[#03111F] flex flex-col items-center pt-2 gap-2 overflow-hidden">
+        <button
+          onClick={onToggle}
+          className="p-1.5 rounded-lg text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-[--color-bg-hover]/60 cursor-pointer"
+          title="Abrir painel de propriedades"
+        >
+          <PanelLeftOpen size={14} />
+        </button>
+        {peerLabel && (
+          <span
+            className="text-[9px] text-[--color-text-muted]/70 font-mono whitespace-nowrap"
+            style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+          >
+            {peerLabel}
+          </span>
+        )}
+      </div>
+    );
+  }
+
   if (connection) {
     const dev1 = topology.devices.find(d => d.id === connection.deviceId1);
     const dev2 = topology.devices.find(d => d.id === connection.deviceId2);
     return (
-      <div className="w-72 shrink-0 border-l border-[--color-border-primary] bg-[--color-bg-secondary] p-4 overflow-y-auto">
-        <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Conexão</h3>
-        <div className="rounded-md border border-[--color-border-primary] bg-[--color-bg-tertiary] p-3 space-y-2">
-          <div className="flex items-center gap-2 text-xs">
-            <span className="text-slate-300">{dev1?.name}</span>
-            <span className="text-slate-600">↔</span>
-            <span className="text-slate-300">{dev2?.name}</span>
+      <div className="w-64 shrink-0 border-l border-[--color-border-primary]/50 bg-[#03111F] p-4 overflow-y-auto flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[--color-accent-blue]/10 border border-[--color-accent-blue]/30">
+              <Link2 size={13} className="text-[--color-accent-blue]" />
+            </span>
+            <h3 className="text-xs font-semibold text-[--color-text-primary]">Conexão</h3>
           </div>
-          <div className="text-[10px] text-slate-500 space-y-0.5">
-            <p>{dev1?.name}: {connection.interfaceId1}</p>
-            <p>{dev2?.name}: {connection.interfaceId2}</p>
-            <p>Tipo: {connection.type}</p>
-            <p>Largura: {connection.bandwidth} Mbps · Latência: {connection.latency} ms</p>
+          <button onClick={onToggle} className="p-1 rounded-lg text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-[--color-bg-hover]/60 cursor-pointer" title="Recolher painel">
+            <PanelLeftClose size={13} />
+          </button>
+        </div>
+
+        <div className="rounded-xl border border-[--color-border-primary]/50 bg-[#071A2C]/60 p-3 space-y-2">
+          <div className="flex items-center gap-2 text-xs">
+            <span className="flex items-center gap-1.5 min-w-0">
+              <span className="h-1.5 w-1.5 rounded-full bg-[--color-status-connected] shrink-0" />
+              <span className="truncate text-[--color-text-primary]">{dev1?.name}</span>
+            </span>
+            <span className="text-[--color-text-muted] shrink-0">↔</span>
+            <span className="flex items-center gap-1.5 min-w-0">
+              <span className="h-1.5 w-1.5 rounded-full bg-[--color-status-connected] shrink-0" />
+              <span className="truncate text-[--color-text-primary]">{dev2?.name}</span>
+            </span>
+          </div>
+          <div className="flex items-center justify-between text-[10px] text-[--color-text-muted]">
+            <span>{connection.type}</span>
+            <span className="font-mono">{connection.bandwidth} Mbps · {connection.latency} ms</span>
           </div>
         </div>
+
+        <p className="text-[10px] text-[--color-text-muted] px-1">
+          {dev1?.name}: <span className="font-mono text-[--color-text-secondary]">{connection.interfaceId1}</span>
+        </p>
+        <p className="text-[10px] text-[--color-text-muted] px-1">
+          {dev2?.name}: <span className="font-mono text-[--color-text-secondary]">{connection.interfaceId2}</span>
+        </p>
+
         <button
           onClick={() => removeConnection(connection.id)}
-          className="mt-3 w-full flex items-center justify-center gap-1.5 rounded-md bg-red-600/10 border border-red-500/30 text-red-400 hover:bg-red-600/20 text-xs font-medium px-3 py-2 cursor-pointer"
+          className="mt-auto w-full flex items-center justify-center gap-1.5 rounded-lg bg-[--color-accent-red]/10 border border-[--color-accent-red]/30 text-[--color-accent-red] hover:bg-[--color-accent-red]/20 text-xs font-medium px-3 py-2 cursor-pointer transition-all duration-150 hover:-translate-y-px"
         >
           <Trash2 size={13} /> Remover conexão
         </button>
@@ -328,11 +424,26 @@ export function PropertyPanel() {
 
   if (!device) {
     return (
-      <div className="w-72 shrink-0 border-l border-[--color-border-primary] bg-[--color-bg-secondary] p-4 overflow-y-auto">
-        <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Propriedades</h3>
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <Info size={24} className="text-slate-700 mb-2" />
-          <p className="text-xs text-slate-500">Selecione um equipamento na topologia para configurá-lo.</p>
+      <div className="w-64 shrink-0 border-l border-[--color-border-primary]/50 bg-[#03111F] p-4 overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xs font-semibold text-[--color-text-secondary] uppercase tracking-wider">Propriedades</h3>
+          <button onClick={onToggle} className="p-1 rounded-lg text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-[--color-bg-hover]/60 cursor-pointer" title="Recolher painel">
+            <PanelLeftClose size={13} />
+          </button>
+        </div>
+        <div className="flex flex-col items-center justify-center py-14 text-center px-2">
+          <div className="relative">
+            <div className="absolute inset-0 rounded-full bg-[--color-accent-blue]/10 blur-xl" />
+            <span className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0A2037] to-[#071A2C] border border-[--color-border-primary]/70 shadow-inner">
+              <Info size={22} className="text-[--color-text-muted]" />
+            </span>
+          </div>
+          <p className="mt-4 text-xs text-[--color-text-secondary]">Nenhum equipamento selecionado</p>
+          <p className="text-[10px] text-[--color-text-muted] mt-1.5 leading-relaxed">
+            Selecione um equipamento na topologia
+            <br />
+            para ver e editar suas configurações.
+          </p>
         </div>
       </div>
     );
@@ -340,61 +451,135 @@ export function PropertyPanel() {
 
   const Icon = DEVICE_ICONS[device.type];
   const colors = DEVICE_COLORS[device.type];
+  const status = interfaceStatus(device);
+  const primary = device.interfaces.find(i => i.ip);
+  const tabs = getTabs(device.type);
+  const activeTab = tabs.includes(tab) ? tab : tabs[0];
 
   return (
-    <div className="w-72 shrink-0 border-l border-[--color-border-primary] bg-[--color-bg-secondary] p-4 overflow-y-auto">
-      <div className="flex items-center gap-2.5 mb-4">
-        <span
-          className="flex h-9 w-9 items-center justify-center rounded-md"
-          style={{ background: colors.fill, border: `1px solid ${colors.stroke}40` }}
-        >
-          <Icon size={18} color={colors.text} />
-        </span>
+    <div className="w-64 shrink-0 border-l border-[--color-border-primary]/50 bg-[#03111F] flex flex-col min-h-0">
+      {/* Device header */}
+      <div className="flex items-center gap-2.5 px-4 pt-4 pb-3 shrink-0">
+        <div className="relative shrink-0">
+          <span
+            className="flex h-10 w-10 items-center justify-center rounded-xl"
+            style={{ background: colors.fill, border: `1px solid ${colors.stroke}45`, boxShadow: `0 0 14px ${colors.stroke}22` }}
+          >
+            <Icon size={19} color={colors.text} />
+          </span>
+          <span className={clsx('absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#03111F]', status.color.includes('connected') && 'bg-[--color-status-connected]', status.color.includes('yellow') && 'bg-[--color-accent-yellow]', (status.color.includes('muted') || status.color.includes('Inativo')) && 'bg-[--color-text-muted]')} />
+        </div>
         <div className="min-w-0 flex-1">
           <input
             value={device.name}
             onChange={e => renameDevice(device.id, e.target.value)}
-            className="w-full bg-transparent text-sm font-semibold text-slate-100 focus:outline-none border-b border-transparent focus:border-blue-500"
+            className="w-full bg-transparent text-sm font-bold text-[--color-text-primary] focus:outline-none border-b border-transparent focus:border-[--color-accent-blue]"
           />
-          <p className="text-[10px] text-slate-500">{DEVICE_LABELS[device.type]}</p>
+          <p className="text-[10px] text-[--color-text-muted]">{DEVICE_LABELS[device.type]}</p>
         </div>
+        <button
+          onClick={onToggle}
+          className="p-1.5 rounded-lg text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-[--color-bg-hover]/60 cursor-pointer shrink-0"
+          title="Recolher painel"
+        >
+          <PanelLeftClose size={13} />
+        </button>
       </div>
 
-      {device.type === 'switch' ? (
-        <SwitchPorts device={device} />
-      ) : (
-        <div className="space-y-3">
-          {device.interfaces.map(iface => (
-            <InterfaceConfig key={iface.id} device={device} iface={iface} />
-          ))}
-        </div>
-      )}
+      {/* Status chip row */}
+      <div className="px-4 pb-3 flex items-center gap-2 shrink-0">
+        <span className={clsx('px-2 py-0.5 rounded-md border text-[9px] font-bold', status.color)}>
+          {status.label}
+        </span>
+        {primary?.ip && (
+          <span className="text-[9px] font-mono text-[--color-text-muted] truncate">{primary.ip}</span>
+        )}
+      </div>
 
-      {(device.type === 'router' || device.type === 'firewall') && (
-        <div className="mt-3">
-          <RouteEditor device={device} />
-        </div>
-      )}
+      {/* Tabs */}
+      <div className="px-4 pb-2 flex gap-1 shrink-0 overflow-x-auto">
+        {tabs.map(t => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={clsx(
+              'flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-150',
+              activeTab === t
+                ? 'bg-[--color-accent-blue]/15 text-[--color-accent-blue] shadow-[inset_0_0_0_1px_rgba(0,140,255,0.2)]'
+                : 'text-[--color-text-muted] hover:text-[--color-text-secondary] hover:bg-[--color-bg-hover]/40'
+            )}
+          >
+            {t === 'config' && <Settings2 size={10} />}
+            {t === 'interfaces' && <Network size={10} />}
+            {t === 'ports' && <Cpu size={10} />}
+            {t === 'rotas' && <Route size={10} />}
+            {t === 'config' ? 'Config' : t}
+          </button>
+        ))}
+      </div>
 
-      <button
-        onClick={() => openTerminal(device.id)}
-        className="mt-4 w-full flex items-center justify-center gap-1.5 rounded-md bg-emerald-600/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-600/20 text-xs font-medium px-3 py-2 cursor-pointer"
-      >
-        <TerminalSquare size={13} /> Abrir console
-      </button>
+      {/* Tab content */}
+      <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-4 space-y-3">
+        {activeTab === 'config' && (
+          <>
+            <Section title="Informações" icon={<Info size={10} />}>
+              <div className="space-y-1">
+                {[['Hostname', device.config.hostname], ['Tipo', DEVICE_LABELS[device.type]], ['Interfaces', String(device.interfaces.length)]].map(([k, v]) => (
+                  <div key={k} className="flex items-center justify-between gap-2 text-[10px]">
+                    <span className="text-[--color-text-muted]">{k}</span>
+                    <span className="font-mono text-[--color-text-secondary]">{v}</span>
+                  </div>
+                ))}
+              </div>
+            </Section>
 
-      {device.type !== 'switch' && (
-        <div className="mt-3">
-          <ArpTable deviceId={device.id} />
-        </div>
-      )}
+            <Section title="Rede" icon={<Network size={10} />}>
+              {primary ? (
+                <div className="space-y-1">
+                  {[['IP', primary.ip ?? '—'], ['Máscara', primary.subnetMask ?? '—'], ['Gateway', primary.gateway ?? '—'], ['DNS', primary.dns ?? '—'], ['MAC', primary.mac]].map(([k, v]) => (
+                    <div key={k} className="flex items-center justify-between gap-2 text-[10px]">
+                      <span className="text-[--color-text-muted]">{k}</span>
+                      <span className="font-mono text-[--color-text-secondary] truncate">{v}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-[10px] text-[--color-text-muted]">
+                  Aba <span className="text-[--color-accent-blue] font-medium">Interfaces</span> para configurar IP.
+                </p>
+              )}
+            </Section>
+          </>
+        )}
 
-      <button
-        onClick={() => removeDevice(device.id)}
-        className="mt-3 w-full flex items-center justify-center gap-1.5 rounded-md bg-red-600/10 border border-red-500/30 text-red-400 hover:bg-red-600/20 text-xs font-medium px-3 py-2 cursor-pointer"
-      >
-        <Trash2 size={13} /> Remover equipamento
-      </button>
+        {activeTab === 'interfaces' && (
+          <div className="space-y-2.5">
+            {device.interfaces.map(iface => (
+              <InterfaceConfig key={iface.id} device={device} iface={iface} />
+            ))}
+          </div>
+        )}
+
+        {activeTab === 'ports' && <SwitchPorts device={device} />}
+
+        {activeTab === 'rotas' && <RouteEditor device={device} />}
+
+        <button
+          onClick={() => openTerminal(device.id)}
+          className="w-full flex items-center justify-center gap-1.5 rounded-lg bg-[--color-status-connected]/10 border border-[--color-status-connected]/30 text-[--color-status-connected] hover:bg-[--color-status-connected]/20 text-xs font-medium px-3 py-2 cursor-pointer transition-all duration-150 hover:-translate-y-px"
+        >
+          <TerminalSquare size={13} /> Abrir console
+        </button>
+
+        {device.type !== 'switch' && <ArpTable deviceId={device.id} />}
+
+        <button
+          onClick={() => removeDevice(device.id)}
+          className="w-full flex items-center justify-center gap-1.5 rounded-lg bg-[--color-accent-red]/10 border border-[--color-accent-red]/30 text-[--color-accent-red] hover:bg-[--color-accent-red]/20 text-xs font-medium px-3 py-2 cursor-pointer transition-all duration-150 hover:-translate-y-px"
+        >
+          <Trash2 size={13} /> Remover equipamento
+        </button>
+      </div>
     </div>
   );
 }

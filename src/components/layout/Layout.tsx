@@ -7,7 +7,7 @@ export function Layout() {
   const fullBleed = pathname.startsWith('/simulador') || pathname.startsWith('/troubleshooting');
 
   return (
-    <div className="flex h-full w-full">
+    <div className="flex h-full w-full bg-[--color-bg-primary]">
       <Sidebar />
       <div className="flex flex-col flex-1 min-w-0 min-h-0">
         <Header />
@@ -16,7 +16,7 @@ export function Layout() {
             <Outlet />
           ) : (
             <div className="h-full overflow-y-auto">
-              <div className="p-6 max-w-7xl mx-auto">
+              <div className="p-6 max-w-7xl mx-auto animate-fade-in-up">
                 <Outlet />
               </div>
             </div>

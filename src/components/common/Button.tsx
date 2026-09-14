@@ -10,12 +10,14 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
-  primary: 'bg-blue-600 hover:bg-blue-500 text-white shadow-sm shadow-blue-900/40',
-  secondary: 'bg-slate-700 hover:bg-slate-600 text-white',
-  outline: 'border border-slate-600 hover:border-slate-400 hover:bg-slate-800 text-slate-300',
-  ghost: 'hover:bg-slate-800 text-slate-400 hover:text-slate-200',
-  danger: 'bg-red-600 hover:bg-red-500 text-white',
-  success: 'bg-emerald-600 hover:bg-emerald-500 text-white',
+  primary:
+    'bg-gradient-to-b from-[#008CFF] to-[#0071D6] hover:from-[#00A8FF] hover:to-[#008CFF] text-white shadow-md shadow-blue-500/25',
+  secondary: 'bg-[#123B61] hover:bg-[#1B4D7A] text-[#C4D8EC]',
+  outline: 'border border-[#1E3957] hover:border-[#008CFF]/60 hover:bg-[#081C30] text-[#7891AA] hover:text-[#C4D8EC]',
+  ghost: 'hover:bg-[#081C30] text-[#7891AA] hover:text-[#C4D8EC]',
+  danger: 'bg-gradient-to-b from-[#F0485C] to-[#D63A4C] hover:from-[#FF5A6C] hover:to-[#F0485C] text-white shadow-md shadow-red-500/25',
+  success:
+    'bg-gradient-to-b from-[#27C66A] to-[#1FA655] hover:from-[#3DD67E] hover:to-[#27C66A] text-white shadow-md shadow-emerald-500/25',
 };
 
 const SIZE_CLASSES: Record<ButtonSize, string> = {
@@ -30,7 +32,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={clsx(
-          'inline-flex items-center justify-center gap-2 rounded-md font-medium transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer',
+          'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-150 hover:-translate-y-px active:translate-y-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer',
           VARIANT_CLASSES[variant],
           SIZE_CLASSES[size],
           className

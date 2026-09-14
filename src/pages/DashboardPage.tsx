@@ -21,32 +21,32 @@ const MODULE_GROUPS: { name: string; conceptIds: string[]; color: string }[] = [
   {
     name: 'Fundamentos',
     conceptIds: ['networking-basics', 'lan-wan', 'network-devices', 'topologies', 'ethernet-basics', 'client-server'],
-    color: 'bg-blue-500',
+    color: 'text-[--color-accent-blue]',
   },
   {
     name: 'Modelos',
     conceptIds: ['osi-model', 'tcp-ip-model', 'encapsulation'],
-    color: 'bg-purple-500',
+    color: 'text-[--color-accent-purple]',
   },
   {
     name: 'Ethernet',
     conceptIds: ['mac-address', 'switch-operations', 'arp', 'frames'],
-    color: 'bg-cyan-500',
+    color: 'text-[--color-accent-cyan]',
   },
   {
     name: 'IPv4',
     conceptIds: ['ipv4-basics', 'subnet-mask', 'gateway', 'broadcast'],
-    color: 'bg-emerald-500',
+    color: 'text-[--color-accent-green]',
   },
   {
     name: 'Subnetting',
     conceptIds: ['subnetting', 'cidr', 'host-calculation'],
-    color: 'bg-yellow-500',
+    color: 'text-[--color-accent-yellow]',
   },
   {
     name: 'Serviços',
     conceptIds: ['dhcp', 'dns', 'routing-basics'],
-    color: 'bg-red-500',
+    color: 'text-[--color-accent-red]',
   },
 ];
 
@@ -112,7 +112,7 @@ export function DashboardPage() {
           </div>
         </Card>
 
-        <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {MODULE_GROUPS.map(group => {
             const groupProgress = group.conceptIds.reduce((sum, id) => sum + getMastery(id), 0) / group.conceptIds.length;
             return (
@@ -238,7 +238,7 @@ export function DashboardPage() {
                 Ver todos <ArrowRight size={12} />
               </Link>
             </div>
-            {INITIAL_EXERCISES.map(ex => {
+            {INITIAL_EXERCISES.slice(0, 5).map(ex => {
               const done = completedIds.includes(ex.id);
               return (
                 <Link

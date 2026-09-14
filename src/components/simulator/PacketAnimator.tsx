@@ -3,12 +3,12 @@ import { useSimulatorStore } from '../../stores/useSimulatorStore';
 import type { ActiveAnimation } from '../../stores/useSimulatorStore';
 
 const PACKET_COLORS: Record<string, string> = {
-  icmp: '#22c55e',
-  arp: '#eab308',
-  tcp: '#3b82f6',
-  udp: '#06b6d4',
-  dns: '#a855f7',
-  dhcp: '#f97316',
+  icmp: '#27C66A',
+  arp: '#F5B301',
+  tcp: '#008CFF',
+  udp: '#00C9FF',
+  dns: '#8B7CF6',
+  dhcp: '#F5901E',
 };
 
 const PACKET_LABELS: Record<string, string> = {
@@ -63,11 +63,11 @@ export function PacketAnimator() {
         const progress = progressOf(anim, now);
         if (progress < 0 || progress >= 1) return null;
         const { x, y } = pointAt(anim.points, progress);
-        const color = PACKET_COLORS[anim.packet.type] ?? '#3b82f6';
+        const color = PACKET_COLORS[anim.packet.type] ?? '#008CFF';
         return (
           <g key={anim.id} transform={`translate(${x} ${y})`}>
             <circle r={14} fill={color} opacity={0.15} />
-            <circle r={7} fill={color} stroke="#0a0e17" strokeWidth={1.5} />
+            <circle r={7} fill={color} stroke="#020914" strokeWidth={1.5} />
             <text
               x={0}
               y={-13}

@@ -1,7 +1,7 @@
 import type { Device } from '../../types';
 import { DEVICE_ICONS, DEVICE_COLORS } from './deviceIcons';
 
-export const DEVICE_BOX_SIZE = 68;
+export const DEVICE_BOX_SIZE = 80;
 
 interface DeviceNodeProps {
   device: Device;
@@ -10,6 +10,10 @@ interface DeviceNodeProps {
   isConnectionSource: boolean;
   onPointerDown: (e: React.PointerEvent, deviceId: string) => void;
   onDoubleClick: (deviceId: string) => void;
+}
+
+function truncateName(name: string): string {
+  return name.length > 11 ? `${name.slice(0, 10)}…` : name;
 }
 
 export function DeviceNode({
@@ -26,7 +30,8 @@ export function DeviceNode({
   const primaryInterface = device.interfaces.find(i => i.ip);
   const anyInterfaceUp = device.interfaces.some(i => i.status === 'up');
 
-  const statusColor = !anyInterfaceUp ? '#64748b' : primaryInterface ? '#22c55e' : '#eab308';
+  const statusColor = !anyInterfaceUp ? '#4E6A87' : primaryInterface ? '#27C66A' : '#F5B301';
+  const statusLabel = !anyInterfaceUp ? 'inativo' : primaryInterface ? 'conectado' : 'atenção';
 
   return (
     <g
@@ -35,78 +40,115 @@ export function DeviceNode({
       onDoubleClick={() => onDoubleClick(device.id)}
       style={{ cursor: connecting ? 'crosshair' : 'grab' }}
     >
+      {/* Selection glow */}
       {selected && (
         <rect
-          x={-half - 6}
-          y={-half - 6}
-          width={DEVICE_BOX_SIZE + 12}
-          height={DEVICE_BOX_SIZE + 12}
-          rx={14}
+          x={-half - 8}
+          y={-half - 8}
+          width={DEVICE_BOX_SIZE + 16}
+          height={DEVICE_BOX_SIZE + 16}
+          rx={16}
           fill="none"
-          stroke="#3b82f6"
+          stroke="#008CFF"
           strokeWidth={1.5}
-          strokeDasharray="5 3"
           vectorEffect="non-scaling-stroke"
+          filter="url(#node-glow)"
         />
       )}
 
+      {/* Connection-source pulsing ring */}
       {isConnectionSource && (
         <rect
-          x={-half - 6}
-          y={-half - 6}
-          width={DEVICE_BOX_SIZE + 12}
-          height={DEVICE_BOX_SIZE + 12}
-          rx={14}
+          x={-half - 7}
+          y={-half - 7}
+          width={DEVICE_BOX_SIZE + 14}
+          height={DEVICE_BOX_SIZE + 14}
+          rx={15}
           fill="none"
-          stroke="#06b6d4"
+          stroke="#00A8FF"
           strokeWidth={2}
           vectorEffect="non-scaling-stroke"
         >
-          <animate attributeName="opacity" values="1;0.3;1" dur="1.2s" repeatCount="indefinite" />
+          <animate attributeName="opacity" values="1;0.25;1" dur="1.2s" repeatCount="indefinite" />
         </rect>
       )}
 
+      {/* Node card */}
       <rect
         x={-half}
         y={-half}
         width={DEVICE_BOX_SIZE}
         height={DEVICE_BOX_SIZE}
-        rx={10}
+        rx={14}
         fill={colors.fill}
-        stroke={selected ? '#3b82f6' : colors.stroke}
+        stroke={selected ? '#008CFF' : colors.stroke}
+        strokeOpacity={selected ? 0.9 : 0.45}
         strokeWidth={selected ? 2 : 1.25}
         vectorEffect="non-scaling-stroke"
       />
 
-      <g transform="translate(-16 -18)">
-        <Icon size={32} color={colors.text} strokeWidth={1.6} />
+      {/* Top highlight (glass sheen) */}
+      <rect
+        x={-half + 1}
+        y={-half + 1}
+        width={DEVICE_BOX_SIZE - 2}
+        height={(DEVICE_BOX_SIZE - 2) / 2}
+        rx={13}
+        fill="url(#node-sheen)"
+      />
+
+      {/* Status dot */}
+      <circle cx={half - 11} cy={-half + 11} r={4} fill={statusColor} stroke="#020914" strokeWidth={1.5} />
+      {statusColor === '#27C66A' && (
+        <circle cx={half - 11} cy={-half + 11} r={7} fill="none" stroke="#27C66A" strokeWidth={1} opacity={0.5}>
+          <animate attributeName="r" values="5;9" dur="1.6s" repeatCount="indefinite" />
+          <animate attributeName="opacity" values="0.5;0" dur="1.6s" repeatCount="indefinite" />
+        </circle>
+      )}
+
+      {/* Icon */}
+      <g transform="translate(-13 -14)" style={{ pointerEvents: 'none' }}>
+        <Icon size={26} color={colors.text} strokeWidth={1.6} />
       </g>
 
+      {/* Name */}
       <text
         x={0}
-        y={half - 6}
+        y={half - 11}
         textAnchor="middle"
         fontSize={9}
-        fontFamily="var(--font-mono, monospace)"
-        fill="#cbd5e1"
+        fontWeight={600}
+        fontFamily="var(--font-sans, Inter, sans-serif)"
+        fill="#C4D8EC"
         style={{ pointerEvents: 'none', userSelect: 'none' }}
       >
-        {device.name}
+        {truncateName(device.name)}
       </text>
 
-      <circle cx={half - 8} cy={-half + 8} r={3.5} fill={statusColor} stroke="#0a0e17" strokeWidth={1} />
-
-      {primaryInterface?.ip && (
+      {/* IP */}
+      {primaryInterface?.ip ? (
         <text
           x={0}
-          y={half + 14}
+          y={half + 16}
           textAnchor="middle"
           fontSize={8}
           fontFamily="var(--font-mono, monospace)"
-          fill="#64748b"
+          fill="#5A7088"
           style={{ pointerEvents: 'none', userSelect: 'none' }}
         >
           {primaryInterface.ip}
+        </text>
+      ) : (
+        <text
+          x={0}
+          y={half + 16}
+          textAnchor="middle"
+          fontSize={7}
+          fontFamily="var(--font-sans, Inter, sans-serif)"
+          fill="#4E6A87"
+          style={{ pointerEvents: 'none', userSelect: 'none' }}
+        >
+          {statusLabel}
         </text>
       )}
     </g>

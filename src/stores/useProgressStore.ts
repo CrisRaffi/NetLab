@@ -17,34 +17,37 @@ function isUnlocked(prerequisites: string[], concepts: ConceptProgress[]): boole
 }
 
 function makeInitialConcepts(): ConceptProgress[] {
+  const now = new Date();
+  const nextReview = new Date();
+  nextReview.setDate(now.getDate() + 7);
   return [
-    { conceptId: 'networking-basics', mastery: 0, attempts: 0, lastPracticed: '', nextReview: '' },
-    { conceptId: 'lan-wan', mastery: 0, attempts: 0, lastPracticed: '', nextReview: '' },
-    { conceptId: 'network-devices', mastery: 0, attempts: 0, lastPracticed: '', nextReview: '' },
-    { conceptId: 'topologies', mastery: 0, attempts: 0, lastPracticed: '', nextReview: '' },
-    { conceptId: 'ethernet-basics', mastery: 0, attempts: 0, lastPracticed: '', nextReview: '' },
-    { conceptId: 'client-server', mastery: 0, attempts: 0, lastPracticed: '', nextReview: '' },
-    { conceptId: 'osi-model', mastery: 0, attempts: 0, lastPracticed: '', nextReview: '' },
-    { conceptId: 'tcp-ip-model', mastery: 0, attempts: 0, lastPracticed: '', nextReview: '' },
-    { conceptId: 'encapsulation', mastery: 0, attempts: 0, lastPracticed: '', nextReview: '' },
-    { conceptId: 'mac-address', mastery: 0, attempts: 0, lastPracticed: '', nextReview: '' },
-    { conceptId: 'switch-operations', mastery: 0, attempts: 0, lastPracticed: '', nextReview: '' },
-    { conceptId: 'arp', mastery: 0, attempts: 0, lastPracticed: '', nextReview: '' },
-    { conceptId: 'frames', mastery: 0, attempts: 0, lastPracticed: '', nextReview: '' },
-    { conceptId: 'ipv4-basics', mastery: 0, attempts: 0, lastPracticed: '', nextReview: '' },
-    { conceptId: 'subnet-mask', mastery: 0, attempts: 0, lastPracticed: '', nextReview: '' },
-    { conceptId: 'gateway', mastery: 0, attempts: 0, lastPracticed: '', nextReview: '' },
-    { conceptId: 'broadcast', mastery: 0, attempts: 0, lastPracticed: '', nextReview: '' },
-    { conceptId: 'subnetting', mastery: 0, attempts: 0, lastPracticed: '', nextReview: '' },
-    { conceptId: 'cidr', mastery: 0, attempts: 0, lastPracticed: '', nextReview: '' },
-    { conceptId: 'host-calculation', mastery: 0, attempts: 0, lastPracticed: '', nextReview: '' },
-    { conceptId: 'dhcp', mastery: 0, attempts: 0, lastPracticed: '', nextReview: '' },
-    { conceptId: 'dns', mastery: 0, attempts: 0, lastPracticed: '', nextReview: '' },
-    { conceptId: 'routing-basics', mastery: 0, attempts: 0, lastPracticed: '', nextReview: '' },
+    { conceptId: 'networking-basics', mastery: 0, attempts: 0, lastPracticed: '', nextReview: nextReview.toISOString() },
+    { conceptId: 'lan-wan', mastery: 0, attempts: 0, lastPracticed: '', nextReview: nextReview.toISOString() },
+    { conceptId: 'network-devices', mastery: 0, attempts: 0, lastPracticed: '', nextReview: nextReview.toISOString() },
+    { conceptId: 'topologies', mastery: 0, attempts: 0, lastPracticed: '', nextReview: nextReview.toISOString() },
+    { conceptId: 'ethernet-basics', mastery: 0, attempts: 0, lastPracticed: '', nextReview: nextReview.toISOString() },
+    { conceptId: 'client-server', mastery: 0, attempts: 0, lastPracticed: '', nextReview: nextReview.toISOString() },
+    { conceptId: 'osi-model', mastery: 0, attempts: 0, lastPracticed: '', nextReview: nextReview.toISOString() },
+    { conceptId: 'tcp-ip-model', mastery: 0, attempts: 0, lastPracticed: '', nextReview: nextReview.toISOString() },
+    { conceptId: 'encapsulation', mastery: 0, attempts: 0, lastPracticed: '', nextReview: nextReview.toISOString() },
+    { conceptId: 'mac-address', mastery: 0, attempts: 0, lastPracticed: '', nextReview: nextReview.toISOString() },
+    { conceptId: 'switch-operations', mastery: 0, attempts: 0, lastPracticed: '', nextReview: nextReview.toISOString() },
+    { conceptId: 'arp', mastery: 0, attempts: 0, lastPracticed: '', nextReview: nextReview.toISOString() },
+    { conceptId: 'frames', mastery: 0, attempts: 0, lastPracticed: '', nextReview: nextReview.toISOString() },
+    { conceptId: 'ipv4-basics', mastery: 0, attempts: 0, lastPracticed: '', nextReview: nextReview.toISOString() },
+    { conceptId: 'subnet-mask', mastery: 0, attempts: 0, lastPracticed: '', nextReview: nextReview.toISOString() },
+    { conceptId: 'gateway', mastery: 0, attempts: 0, lastPracticed: '', nextReview: nextReview.toISOString() },
+    { conceptId: 'broadcast', mastery: 0, attempts: 0, lastPracticed: '', nextReview: nextReview.toISOString() },
+    { conceptId: 'subnetting', mastery: 0, attempts: 0, lastPracticed: '', nextReview: nextReview.toISOString() },
+    { conceptId: 'cidr', mastery: 0, attempts: 0, lastPracticed: '', nextReview: nextReview.toISOString() },
+    { conceptId: 'host-calculation', mastery: 0, attempts: 0, lastPracticed: '', nextReview: nextReview.toISOString() },
+    { conceptId: 'dhcp', mastery: 0, attempts: 0, lastPracticed: '', nextReview: nextReview.toISOString() },
+    { conceptId: 'dns', mastery: 0, attempts: 0, lastPracticed: '', nextReview: nextReview.toISOString() },
+    { conceptId: 'routing-basics', mastery: 0, attempts: 0, lastPracticed: '', nextReview: nextReview.toISOString() },
   ];
 }
 
-interface ProgressState {
+export interface ProgressState {
   progress: UserProgress;
   addXp: (amount: number) => void;
   completeExercise: (exerciseId: string, concepts: string[], xp: number) => void;
@@ -53,6 +56,9 @@ interface ProgressState {
   getConceptMastery: (conceptId: string) => number;
   isConceptUnlocked: (conceptId: string, prerequisites: string[]) => boolean;
   getOverallProgress: () => number;
+  getWeakConcepts: () => ConceptProgress[];
+  getDueForReview: () => ConceptProgress[];
+  scheduleNextReview: (conceptId: string) => void;
   resetProgress: () => void;
 }
 
@@ -111,21 +117,37 @@ export const useProgressStore = create<ProgressState>()(
         }),
 
       registerPractice: (conceptId, success) =>
-        set(state => ({
-          progress: {
-            ...state.progress,
-            concepts: state.progress.concepts.map(c =>
-              c.conceptId === conceptId
-                ? {
-                    ...c,
-                    attempts: c.attempts + 1,
-                    mastery: Math.max(0, Math.min(100, c.mastery + (success ? 10 : -5))),
-                    lastPracticed: new Date().toISOString(),
-                  }
-                : c
-            ),
-          },
-        })),
+        set(state => {
+          const conceptIndex = state.progress.concepts.findIndex(c => c.conceptId === conceptId);
+          if (conceptIndex === -1) return { progress: state.progress };
+
+          const now = new Date();
+          let newMastery = state.progress.concepts[conceptIndex].mastery;
+          if (success) {
+            newMastery = Math.min(100, newMastery + 10);
+          } else {
+            newMastery = Math.max(0, newMastery - 5);
+          }
+
+          const nextReview = new Date();
+          nextReview.setDate(now.getDate() + 7);
+
+          const updatedConcepts = [...state.progress.concepts];
+          updatedConcepts[conceptIndex] = {
+            ...updatedConcepts[conceptIndex],
+            mastery: newMastery,
+            attempts: updatedConcepts[conceptIndex].attempts + 1,
+            lastPracticed: now.toISOString(),
+            nextReview: nextReview.toISOString(),
+          };
+
+          return {
+            progress: {
+              ...state.progress,
+              concepts: updatedConcepts,
+            },
+          };
+        }),
 
       unlockAchievement: (achievement) =>
         set(state => {
@@ -157,8 +179,44 @@ export const useProgressStore = create<ProgressState>()(
         return Math.round(total / concepts.length);
       },
 
+      getWeakConcepts: (): ConceptProgress[] => {
+        const { concepts } = get().progress;
+        return concepts.filter(c => c.mastery < 50 && c.attempts > 0);
+      },
+
+      getDueForReview: (): ConceptProgress[] => {
+        const { concepts } = get().progress;
+        const now = new Date();
+        return concepts.filter(c => c.nextReview && new Date(c.nextReview) <= now);
+      },
+
+      scheduleNextReview: (conceptId: string) =>
+        set(state => {
+          const conceptIndex = state.progress.concepts.findIndex(c => c.conceptId === conceptId);
+          if (conceptIndex === -1) return state;
+
+          const now = new Date();
+          const nextReview = new Date();
+          nextReview.setDate(now.getDate() + 7);
+
+          const updatedConcepts = [...state.progress.concepts];
+          updatedConcepts[conceptIndex] = {
+            ...updatedConcepts[conceptIndex],
+            nextReview: nextReview.toISOString(),
+          };
+
+          return {
+            progress: {
+              ...state.progress,
+              concepts: updatedConcepts,
+            },
+          };
+        }),
+
       resetProgress: () => set({ progress: defaultProgress }),
     }),
     { name: 'netlab-progress' }
   )
 );
+
+export type { ConceptProgress };
