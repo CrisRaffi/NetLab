@@ -63,7 +63,7 @@ export function PacketJourneyPage() {
       : TCP_IP_LAYERS[selected - 1];
 
   return (
-    <div className="max-w-7xl mx-auto space-y-3" style={{ padding: 16 }}>
+    <div className="space-y-3 w-full" style={{ padding: 16 }}>
       <PageHeader
         title="A Viagem do Pacote"
         subtitle="Não memorize as camadas. Veja o que acontece com os dados."

@@ -307,6 +307,8 @@ h1,h2,h3,h4,h5,h6 { font-size: inherit; font-weight: inherit; letter-spacing: in
 .pl-1 { padding-left: 4px }
 .pl-3 { padding-left: 12px }
 .pl-4 { padding-left: 16px }
+.pl-10 { padding-left: 40px }
+.pr-16 { padding-right: 64px }
 
 /* ─── Spacing: Margin ─── */
 .m-0 { margin: 0 }
