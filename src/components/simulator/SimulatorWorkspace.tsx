@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   Wifi,
   Copy,
+  Home,
 } from 'lucide-react';
 import { DevicePalette } from './DevicePalette';
 import { TopologyCanvas } from './TopologyCanvas';
@@ -127,6 +128,70 @@ export function SimulatorWorkspace({
     prevTerminalOpenRef.current = terminalOpen;
   }, [terminalOpen]);
 
+  const createHomeNetworkExample = () => {
+    const loadTopology = useSimulatorStore.getState().loadTopology;
+    const { device, iface, conn } = createTopologyHelpers();
+    const topology = {
+      id: 'home-network-example',
+      name: 'Rede Doméstica Exemplo',
+      devices: [
+        device('core1', 'core', 'CORE-01', 440, 120, [
+          iface('eth0', '192.168.1.1', { mask: '255.255.255.0' }),
+          iface('eth1', '192.168.2.1', { mask: '255.255.255.0' }),
+          iface('eth2', '192.168.3.1', { mask: '255.255.255.0' }),
+          iface('eth3', '10.0.0.1', { mask: '255.255.255.0' }),
+        ]),
+        device('switch1', 'switch', 'SW-LAN', 200, 120, [
+          iface('f0/1'),
+          iface('f0/2'),
+          iface('f0/3'),
+          iface('f0/4'),
+        ]),
+        device('pc1', 'pc', 'PC-Sala', 80, 60, [
+          iface('eth0', '192.168.1.10', { mask: '255.255.255.0', gw: '192.168.1.1', dns: '8.8.8.8' }),
+        ]),
+        device('pc2', 'pc', 'PC-Quarto', 80, 180, [
+          iface('eth0', '192.168.1.11', { mask: '255.255.255.0', gw: '192.168.1.1', dns: '8.8.8.8' }),
+        ]),
+        device('server1', 'server', 'NAS', 80, 300, [
+          iface('eth0', '192.168.2.10', { mask: '255.255.255.0', gw: '192.168.2.1', dns: '8.8.8.8' }),
+        ]),
+        device('ap1', 'access_point', 'WiFi-Casa', 200, 300, [
+          iface('eth0', '192.168.3.10', { mask: '255.255.255.0', gw: '192.168.3.1', dns: '8.8.8.8' }),
+        ]),
+        device('printer1', 'printer', 'Impressora', 320, 300, [
+          iface('eth0', '192.168.3.11', { mask: '255.255.255.0', gw: '192.168.3.1', dns: '8.8.8.8' }),
+        ]),
+        device('cloud1', 'cloud', 'Internet', 680, 120, [
+          iface('eth0', '203.0.113.1', { mask: '255.255.255.252' }),
+        ]),
+      ],
+      connections: [
+        conn('core1', 'eth0', 'switch1', 'f0/1'),
+        conn('switch1', 'f0/2', 'pc1', 'eth0'),
+        conn('switch1', 'f0/3', 'pc2', 'eth0'),
+        conn('core1', 'eth1', 'server1', 'eth0'),
+        conn('core1', 'eth2', 'ap1', 'eth0'),
+        conn('ap1', 'f0/2', 'printer1', 'eth0'),
+        conn('core1', 'eth3', 'cloud1', 'eth0'),
+      ],
+    };
+    loadTopology(topology);
+  };
+
+  function createTopologyHelpers() {
+    function iface(id: string, ip?: string, opts: { mask?: string; gw?: string; dns?: string } = {}) {
+      return { id, name: id, type: 'ethernet' as const, mac: `AA:BB:CC:DD:${id.charCodeAt(0).toString(16).padStart(2, '0')}:00`, ip: ip ?? undefined, subnetMask: opts.mask, gateway: opts.gw, dns: opts.dns, status: 'up' as const, speed: 100 };
+    }
+    function device(id: string, type: any, name: string, x: number, y: number, interfaces: any[], routes: any[] = []) {
+      return { id, type, name, position: { x, y }, interfaces, config: { hostname: name, routes } };
+    }
+    function conn(a: string, ia: string, b: string, ib: string) {
+      return { id: `conn-${a}-${b}`, deviceId1: a, interfaceId1: ia, deviceId2: b, interfaceId2: ib, type: 'ethernet' as const, status: 'connected' as const, bandwidth: 100, latency: 1 };
+    }
+    return { iface, device, conn };
+  }
+
   const handleDeviceClick = (deviceId: string) => {
     if (connectMode) {
       if (!connectingFromId) {
@@ -191,8 +256,19 @@ export function SimulatorWorkspace({
         {/* Left: Brand & Title */}
         <div className="flex items-center gap-2.5"></div>
 
-        {/* Right: Validate + Connect */}
+        {/* Right: Validate + Connect + Example */}
         <div className="flex items-center gap-3 shrink-0">
+          <button
+            onClick={createHomeNetworkExample}
+            className={clsx(
+              'flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-medium cursor-pointer transition-all duration-150',
+              'bg-[--color-accent-cyan]/12 text-[#06B6D4] ring-inset-cyan hover:bg-[--color-accent-cyan]/20',
+            )}
+            title="Carregar rede doméstica de exemplo"
+          >
+            <Home size={14} />
+            Exemplo
+          </button>
           {onValidate && (
             <button
               onClick={handleValidate}

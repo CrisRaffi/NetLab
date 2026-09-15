@@ -9,6 +9,7 @@ import {
   Camera,
   Phone,
   Cloud,
+  Cpu,
 } from 'lucide-react';
 import type { DeviceType } from '../../types';
 
@@ -23,6 +24,7 @@ export const DEVICE_ICONS: Record<DeviceType, React.ComponentType<{ size?: numbe
   ip_camera: Camera,
   ip_phone: Phone,
   cloud: Cloud,
+  core: Cpu,
 };
 
 /** Node card colors: accent stroke, translucent fill, icon/text tone. */
@@ -37,6 +39,7 @@ export const DEVICE_COLORS: Record<DeviceType, { stroke: string; fill: string; t
   ip_camera: { stroke: '#F5901E', fill: 'rgba(245,144,30,0.13)', text: '#FFB95E' },
   ip_phone: { stroke: '#00C9FF', fill: 'rgba(0,201,255,0.13)', text: '#5ED9FF' },
   cloud: { stroke: '#4E9EF5', fill: 'rgba(78,158,245,0.13)', text: '#8CC2FF' },
+  core: { stroke: '#FF6B35', fill: 'rgba(255,107,53,0.13)', text: '#FF9F7A' },
 };
 
 export const DEVICE_ORDER: DeviceType[] = [
@@ -50,4 +53,5 @@ export const DEVICE_ORDER: DeviceType[] = [
   'ip_camera',
   'ip_phone',
   'cloud',
+  'core',
 ];

@@ -633,6 +633,7 @@ h1,h2,h3,h4,h5,h6 { font-size: inherit; font-weight: inherit; letter-spacing: in
 
 /* ─── Caret ─── */
 .caret-\[--color-accent-green\] { caret-color: var(--color-accent-green) }
+.outline-none { outline: none }
 
 /* ─── Placeholder ─── */
 .placeholder\:text-\[--color-text-muted\]\/60::placeholder { color: color-mix(in srgb, var(--color-text-muted) 60%, transparent) }

@@ -25,6 +25,7 @@ export const DEVICE_LABELS: Record<DeviceType, string> = {
   ip_camera: 'Câmera IP',
   ip_phone: 'Telefone IP',
   cloud: 'Internet',
+  core: 'Núcleo de Rede',
 };
 
 export const DEVICE_PREFIX: Record<DeviceType, string> = {
@@ -38,6 +39,7 @@ export const DEVICE_PREFIX: Record<DeviceType, string> = {
   ip_camera: 'CAM',
   ip_phone: 'IPF',
   cloud: 'NET',
+  core: 'CORE',
 };
 
 const INTERFACE_COUNT: Record<DeviceType, number> = {
@@ -51,6 +53,7 @@ const INTERFACE_COUNT: Record<DeviceType, number> = {
   ip_camera: 1,
   ip_phone: 1,
   cloud: 1,
+  core: 6,
 };
 
 function createInterfaces(type: DeviceType, deviceIndex: number): NetworkInterface[] {
