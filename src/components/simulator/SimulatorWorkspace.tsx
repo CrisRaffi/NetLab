@@ -139,7 +139,7 @@ export function SimulatorWorkspace({
           iface('eth0', '192.168.1.1', { mask: '255.255.255.0' }),
           iface('eth1', '192.168.2.1', { mask: '255.255.255.0' }),
           iface('eth2', '192.168.3.1', { mask: '255.255.255.0' }),
-          iface('eth3', '10.0.0.1', { mask: '255.255.255.0' }),
+          iface('eth3', '203.0.113.1', { mask: '255.255.255.252' }),
         ]),
         device('switch1', 'switch', 'SW-LAN', 200, 120, [
           iface('f0/1'),
@@ -163,7 +163,7 @@ export function SimulatorWorkspace({
           iface('eth0', '192.168.3.11', { mask: '255.255.255.0', gw: '192.168.3.1', dns: '8.8.8.8' }),
         ]),
         device('cloud1', 'cloud', 'Internet', 680, 120, [
-          iface('eth0', '203.0.113.1', { mask: '255.255.255.252' }),
+          iface('eth0', '203.0.113.2', { mask: '255.255.255.252', gw: '203.0.113.1' }),
         ]),
       ],
       connections: [
