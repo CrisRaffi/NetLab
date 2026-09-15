@@ -83,20 +83,6 @@ export function DevicePalette({ onAdd }: DevicePaletteProps) {
         </div>
 
         <button
-          onClick={explodeTopology}
-          title="Explodir rede: reorganiza os equipamentos com espaçamento"
-          className="mt-4 w-full flex flex-col items-center justify-center gap-1.5 rounded-lg px-2 py-3 bg-[#111A2C]/50 hover:bg-[#1C2538] text-[--color-accent-cyan] transition-all duration-150 cursor-pointer group"
-        >
-          <span className="flex h-8 w-8 items-center justify-center rounded-md bg-[--color-accent-cyan]/10 group-hover:scale-105 transition-transform">
-            <Waypoints size={14} />
-          </span>
-          <span className="text-[9px] font-bold uppercase tracking-wider">EX</span>
-          <span className="text-[8px] text-[--color-text-muted] text-center leading-snug">
-            Explodir rede
-          </span>
-        </button>
-
-        <button
           onClick={handleSave}
           title="Salvar o quadro atual"
           className="mt-2 w-full flex items-center justify-center gap-2 rounded-lg px-2 py-2 bg-[--color-accent-green]/8 hover:bg-[--color-accent-green]/15 text-[--color-accent-green] transition-all duration-150 cursor-pointer"
@@ -119,7 +105,10 @@ export function DevicePalette({ onAdd }: DevicePaletteProps) {
               className="w-full text-left rounded-lg px-2.5 py-2 bg-[#111A2C]/50 hover:bg-[#1C2538] transition-all duration-150 cursor-pointer group"
             >
               <div className="flex items-center gap-1.5 min-w-0">
-                <Upload size={10} className="text-[--color-accent-cyan] shrink-0" />
+                <Upload
+                  size={10}
+                  className="text-[--color-accent-cyan] shrink-0"
+                />
                 <span className="text-[9px] font-medium text-[--color-text-secondary] group-hover:text-[--color-text-primary] truncate">
                   {lastBoard.name}
                 </span>
