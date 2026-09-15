@@ -127,7 +127,7 @@ function interfaceStatus(device: Device): { label: string; color: string } {
     };
   if (!primary)
     return {
-      label: 'AtenÃ§Ã£o',
+      label: 'Atenção',
       color:
         'text-[--color-accent-yellow] border-[--color-accent-yellow]/30 bg-[--color-accent-yellow]/10',
     };
@@ -190,7 +190,7 @@ function InterfaceConfig({
 
       <div className="space-y-2.5">
         <Field
-          label="EndereÃ§o IP"
+          label="Endereço IP"
           value={iface.ip ?? ''}
           placeholder="192.168.1.10"
           onChange={(v) =>
@@ -200,7 +200,7 @@ function InterfaceConfig({
         />
         <div className="grid grid-cols-2 gap-2">
           <Field
-            label="MÃ¡scara"
+            label="Máscara"
             value={iface.subnetMask ?? ''}
             placeholder="255.255.255.0"
             onChange={(v) =>
@@ -296,7 +296,7 @@ function SwitchPorts({ device }: { device: Device }) {
         })}
       </div>
       <p className="text-[9px] text-[--color-text-muted]/70 mt-2">
-        Clique numa porta para ativÃ¡-la/desativÃ¡-la.
+        Clique numa porta para ativá-la/desativá-la.
       </p>
     </div>
   );
@@ -309,7 +309,7 @@ function ArpTable({ deviceId }: { deviceId: string }) {
     <Section title="Tabela ARP">
       {arpTable.length === 0 ? (
         <p className="text-[10px] text-[--color-text-muted]">
-          Vazia. FaÃ§a um{' '}
+          Vazia. Faça um{' '}
           <span className="font-mono text-[--color-text-secondary]">ping</span>{' '}
           para popular.
         </p>
@@ -375,7 +375,7 @@ function RouteEditor({ device }: { device: Device }) {
   };
 
   return (
-    <Section title="Rotas estÃ¡ticas" icon={<Route size={10} />}>
+    <Section title="Rotas estáticas" icon={<Route size={10} />}>
       {routes.length > 0 && (
         <div className="space-y-1 mb-2">
           {routes.map((r, i) => (
@@ -413,13 +413,13 @@ function RouteEditor({ device }: { device: Device }) {
         <input
           value={mask}
           onChange={(e) => setMask(e.target.value)}
-          placeholder="MÃ¡scara"
+          placeholder="Máscara"
           className="bg-[#0D1424] border border-[--color-border-primary]/70 rounded-lg px-2 py-1.5 text-[10px] font-mono text-[--color-text-primary] placeholder:text-[--color-text-muted]/60 focus:outline-none focus:border-[--color-accent-blue]"
         />
         <input
           value={gateway}
           onChange={(e) => setGateway(e.target.value)}
-          placeholder="Gateway (prÃ³ximo salto)"
+          placeholder="Gateway (próximo salto)"
           className="bg-[#0D1424] border border-[--color-border-primary]/70 rounded-lg px-2 py-1.5 text-[10px] font-mono text-[--color-text-primary] placeholder:text-[--color-text-muted]/60 focus:outline-none focus:border-[--color-accent-blue] col-span-2"
         />
       </div>
@@ -430,7 +430,7 @@ function RouteEditor({ device }: { device: Device }) {
         <Plus size={11} /> Adicionar rota
       </button>
       <p className="text-[9px] text-[--color-text-muted]/70 mt-1.5">
-        Ex.: destino 192.168.5.0, mÃ¡scara 255.255.255.0, gateway 172.16.0.2
+        Ex.: destino 192.168.5.0, máscara 255.255.255.0, gateway 172.16.0.2
       </p>
     </Section>
   );
@@ -496,7 +496,7 @@ export function PropertyPanel({ open, onToggle }: PropertyPanelProps) {
               <Link2 size={13} className="text-[--color-accent-blue]" />
             </span>
             <h3 className="text-xs font-semibold text-[--color-text-primary]">
-              ConexÃ£o
+              Conexão
             </h3>
           </div>
           <button
@@ -532,7 +532,7 @@ export function PropertyPanel({ open, onToggle }: PropertyPanelProps) {
               {connection.type === 'wireless' ? 'WiFi' : 'Ethernet'}
             </span>
             <span className="font-mono">
-              {connection.bandwidth} Mbps Â· {connection.latency} ms
+              {connection.bandwidth} Mbps · {connection.latency} ms
             </span>
           </div>
         </div>
@@ -554,7 +554,7 @@ export function PropertyPanel({ open, onToggle }: PropertyPanelProps) {
           onClick={() => removeConnection(connection.id)}
           className="mt-auto w-full flex items-center justify-center gap-1.5 rounded-lg bg-[--color-accent-red]/10 border border-[--color-accent-red]/30 text-[--color-accent-red] hover:bg-[--color-accent-red]/20 text-xs font-medium px-3 py-2 cursor-pointer transition-all duration-150 hover:-translate-y-px"
         >
-          <Trash2 size={13} /> Remover conexÃ£o
+          <Trash2 size={13} /> Remover conexão
         </button>
       </div>
     );
@@ -588,7 +588,7 @@ export function PropertyPanel({ open, onToggle }: PropertyPanelProps) {
           <p className="text-[10px] text-[--color-text-muted] mt-1.5 leading-relaxed">
             Selecione um equipamento na topologia
             <br />
-            para ver e editar suas configuraÃ§Ãµes.
+            para ver e editar suas configurações.
           </p>
         </div>
       </div>
@@ -739,7 +739,7 @@ export function PropertyPanel({ open, onToggle }: PropertyPanelProps) {
       <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-5 space-y-4">
         {activeTab === 'config' && (
           <>
-            <Section title="InformaÃ§Ãµes" icon={<Info size={10} />}>
+            <Section title="Informações" icon={<Info size={10} />}>
               <div className="space-y-1">
                 {[
                   ['Hostname', device.config.hostname],
@@ -763,10 +763,10 @@ export function PropertyPanel({ open, onToggle }: PropertyPanelProps) {
               {primary ? (
                 <div className="space-y-1">
                   {[
-                    ['IP', primary.ip ?? 'â€”'],
-                    ['MÃ¡scara', primary.subnetMask ?? 'â€”'],
-                    ['Gateway', primary.gateway ?? 'â€”'],
-                    ['DNS', primary.dns ?? 'â€”'],
+                    ['IP', primary.ip ?? '—'],
+                    ['Máscara', primary.subnetMask ?? '—'],
+                    ['Gateway', primary.gateway ?? '—'],
+                    ['DNS', primary.dns ?? '—'],
                     ['MAC', primary.mac],
                   ].map(([k, v]) => (
                     <div

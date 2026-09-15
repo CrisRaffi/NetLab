@@ -42,16 +42,16 @@ export function DevicePalette({ onAdd }: DevicePaletteProps) {
   const lastBoard = boards[0] ?? null;
 
   return (
-    <div className="w-40 shrink-0 border-r border-[--color-border-primary]/20 bg-[#020A14]/70 overflow-y-auto flex flex-col">
-      <div className="px-4 py-4 flex-1">
-        <h3 className="text-[10px] font-semibold text-[--color-text-secondary] uppercase tracking-[0.14em]">
+    <div className="w-44 shrink-0 border-r border-[--color-border-primary]/20 bg-[#020A14]/70 overflow-y-auto flex flex-col">
+      <div className="px-3 py-3 flex-1">
+        <h3 className="text-[9px] font-semibold text-[--color-text-secondary] uppercase tracking-[0.14em]">
           Equipamentos
         </h3>
-        <p className="text-[10px] text-[--color-text-muted]/70 mt-1 mb-4">
+        <p className="text-[9px] text-[--color-text-muted]/70 mt-0.5 mb-3">
           Clique para adicionar
         </p>
 
-        <div className="space-y-2.5">
+        <div className="space-y-2">
           {DEVICE_ORDER.map((type) => {
             const Icon = DEVICE_ICONS[type];
             const colors = DEVICE_COLORS[type];
@@ -59,22 +59,22 @@ export function DevicePalette({ onAdd }: DevicePaletteProps) {
               <button
                 key={type}
                 onClick={() => handleAdd(type)}
-                className="group w-full flex items-center gap-3 px-2.5 py-2.5 rounded-xl bg-[#111A2C]/50 hover:bg-[#1C2538] transition-all duration-150 cursor-pointer hover:-translate-y-px"
+                className="group w-full flex items-center gap-2 px-2 py-2 rounded-lg bg-[#111A2C]/50 hover:bg-[#1C2538] transition-all duration-150 cursor-pointer hover:-translate-y-px"
               >
                 <span
-                  className="flex h-8 w-8 items-center justify-center rounded-lg shrink-0 transition-transform duration-150 group-hover:scale-105"
+                  className="flex h-7 w-7 items-center justify-center rounded-md shrink-0 transition-transform duration-150 group-hover:scale-105"
                   style={{
                     background: colors.fill,
                     border: `1px solid ${colors.stroke}45`,
                   }}
                 >
-                  <Icon size={15} color={colors.text} />
+                  <Icon size={14} color={colors.text} />
                 </span>
-                <span className="flex-1 text-left text-[11px] font-medium text-[--color-text-secondary] group-hover:text-[--color-text-primary] transition-colors truncate">
+                <span className="flex-1 text-left text-[10px] font-medium text-[--color-text-secondary] group-hover:text-[--color-text-primary] transition-colors truncate">
                   {DEVICE_LABELS[type]}
                 </span>
                 <Plus
-                  size={11}
+                  size={10}
                   className="text-[--color-text-muted]/0 group-hover:text-[--color-accent-blue]/70 transition-all shrink-0"
                 />
               </button>
@@ -85,13 +85,13 @@ export function DevicePalette({ onAdd }: DevicePaletteProps) {
         <button
           onClick={explodeTopology}
           title="Explodir rede: reorganiza os equipamentos com espaçamento"
-          className="mt-5 w-full flex flex-col items-center justify-center gap-2 rounded-xl px-2 py-4 bg-[#111A2C]/50 hover:bg-[#1C2538] text-[--color-accent-cyan] transition-all duration-150 cursor-pointer group"
+          className="mt-4 w-full flex flex-col items-center justify-center gap-1.5 rounded-lg px-2 py-3 bg-[#111A2C]/50 hover:bg-[#1C2538] text-[--color-accent-cyan] transition-all duration-150 cursor-pointer group"
         >
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[--color-accent-cyan]/10 group-hover:scale-105 transition-transform">
-            <Waypoints size={15} />
+          <span className="flex h-8 w-8 items-center justify-center rounded-md bg-[--color-accent-cyan]/10 group-hover:scale-105 transition-transform">
+            <Waypoints size={14} />
           </span>
-          <span className="text-[10px] font-bold uppercase tracking-wider">EX</span>
-          <span className="text-[9px] text-[--color-text-muted] text-center leading-snug">
+          <span className="text-[9px] font-bold uppercase tracking-wider">EX</span>
+          <span className="text-[8px] text-[--color-text-muted] text-center leading-snug">
             Explodir rede
           </span>
         </button>
@@ -99,32 +99,32 @@ export function DevicePalette({ onAdd }: DevicePaletteProps) {
         <button
           onClick={handleSave}
           title="Salvar o quadro atual"
-          className="mt-2.5 w-full flex items-center justify-center gap-2 rounded-xl px-2 py-2.5 bg-[--color-accent-green]/8 hover:bg-[--color-accent-green]/15 text-[--color-accent-green] transition-all duration-150 cursor-pointer"
+          className="mt-2 w-full flex items-center justify-center gap-2 rounded-lg px-2 py-2 bg-[--color-accent-green]/8 hover:bg-[--color-accent-green]/15 text-[--color-accent-green] transition-all duration-150 cursor-pointer"
         >
-          <Save size={12} />
-          <span className="text-[10px] font-bold uppercase tracking-wider">
+          <Save size={11} />
+          <span className="text-[9px] font-bold uppercase tracking-wider">
             {saved ? 'Salvo!' : 'Salvar'}
           </span>
         </button>
 
-        <div className="mt-6">
-          <div className="flex items-center gap-2 text-[10px] font-semibold text-[--color-text-secondary] uppercase tracking-[0.14em] mb-3">
-            <History size={11} />
+        <div className="mt-4">
+          <div className="flex items-center gap-1.5 text-[9px] font-semibold text-[--color-text-secondary] uppercase tracking-[0.14em] mb-2">
+            <History size={10} />
             Último salvo
           </div>
           {lastBoard ? (
             <button
               onClick={() => loadTopology(lastBoard.topology)}
               title="Carregar quadro salvo"
-              className="w-full text-left rounded-xl px-3 py-2.5 bg-[#111A2C]/50 hover:bg-[#1C2538] transition-all duration-150 cursor-pointer group"
+              className="w-full text-left rounded-lg px-2.5 py-2 bg-[#111A2C]/50 hover:bg-[#1C2538] transition-all duration-150 cursor-pointer group"
             >
-              <div className="flex items-center gap-2 min-w-0">
-                <Upload size={11} className="text-[--color-accent-cyan] shrink-0" />
-                <span className="text-[10px] font-medium text-[--color-text-secondary] group-hover:text-[--color-text-primary] truncate">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Upload size={10} className="text-[--color-accent-cyan] shrink-0" />
+                <span className="text-[9px] font-medium text-[--color-text-secondary] group-hover:text-[--color-text-primary] truncate">
                   {lastBoard.name}
                 </span>
               </div>
-              <p className="text-[9px] text-[--color-text-muted] mt-1">
+              <p className="text-[8px] text-[--color-text-muted] mt-0.5">
                 {lastBoard.topology.devices.length} disp. ·{' '}
                 {new Date(lastBoard.savedAt).toLocaleTimeString('pt-BR', {
                   hour: '2-digit',
@@ -133,7 +133,7 @@ export function DevicePalette({ onAdd }: DevicePaletteProps) {
               </p>
             </button>
           ) : (
-            <p className="text-[9px] text-[--color-text-muted] leading-relaxed">
+            <p className="text-[8px] text-[--color-text-muted] leading-relaxed">
               Nenhum quadro salvo ainda. Clique em Salvar.
             </p>
           )}

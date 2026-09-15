@@ -4,7 +4,10 @@ import { Header } from './Header';
 
 export function Layout() {
   const { pathname } = useLocation();
-  const fullBleed = pathname.startsWith('/simulador') || pathname.startsWith('/troubleshooting');
+  const fullBleed =
+    pathname.startsWith('/simulador') ||
+    pathname.startsWith('/troubleshooting') ||
+    pathname.startsWith('/labs/');
 
   return (
     <div className="flex h-full w-full bg-[--color-bg-primary]">
@@ -21,10 +24,8 @@ export function Layout() {
             {fullBleed ? (
               <Outlet />
             ) : (
-              <div className="h-full overflow-y-auto">
-                <div className="max-w-7xl mx-auto animate-fade-in-up">
-                  <Outlet />
-                </div>
+              <div className="h-full overflow-y-auto animate-fade-in-up">
+                <Outlet />
               </div>
             )}
           </div>

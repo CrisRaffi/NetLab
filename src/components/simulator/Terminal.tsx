@@ -282,7 +282,7 @@ export function Terminal() {
       {/* Área de saída */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-3 py-2 font-mono text-[11px] leading-relaxed"
+        className="flex-1 overflow-y-auto px-3 pt-2 pb-3 font-mono text-[11px] leading-relaxed"
         onClick={() => inputRef.current?.focus()}
       >
         {lines.length === 0 && (
@@ -306,8 +306,8 @@ export function Terminal() {
       </div>
 
       {/* Linha de comando */}
-      <div className="flex items-center gap-1 px-3 py-1.5 border-t border-[--color-border-primary] bg-[--color-bg-secondary] shrink-0">
-        <span className="font-mono text-[11px] text-[--color-accent-green]">{prompt}</span>
+      <div className="flex items-center gap-1 px-3 py-2 border-t border-[--color-border-primary] bg-[--color-bg-secondary] shrink-0">
+        <span className="font-mono text-xs text-[--color-accent-green]">{prompt}</span>
 
         <input
           ref={inputRef}
@@ -316,7 +316,7 @@ export function Terminal() {
           onKeyDown={onKeyDown}
           spellCheck={false}
           autoComplete="off"
-          className="flex-1 bg-transparent font-mono text-[11px] text-[--color-text-primary] focus:outline-none caret-[--color-accent-green]"
+          className="flex-1 bg-transparent border-0 p-0 font-mono text-xs text-[--color-text-primary] outline-none focus:outline-none caret-[--color-accent-green]"
           aria-label="Comando do terminal"
         />
       </div>

@@ -53,7 +53,7 @@ const MODULE_GROUPS: { name: string; conceptIds: string[]; color: string }[] = [
     color: 'bg-[--color-accent-yellow]',
   },
   {
-    name: 'ServiÃ§os',
+    name: 'Serviços',
     conceptIds: ['dhcp', 'dns', 'routing-basics'],
     color: 'bg-[--color-accent-red]',
   },
@@ -93,8 +93,8 @@ export function DashboardPage() {
   return (
     <div className="space-y-4 page-container">
       <PageHeader
-        title="OlÃ¡!"
-        subtitle="Seu laboratÃ³rio estÃ¡ pronto. Escolha um desafio e comece a experimentar."
+        title="Olá!"
+        subtitle="Seu laboratório está pronto. Escolha um desafio e comece a experimentar."
         accent="blue"
         icon={<Sparkles size={19} />}
         actions={
@@ -117,11 +117,11 @@ export function DashboardPage() {
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-2 mb-2">
                 <Badge tone="blue">
-                  {nextExercise ? 'PrÃ³ximo desafio' : 'Explorando'}
+                  {nextExercise ? 'Próximo desafio' : 'Explorando'}
                 </Badge>
                 {nextExercise && (
                   <span className="text-[10px] font-mono text-[--color-text-muted]">
-                    dificuldade {nextExercise.difficulty}/5 Â· {nextExercise.estimatedTime} min Â· +{nextExercise.xpReward} XP
+                    dificuldade {nextExercise.difficulty}/5 · {nextExercise.estimatedTime} min · +{nextExercise.xpReward} XP
                   </span>
                 )}
               </div>
@@ -129,14 +129,14 @@ export function DashboardPage() {
                 {nextExercise
                   ? nextExercise.title
                   : lastCompleted
-                  ? 'Todos os laboratÃ³rios concluÃ­dos'
+                  ? 'Todos os laboratórios concluídos'
                   : 'Comece sua jornada'}
               </h3>
               <p className="text-sm text-[--color-text-muted] mb-3 max-w-xl line-clamp-2">
                 {nextExercise
                   ? nextExercise.description
                   : lastCompleted
-                  ? `Ãšltimo concluÃ­do: ${lastCompleted.title} (+${lastCompleted.xpReward} XP)`
+                  ? `Último concluído: ${lastCompleted.title} (+${lastCompleted.xpReward} XP)`
                   : 'Explore o mapa de aprendizado e monte sua primeira rede.'}
               </p>
               <div className="flex flex-wrap gap-2">
@@ -173,7 +173,7 @@ export function DashboardPage() {
         <Card className="!rounded-2xl flex flex-col justify-center">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-sm font-semibold text-[--color-text-primary]">
-              NÃ­vel {progress.level}
+              Nível {progress.level}
             </span>
             <span className="text-[11px] font-mono text-[--color-accent-blue]">
               {progress.xp.toLocaleString('pt-BR')} XP
@@ -200,10 +200,10 @@ export function DashboardPage() {
         </Card>
       </div>
 
-      {/* mÃ³dulos de progresso */}
+      {/* módulos de progresso */}
       <Card
-        title="Progresso por mÃ³dulo"
-        subtitle="Sua maestria em cada Ã¡rea do conteÃºdo"
+        title="Progresso por módulo"
+        subtitle="Sua maestria em cada área do conteúdo"
         icon={<BookOpen size={16} />}
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-x-6 gap-y-3">
@@ -268,11 +268,11 @@ export function DashboardPage() {
                 ))}
               </div>
               <p className="text-xs text-[--color-text-muted] mb-3">
-                Complete laboratÃ³rios para ganhar conquistas.
+                Complete laboratórios para ganhar conquistas.
               </p>
               <Link to="/labs">
                 <Button variant="outline" size="sm">
-                  Ver laboratÃ³rios
+                  Ver laboratórios
                 </Button>
               </Link>
             </div>
@@ -300,7 +300,7 @@ export function DashboardPage() {
       </div>
 
       <Card
-        title="Seus LaboratÃ³rios"
+        title="Seus Laboratórios"
         icon={<Network size={16} />}
         padding="none"
         className="!rounded-2xl"
@@ -312,7 +312,7 @@ export function DashboardPage() {
                 INITIAL_EXERCISES.some((ex) => ex.id === id),
               ).length
             }{' '}
-            de {INITIAL_EXERCISES.length} concluÃ­dos
+            de {INITIAL_EXERCISES.length} concluídos
           </span>
           <Link
             to="/labs"
@@ -344,11 +344,11 @@ export function DashboardPage() {
                     {ex.title}
                   </p>
                   <p className="text-[10px] text-[--color-text-muted]">
-                    {ex.estimatedTime} min Â· {ex.xpReward} XP
+                    {ex.estimatedTime} min · {ex.xpReward} XP
                   </p>
                 </div>
                 {done ? (
-                  <Badge tone="green">ConcluÃ­do</Badge>
+                  <Badge tone="green">Concluído</Badge>
                 ) : (
                   <Badge tone="yellow">Pendente</Badge>
                 )}

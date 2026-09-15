@@ -175,14 +175,14 @@ export function JourneyDiagram({ sendKey = 0, onArrived }: { sendKey?: number; o
         {status === 'idle' && (
           <span className="text-[--color-text-muted]">
             Clique em <strong className="text-[--color-blue-400]">Enviar mensagem</strong> para ver o que acontece com{' '}
-            <code className="font-mono px-1 py-0.5 rounded bg-[--color-bg-tertiary] text-[--color-accent-green]">"OlÃ¡ servidor!"</code> atÃ© chegar ao destino.
+            <code className="font-mono px-1 py-0.5 rounded bg-[--color-bg-tertiary] text-[--color-accent-green]">"Olá servidor!"</code> até chegar ao destino.
           </span>
         )}
         {status === 'arrived' && (
           <div className="flex-1 rounded-lg border border-[--color-accent-green]/30 bg-[--color-accent-green]/8 px-3 py-2">
-            <p className="text-[--color-accent-green] font-semibold mb-1">âœ“ Mensagem recebida no SERVER: "OlÃ¡ servidor!"</p>
+            <p className="text-[--color-accent-green] font-semibold mb-1">✓ Mensagem recebida no SERVER: "Olá servidor!"</p>
             <p className="text-[11px] text-[--color-text-muted]">
-              A informaÃ§Ã£o desceu pelas camadas do PC (virou <b>bits</b>), atravessou a rede pelo switch e pelo roteador, e subiu de volta pelas camadas do servidor atÃ© virar texto de novo.
+              A informação desceu pelas camadas do PC (virou <b>bits</b>), atravessou a rede pelo switch e pelo roteador, e subiu de volta pelas camadas do servidor até virar texto de novo.
             </p>
           </div>
         )}

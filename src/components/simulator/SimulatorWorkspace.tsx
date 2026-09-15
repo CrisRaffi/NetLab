@@ -204,7 +204,7 @@ export function SimulatorWorkspace({
               )}
             >
               <ShieldCheck size={14} />
-              Validar laboratÃ³rio
+              Validar laboratório
               {validationSummary && (
                 <span
                   className={clsx(
@@ -219,47 +219,11 @@ export function SimulatorWorkspace({
               )}
             </button>
           )}
-
-          <div className="flex items-center rounded-xl border border-[--color-border-primary]/25 bg-[#111A2C]/60 p-1 gap-1">
-            {(['ethernet', 'wireless'] as const).map((mode) => {
-              const active = connectMode === mode;
-              return (
-                <button
-                  key={mode}
-                  onClick={() => {
-                    setConnectMode(active ? null : mode);
-                    cancelConnection();
-                  }}
-                  className={clsx(
-                    'flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium cursor-pointer transition-all duration-150',
-                    active
-                      ? mode === 'wireless'
-                        ? 'bg-[--color-accent-green]/15 text-[--color-accent-green] ring-inset-green-strong'
-                        : 'bg-[--color-accent-red]/15 text-[--color-accent-red] ring-inset-red'
-                      : 'text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/[0.04]',
-                  )}
-                >
-                  {mode === 'wireless' ? (
-                    <Wifi size={14} />
-                  ) : (
-                    <MousePointer2 size={14} />
-                  )}
-                  {active
-                    ? mode === 'wireless'
-                      ? 'Cancelar WiFi'
-                      : 'Cancelar conexÃ£o'
-                    : mode === 'wireless'
-                      ? 'WiFi'
-                      : 'Conectar'}
-                </button>
-              );
-            })}
-          </div>
         </div>
       </div>
 
       {/* Instructions */}
-      {showHelp && (
+      {!showHelp && (
         <div className="flex items-center gap-5 px-4 py-2.5 bg-[#1C2538]/70 border-b border-[#273651]/25 text-xs text-[#94A3B8] shrink-0 overflow-x-auto">
           <span className="flex items-center gap-2">
             <MousePointer2 size={12} className="text-[#6366F1]" />
@@ -279,11 +243,11 @@ export function SimulatorWorkspace({
 
           <span className="flex items-center gap-2">
             <Copy size={12} className="text-[#818CF8]" />
-            <strong>Copiar/Colar:</strong> Ctrl+C Â· Ctrl+V Â· Ctrl+D (duplicar)
+            <strong>Copiar/Colar:</strong> Ctrl+C · Ctrl+V · Ctrl+D (duplicar)
           </span>
 
           <span className="text-[#94A3B8] shrink-0">
-            Roda do mouse = zoom Â· arraste o fundo = mover
+            Roda do mouse = zoom · arraste o fundo = mover
           </span>
         </div>
       )}
@@ -293,12 +257,51 @@ export function SimulatorWorkspace({
         <div className="flex min-h-0 flex-1">
           <DevicePalette onAdd={addDevice} />
 
-          <TopologyCanvas
-            connectMode={!!connectMode}
-            onDeviceClick={handleDeviceClick}
-            onBackgroundClick={handleBackgroundClick}
-            onConnectionSelect={() => setPropertyPanelOpen(true)}
-          />
+          <div className="relative flex flex-1 min-w-0 min-h-0">
+            <TopologyCanvas
+              connectMode={!!connectMode}
+              onDeviceClick={handleDeviceClick}
+              onBackgroundClick={handleBackgroundClick}
+              onConnectionSelect={() => setPropertyPanelOpen(true)}
+            />
+
+            {/* Floating connect mode buttons over the canvas */}
+            <div className="absolute top-3 right-3 z-20 flex items-center rounded-xl border border-[--color-border-primary]/25 bg-[#0D1424]/85 backdrop-blur-md p-1 gap-1 shadow-lg">
+              {(['ethernet', 'wireless'] as const).map((mode) => {
+                const active = connectMode === mode;
+                return (
+                  <button
+                    key={mode}
+                    onClick={() => {
+                      setConnectMode(active ? null : mode);
+                      cancelConnection();
+                    }}
+                    className={clsx(
+                      'flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium cursor-pointer transition-all duration-150',
+                      active
+                        ? mode === 'wireless'
+                          ? 'bg-[--color-accent-green]/15 text-[--color-accent-green] ring-inset-green-strong'
+                          : 'bg-[--color-accent-red]/15 text-[--color-accent-red] ring-inset-red'
+                        : 'text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/[0.04]',
+                    )}
+                  >
+                    {mode === 'wireless' ? (
+                      <Wifi size={14} />
+                    ) : (
+                      <MousePointer2 size={14} />
+                    )}
+                    {active
+                      ? mode === 'wireless'
+                        ? 'Cancelar WiFi'
+                        : 'Cancelar conexão'
+                      : mode === 'wireless'
+                        ? 'WiFi'
+                        : 'Conectar'}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
           <PropertyPanel
             open={propertyPanelOpen}
@@ -307,23 +310,23 @@ export function SimulatorWorkspace({
         </div>
 
         {/* Bottom panel */}
-        <div className="flex flex-col min-h-0">
-          <div className="flex items-center justify-between px-5 py-2.5 border-t border-[--color-border-primary]/25 bg-[#0D1424]/90 shrink-0">
-            <div className="flex items-center gap-2.5">
+        <div className="flex flex-col min-h-0 pb-3 max-h-[320px]">
+          <div className="flex items-center justify-between px-4 py-2 border-t border-[--color-border-primary]/25 bg-[#0D1424]/90 shrink-0">
+            <div className="flex items-center gap-1.5">
               {/* Console */}
               <button
                 onClick={handleConsoleTab}
                 className={clsx(
-                  'flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-[11px] font-medium cursor-pointer transition-all duration-150',
+                  'flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] font-medium cursor-pointer transition-all duration-150',
                   bottomExpanded && bottomTab === 'console'
                     ? 'bg-[--color-accent-green]/15 text-[--color-accent-green] ring-inset-green'
                     : 'text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/[0.04]',
                 )}
               >
-                <TerminalSquare size={14} />
+                <TerminalSquare size={13} />
                 Console
                 {terminalDeviceName && (
-                  <span className="text-[10px] text-[--color-text-muted] truncate">
+                  <span className="text-[9px] text-[--color-text-muted] truncate">
                     {terminalDeviceName}
                   </span>
                 )}
@@ -333,16 +336,16 @@ export function SimulatorWorkspace({
               <button
                 onClick={handlePacketsTab}
                 className={clsx(
-                  'flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-[11px] font-medium cursor-pointer transition-all duration-150',
+                  'flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] font-medium cursor-pointer transition-all duration-150',
                   bottomExpanded && bottomTab === 'packets'
                     ? 'bg-[--color-accent-blue]/15 text-[--color-accent-blue] ring-inset-blue'
                     : 'text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/[0.04]',
                 )}
               >
-                <Layers size={14} />
+                <Layers size={13} />
                 Pacotes
                 {packets.length > 0 && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[--color-accent-blue]/20 text-[#818CF8]">
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[--color-accent-blue]/20 text-[#818CF8]">
                     {packets.length}
                   </span>
                 )}
@@ -353,13 +356,13 @@ export function SimulatorWorkspace({
                 <button
                   onClick={handleEvaluationTab}
                   className={clsx(
-                    'flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-[11px] font-medium cursor-pointer transition-all duration-150',
+                    'flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] font-medium cursor-pointer transition-all duration-150',
                     bottomExpanded && bottomTab === 'evaluation'
                       ? 'bg-[--color-accent-yellow]/15 text-[--color-accent-yellow] ring-inset-yellow'
                       : 'text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/[0.04]',
                   )}
                 >
-                  <ShieldCheck size={14} />
+                  <ShieldCheck size={13} />
                   {evaluationTab.label}
                 </button>
               )}
@@ -368,7 +371,7 @@ export function SimulatorWorkspace({
             {/* Bottom panel toggle */}
             <button
               onClick={handleBottomToggle}
-              className="p-2.5 rounded-xl text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/[0.04] cursor-pointer"
+              className="p-2 rounded-lg text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/[0.04] cursor-pointer"
               title={bottomExpanded ? 'Recolher painel' : 'Expandir painel'}
             >
               {bottomExpanded ? (
@@ -381,7 +384,7 @@ export function SimulatorWorkspace({
 
           {/* Bottom content */}
           {bottomExpanded && (
-            <div className="flex flex-1 min-h-0 overflow-y-auto">
+            <div className="flex flex-col flex-1 min-h-0 overflow-y-auto">
               {bottomTab === 'console' ? (
                 terminalOpen ? (
                   <Terminal />
@@ -398,7 +401,7 @@ export function SimulatorWorkspace({
                     </p>
 
                     <p className="text-[10px] text-[#64748B] mt-1">
-                      No console vocÃª pode executar ipconfig, ping, tracert, arp
+                      No console você pode executar ipconfig, ping, tracert, arp
                       e mais.
                     </p>
                   </div>

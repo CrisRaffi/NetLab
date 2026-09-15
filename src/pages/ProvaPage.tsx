@@ -20,7 +20,7 @@ export function ProvaPage() {
         <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[--color-bg-tertiary] border border-[--color-border-primary]/70 mb-2">
           <FileQuestion size={28} className="text-[--color-text-muted]" />
         </span>
-        <p className="text-sm text-[--color-text-secondary] mb-2">Modo Prova</p>
+        <p className="text-sm text-[--color-text-secondary] mb-1">Modo Prova</p>
         <p className="text-xs text-[--color-text-muted] text-center max-w-sm leading-relaxed">
           Avaliações cronometradas sem dicas. Será implementado nas próximas
           fases.

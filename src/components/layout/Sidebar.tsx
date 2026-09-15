@@ -25,15 +25,13 @@ const NAV_SECTIONS = [
   },
   {
     label: 'Aprender',
-    items: [
-      { to: '/viagem', label: 'A Viagem do Pacote', icon: Gamepad2 },
-    ],
+    items: [{ to: '/viagem', label: 'A Viagem do Pacote', icon: Gamepad2 }],
   },
   {
-    label: 'LaboratÃ³rio',
+    label: 'Laboratório',
     items: [
-      { to: '/simulador', label: 'LaboratÃ³rio Livre', icon: Network },
-      { to: '/labs', label: 'LaboratÃ³rios', icon: FlaskConical },
+      { to: '/simulador', label: 'Laboratório Livre', icon: Network },
+      { to: '/labs', label: 'Laboratórios', icon: FlaskConical },
       { to: '/troubleshooting', label: 'Troubleshooting', icon: Bug },
       { to: '/prova', label: 'Modo Prova', icon: FileQuestion },
     ],
@@ -42,90 +40,117 @@ const NAV_SECTIONS = [
 
 const BOTTOM_ITEMS = [
   { to: '/conquistas', label: 'Conquistas', icon: Trophy },
-  { to: '/config', label: 'ConfiguraÃ§Ãµes', icon: Settings },
+  { to: '/config', label: 'Configurações', icon: Settings },
 ];
 
 const navItemClass = ({ isActive }: { isActive: boolean }) =>
   clsx(
-    'flex items-center gap-2.5 px-3 py-2 text-[13px] rounded-lg transition-all duration-200',
+    'flex items-center gap-2.5 px-3 py-1.5 text-[10.5px] rounded-lg transition-all duration-200',
     isActive
       ? 'bg-gradient-to-r from-[--color-accent-blue]/22 to-[--color-accent-blue]/8 text-[--color-cyan-300] font-semibold nav-active-glow'
       : 'text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/[0.04]',
   );
 
 export function Sidebar() {
-  const progress = useProgressStore(s => s.progress);
+  const progress = useProgressStore((s) => s.progress);
   const level = getLevelFromXp(progress.xp);
   const xpInLevel = progress.xp % 100;
-  const labsCompleted = progress.completedExercises.filter(id => !id.startsWith('brk-')).length;
+  const labsCompleted = progress.completedExercises.filter(
+    (id) => !id.startsWith('brk-'),
+  ).length;
   const achievementsUnlocked = progress.achievements.length;
 
   return (
-    <aside className="relative flex flex-col w-16 lg:w-64 h-full bg-[#020A14]/85 backdrop-blur-md border-r border-[--color-border-primary]/20 shrink-0 transition-[width] duration-200 z-20">
-      {/* â”€â”€â”€ Brand â”€â”€â”€ */}
-      <div className="flex items-center justify-center lg:justify-start gap-3 px-2 lg:px-5 h-[72px] shrink-0">
+    <aside className="relative flex flex-col w-16 lg:w-52 h-full bg-[#020A14]/85 backdrop-blur-md border-r border-[--color-border-primary]/20 shrink-0 transition-[width] duration-200 z-20">
+      {/* Brand */}
+      <div className="flex items-center justify-center lg:justify-start gap-3 px-2 lg:px-4 h-14 shrink-0">
         <div className="relative shrink-0">
           <div className="absolute inset-0 rounded-xl bg-[--color-accent-blue]/30 blur-lg" />
-          <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-[--color-accent-blue] via-[#4F46E5] to-[--color-accent-cyan] flex items-center justify-center text-white font-bold text-[15px] glow-logo">
+          <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-[--color-accent-blue] via-[#4F46E5] to-[--color-accent-cyan] flex items-center justify-center text-white font-bold text-[13px] glow-logo">
             NL
           </div>
         </div>
         <div className="hidden lg:block min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className="text-[15px] font-bold text-[--color-text-primary] tracking-tight">
+            <span className="text-[14px] font-bold text-[--color-text-primary] tracking-tight">
               NetLab
             </span>
-            <Zap size={12} className="text-[--color-accent-cyan]" />
+            <Zap size={11} className="text-[--color-accent-cyan]" />
           </div>
-          <span className="block text-[9px] text-[--color-text-muted] uppercase tracking-[0.16em] mt-0.5">
+          <span className="block text-[8.5px] text-[--color-text-muted] uppercase tracking-[0.14em] mt-0.5">
             Simulador de Redes
           </span>
         </div>
       </div>
 
-      {/* â”€â”€â”€ Progress (expanded) â”€â”€â”€ */}
-      <div className="hidden lg:block px-4 pb-6">
-        <div className="rounded-2xl bg-[#0D1424]/80 px-4 py-3.5">
-          <div className="flex items-center justify-between text-[11px] mb-2.5">
-            <span className="text-[--color-text-secondary] font-semibold">
-              NÃ­vel {level}
+      {/* Progress */}
+      <div
+        className="hidden lg:block px-2.5 pb-3"
+        style={{ fontSize: '12px', marginTop: 10 }}
+      >
+        <div className="rounded-xl bg-[#0D1424]/80 px-2.5 py-2.5">
+          <div
+            className="flex items-center justify-between text-[10px] mb-2"
+            style={{ fontSize: '12px' }}
+          >
+            <span
+              className="text-[--color-text-secondary] font-semibold"
+              style={{ fontSize: '12px' }}
+            >
+              Nível {level}
             </span>
-            <span className="text-[--color-text-muted] font-mono text-[10px]">
+            <span
+              className="text-[--color-text-muted] font-mono text-[9px]"
+              style={{ fontSize: '12px' }}
+            >
               {progress.xp} XP
             </span>
           </div>
-          <div className="h-1.5 rounded-full bg-[--color-bg-primary] overflow-hidden">
+          <div
+            className="h-1.5 rounded-full bg-[--color-bg-primary] overflow-hidden"
+            style={{ fontSize: '12px' }}
+          >
             <div
               className="h-full bg-gradient-to-r from-[--color-accent-blue] to-[--color-accent-cyan] rounded-full transition-all duration-500"
-              style={{ width: `${xpInLevel}%` }}
+              style={{ width: `${xpInLevel}%`, fontSize: '12px' }}
             />
           </div>
-          <p className="text-[9px] text-[--color-text-muted] mt-2.5">
-            {100 - xpInLevel} XP para o prÃ³ximo nÃ­vel
+          <p
+            className="text-[8.5px] text-[--color-text-muted] mt-2"
+            style={{ fontSize: '10px' }}
+          >
+            {100 - xpInLevel} XP para o próximo nível
           </p>
         </div>
       </div>
 
-      {/* â”€â”€â”€ Nav sections â”€â”€â”€ */}
-      <nav className="flex-1 overflow-y-auto px-3 lg:px-4 pt-1 pb-6 space-y-5">
-        {NAV_SECTIONS.map(section => (
+      {/* Nav sections */}
+      <nav className="flex-1 overflow-y-auto px-2.5 lg:px-3 pt-1 pb-3 space-y-3">
+        {NAV_SECTIONS.map((section) => (
           <div key={section.label}>
-            <div className="hidden lg:block section-label mb-1.5 pl-1">
+            <div
+              className="hidden lg:block section-label mb-1 pl-1"
+              style={{ fontSize: '12px' }}
+            >
               {section.label}
             </div>
-            <div className="space-y-1.5">
-              {section.items.map(item => (
+            <div className="space-y-1" style={{ fontSize: '14px' }}>
+              {section.items.map((item) => (
                 <NavLink key={item.to} to={item.to} className={navItemClass}>
                   {({ isActive }) => (
                     <>
                       <item.icon
-                        size={16}
+                        size={13}
                         className={clsx(
                           'shrink-0',
-                          isActive ? 'text-[--color-accent-blue]' : 'text-[--color-text-muted]',
+                          isActive
+                            ? 'text-[--color-accent-blue]'
+                            : 'text-[--color-text-muted]',
                         )}
                       />
-                      <span className="hidden lg:block truncate">{item.label}</span>
+                      <span className="hidden lg:block truncate">
+                        {item.label}
+                      </span>
                       {isActive && (
                         <span className="hidden lg:block ml-auto h-1.5 w-1.5 rounded-full bg-[--color-accent-blue] glow-dot" />
                       )}
@@ -138,18 +163,23 @@ export function Sidebar() {
         ))}
       </nav>
 
-      {/* â”€â”€â”€ Bottom: conquistas + configuraÃ§Ãµes â”€â”€â”€ */}
-      <div className="px-3 lg:px-4 pb-5 shrink-0">
-        <div className="space-y-1.5">
-          {BOTTOM_ITEMS.map(item => (
+      {/* Bottom: conquistas + config */}
+      <div
+        className="px-2.5 lg:px-3 pb-3 shrink-0"
+        style={{ fontSize: '14px' }}
+      >
+        <div className="space-y-1">
+          {BOTTOM_ITEMS.map((item) => (
             <NavLink key={item.to} to={item.to} className={navItemClass}>
               {({ isActive }) => (
                 <>
                   <item.icon
-                    size={16}
+                    size={13}
                     className={clsx(
                       'shrink-0',
-                      isActive ? 'text-[--color-accent-blue]' : 'text-[--color-text-muted]',
+                      isActive
+                        ? 'text-[--color-accent-blue]'
+                        : 'text-[--color-text-muted]',
                     )}
                   />
                   <span className="hidden lg:block truncate">{item.label}</span>
@@ -162,21 +192,23 @@ export function Sidebar() {
           ))}
         </div>
 
-        <div className="mt-5 pt-4 border-t border-[--color-border-primary]/20">
-          <div className="flex items-center justify-between text-[11px] text-[--color-text-muted]">
+        <div className="mt-4 pt-3 border-t border-[--color-border-primary]/20">
+          <div className="flex items-center justify-between text-[10px] text-[--color-text-muted]">
             <span className="flex items-center gap-2">
-              <FlaskConical size={13} className="text-[--color-accent-cyan]" />
-              Labs concluÃ­dos
+              <FlaskConical size={12} className="text-[--color-accent-cyan]" />
+              Labs concluídos
             </span>
-            <span className="font-mono text-[10px]">{labsCompleted}</span>
+            <span className="font-mono text-[9px]">{labsCompleted}</span>
           </div>
           {achievementsUnlocked > 0 && (
-            <div className="flex items-center justify-between text-[11px] text-[--color-text-muted] mt-2">
+            <div className="flex items-center justify-between text-[10px] text-[--color-text-muted] mt-1.5">
               <span className="flex items-center gap-2">
-                <Trophy size={13} className="text-[--color-accent-yellow]" />
+                <Trophy size={12} className="text-[--color-accent-yellow]" />
                 Conquistas
               </span>
-              <span className="font-mono text-[10px]">{achievementsUnlocked}</span>
+              <span className="font-mono text-[9px]">
+                {achievementsUnlocked}
+              </span>
             </div>
           )}
         </div>
