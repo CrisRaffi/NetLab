@@ -30,7 +30,7 @@ export function PageHeader({ title, subtitle, icon, accent = 'blue', badge, acti
             className={clsx(
               'flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl',
               ACCENT_CHIP[accent],
-              '[&>svg]:drop-shadow-[0_0_8px_rgba(129,140,248,0.25)]'
+              'icon-glow-purple'
             )}
           >
             {icon}
