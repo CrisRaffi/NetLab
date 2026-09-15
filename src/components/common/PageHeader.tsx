@@ -28,7 +28,7 @@ export function PageHeader({ title, subtitle, icon, accent = 'blue', badge, acti
         {icon && (
           <span
             className={clsx(
-              'flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl',
+              'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
               ACCENT_CHIP[accent],
               'icon-glow-purple'
             )}
@@ -38,11 +38,11 @@ export function PageHeader({ title, subtitle, icon, accent = 'blue', badge, acti
         )}
         <div className="min-w-0">
           <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl font-bold text-[--color-text-primary] tracking-tight truncate">{title}</h1>
+            <h1 className="text-xl font-bold text-[--color-text-primary] tracking-tight truncate">{title}</h1>
             {badge}
           </div>
           {subtitle && (
-            <p className="text-sm text-[--color-text-muted] mt-1">{subtitle}</p>
+            <p className="text-xs text-[--color-text-muted] mt-0.5">{subtitle}</p>
           )}
         </div>
       </div>

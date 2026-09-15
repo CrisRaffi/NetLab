@@ -60,7 +60,7 @@ export function AchievementsPage() {
   const progress = useProgressStore((s) => s.progress);
 
   return (
-    <div className="page-container space-y-6">
+    <div className="page-container space-y-3">
       <PageHeader
         title="Conquistas"
         subtitle="Complete laboratórios e desafios para desbloquear conquistas e ganhar XP."
@@ -73,14 +73,14 @@ export function AchievementsPage() {
           </span>
         }
       />
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {ALL_ACHIEVEMENTS.map((ach) => {
           const unlocked = progress.achievements.some((a) => a.id === ach.id);
           return (
             <Card
               key={ach.id}
               className={clsx(
-                '!p-4 transition-all duration-200',
+                '!p-3.5 transition-all duration-200',
                 unlocked
                   ? 'hover:border-[--color-accent-yellow]/40'
                   : 'opacity-60',

@@ -118,7 +118,7 @@ export function LearningMapPage() {
   const nextLocked = getNextLocked();
 
   return (
-    <div className="space-y-6" style={{ paddingInline: 20, paddingBlock: 20 }}>
+    <div className="space-y-3" style={{ paddingInline: 20, paddingBlock: 16 }}>
       <PageHeader
         title="Mapa de Aprendizado"
         subtitle="Fundamentos liberam conceitos mais avançados. Domine cada nível para avançar."
@@ -126,7 +126,7 @@ export function LearningMapPage() {
         icon={<MapIcon size={19} />}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-4">
         <div className="flex flex-col gap-3">
           {[...grouped.entries()]
             .sort((a, b) => a[0] - b[0])
@@ -141,7 +141,7 @@ export function LearningMapPage() {
                 <div
                   key={level}
                   className={clsx(
-                    'rounded-lg border p-4 transition-colors',
+                    'rounded-lg border p-3.5 transition-colors',
                     levelUnlocked
                       ? 'border-[--color-border-primary] bg-[--color-bg-card]'
                       : 'opacity-60',
@@ -163,7 +163,7 @@ export function LearningMapPage() {
                     )}
                   </div>
 
-                  <div className="flex flex-wrap gap-1.5 mb-3">
+                  <div className="flex flex-wrap gap-1.5 mb-2">
                     {items.map((c) => (
                       <span
                         key={c.id}
@@ -198,7 +198,7 @@ export function LearningMapPage() {
             })}
 
           {weakConcepts.length > 0 && (
-            <div className="rounded-lg border border-[--color-accent-red]/30 bg-[--color-accent-red]/5 p-4 mb-4">
+            <div className="rounded-lg border border-[--color-accent-red]/30 bg-[--color-accent-red]/5 p-3 mb-3">
               <h4 className="text-xs font-medium text-[--color-accent-red] mb-2">
                 Conceitos Fraquezas
               </h4>
@@ -217,7 +217,7 @@ export function LearningMapPage() {
           )}
 
           {dueForReview.length > 0 && (
-            <div className="rounded-lg border border-[--color-accent-yellow]/30 bg-[--color-accent-yellow]/5 p-4 mb-4">
+            <div className="rounded-lg border border-[--color-accent-yellow]/30 bg-[--color-accent-yellow]/5 p-3 mb-3">
               <h4 className="text-xs font-medium text-[--color-accent-yellow] mb-2">
                 Para Revisão Hoje
               </h4>
@@ -236,7 +236,7 @@ export function LearningMapPage() {
           )}
 
           {reinforcementSuggestions.length > 0 && (
-            <div className="rounded-lg border border-[--color-accent-green]/30 bg-[--color-accent-green]/5 p-4 mb-4">
+            <div className="rounded-lg border border-[--color-accent-green]/30 bg-[--color-accent-green]/5 p-3 mb-3">
               <h4 className="text-xs font-medium text-[--color-accent-green] mb-2">
                 Sugestões de Reforço
               </h4>
@@ -270,7 +270,7 @@ export function LearningMapPage() {
           )}
 
           {nextLocked && (
-            <div className="rounded-lg border border-[--color-accent-yellow]/30 bg-[--color-accent-yellow]/5 p-4">
+            <div className="rounded-lg border border-[--color-accent-yellow]/30 bg-[--color-accent-yellow]/5 p-3">
               <p className="text-xs text-[--color-accent-yellow] font-medium mb-1">
                 Domine: {nextLocked.name}
               </p>
@@ -284,7 +284,7 @@ export function LearningMapPage() {
           {nextLocked && (
             <Link
               to="/labs"
-              className="mt-6 inline-flex items-center gap-1.5 text-sm text-[--color-accent-blue] hover:text-[--color-text-primary]"
+              className="mt-4 inline-flex items-center gap-1.5 text-sm text-[--color-accent-blue] hover:text-[--color-text-primary]"
             >
               <Play size={14} />
               Praticar: {nextLocked.name}
@@ -292,12 +292,12 @@ export function LearningMapPage() {
           )}
         </div>
 
-        <div className="rounded-lg border border-[--color-border-primary]/70 bg-[--color-bg-card] p-6 overflow-x-auto">
-          <h3 className="text-sm font-semibold text-[--color-text-primary] mb-6 uppercase tracking-wider">
+        <div className="rounded-lg border border-[--color-border-primary]/70 bg-[--color-bg-card] p-5 overflow-x-auto">
+          <h3 className="text-sm font-semibold text-[--color-text-primary] mb-4 uppercase tracking-wider">
             REDES DE COMPUTADORES
           </h3>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             {DIAGRAM.flatMap((node) => {
               const rows: {
                 label: string;
@@ -337,7 +337,7 @@ export function LearningMapPage() {
               return (
                 <div key={i}>
                   {i > 0 && (
-                    <div className="flex justify-center py-1">
+                    <div className="flex justify-center py-0.5">
                       <ChevronRight
                         size={14}
                         className="text-[--color-text-muted] rotate-90"
@@ -347,7 +347,7 @@ export function LearningMapPage() {
 
                   <div
                     className={clsx(
-                      'flex items-center gap-3 rounded-md border p-3',
+                      'flex items-center gap-3 rounded-md border p-2.5',
                       row.isChild
                         ? 'ml-8 border-[--color-border-primary]/60 bg-[--color-bg-tertiary]/50'
                         : 'border-[--color-border-secondary] bg-[--color-bg-tertiary]',
@@ -402,7 +402,7 @@ export function LearningMapPage() {
           {nextLocked && (
             <Link
               to="/labs"
-              className="mt-6 inline-flex items-center gap-1.5 text-sm text-[--color-accent-blue] hover:text-[--color-text-primary]"
+              className="mt-4 inline-flex items-center gap-1.5 text-sm text-[--color-accent-blue] hover:text-[--color-text-primary]"
             >
               <Play size={14} />
               Praticar: {nextLocked.name}

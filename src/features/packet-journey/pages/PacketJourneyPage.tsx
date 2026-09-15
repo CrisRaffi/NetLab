@@ -63,7 +63,7 @@ export function PacketJourneyPage() {
       : TCP_IP_LAYERS[selected - 1];
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6" style={{ padding: 20 }}>
+    <div className="max-w-7xl mx-auto space-y-3" style={{ padding: 16 }}>
       <PageHeader
         title="A Viagem do Pacote"
         subtitle="Não memorize as camadas. Veja o que acontece com os dados."
@@ -76,7 +76,7 @@ export function PacketJourneyPage() {
         }
       />
 
-      <div className="rounded-lg border border-[--color-accent-cyan]/20 bg-gradient-to-r from-[--color-accent-cyan]/6 to-transparent px-4 py-3 flex items-center gap-3">
+      <div className="rounded-lg border border-[--color-accent-cyan]/20 bg-gradient-to-r from-[--color-accent-cyan]/6 to-transparent px-4 py-2.5 flex items-center gap-3">
         <MessageSquareText
           size={16}
           className="text-[--color-accent-cyan] shrink-0"
@@ -88,18 +88,18 @@ export function PacketJourneyPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-6 items-start">
-        <div className="space-y-6 min-w-0">
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-4 items-start">
+        <div className="space-y-3 min-w-0">
           <Card
             title="Montando o pacote"
             subtitle="Coloque cada cartão na ordem em que ele envelopa os dados"
             icon={<Package size={16} />}
             padding="md"
           >
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3">
               <EncapsulationBuilder onComplete={() => setBuilt(true)} />
-              <div className="border-t border-[--color-border-primary] pt-4">
-                <div className="flex items-center gap-2 text-xs text-[--color-text-secondary] mb-3">
+              <div className="border-t border-[--color-border-primary] pt-3">
+                <div className="flex items-center gap-2 text-xs text-[--color-text-secondary] mb-2">
                   <SendHorizonal
                     size={14}
                     className="text-[--color-accent-blue]"
@@ -149,13 +149,13 @@ export function PacketJourneyPage() {
                 }}
               />
             ) : (
-              <div className="flex flex-col items-center gap-3 py-4 text-center">
+              <div className="flex flex-col items-center gap-3 py-3 text-center">
                 <div className="w-12 h-12 rounded-full bg-[--color-accent-green]/10 border border-[--color-accent-green]/30 flex items-center justify-center">
                   <Trophy size={20} className="text-[--color-accent-green]" />
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-[--color-text-primary]">Exercícios concluídos!</p>
-                  <p className="text-xs text-[--color-text-muted] mt-1">
+                  <p className="text-xs text-[--color-text-muted] mt-0.5">
                     Precisão (na 1a tentativa): <b className="text-[--color-accent-green]">{accuracyOf(exResults)}%</b> · XP ganho: <b className="text-[--color-accent-blue]">{totalXp(exResults)}</b>
                   </p>
                 </div>
@@ -174,7 +174,7 @@ export function PacketJourneyPage() {
             subtitle="Clique numa camada para ver o que ela faz"
             padding="md"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-2">
               {OSI_LAYERS.map((l) => (
                 <button
                   key={l.number}
@@ -201,9 +201,9 @@ export function PacketJourneyPage() {
           </Card>
         </div>
 
-        <div className="space-y-4 min-w-0">
+        <div className="space-y-3 min-w-0">
           <Card padding="none" className="overflow-hidden">
-            <div className="p-4">
+            <div className="p-3.5">
               <LayerColumn
                 mode={mode}
                 onMode={setMode}
@@ -212,7 +212,7 @@ export function PacketJourneyPage() {
               />
             </div>
             {layer && (
-              <div className="border-t border-[--color-border-primary] px-4 py-3 space-y-3 bg-[--color-bg-tertiary]/30">
+              <div className="border-t border-[--color-border-primary] px-3.5 py-2.5 space-y-2.5 bg-[--color-bg-tertiary]/30">
                 <p className="text-[10px] uppercase tracking-wider text-[--color-text-muted]">
                   Como funciona
                 </p>

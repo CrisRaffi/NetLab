@@ -18,7 +18,7 @@ export function ConfigPage() {
   };
 
   return (
-    <div className="page-container space-y-6 max-w-2xl">
+    <div className="page-container space-y-3 max-w-2xl">
       <PageHeader
         title="Configurações"
         subtitle="Preferências e dados da sua conta."
@@ -27,16 +27,16 @@ export function ConfigPage() {
       />
 
       <Card title="Dados de Progresso" icon={<Trash2 size={15} />}>
-        <p className="text-sm text-[--color-text-muted] mb-4">
+        <p className="text-sm text-[--color-text-muted] mb-2">
           Resete todo o seu progresso. Esta ação é irreversível.
         </p>
         {showConfirm ? (
-          <div className="rounded-lg border border-[--color-accent-red]/30 bg-[--color-accent-red]/5 p-4">
-            <div className="flex items-center gap-2 mb-3 text-[--color-accent-red]">
+          <div className="rounded-lg border border-[--color-accent-red]/30 bg-[--color-accent-red]/5 p-3">
+            <div className="flex items-center gap-2 mb-2 text-[--color-accent-red]">
               <AlertTriangle size={15} />
               <span className="text-sm font-medium">Tem certeza?</span>
             </div>
-            <p className="text-xs text-[--color-text-muted] mb-4">
+            <p className="text-xs text-[--color-text-muted] mb-2">
               Todo o progresso, conquistas e XP serão perdidos.
             </p>
             <div className="flex items-center gap-2">

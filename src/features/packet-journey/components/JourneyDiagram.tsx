@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import { Monitor, Network, Router, Server, Send, RotateCcw, Sparkles } from 'lucide-react';
 import { clsx } from 'clsx';
 
@@ -123,7 +123,7 @@ export function JourneyDiagram({ sendKey = 0, onArrived }: { sendKey?: number; o
         {/* Packet dot */}
         {status !== 'idle' && (
           <div
-            className="absolute w-4 h-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[--color-accent-cyan] shadow-[0_0_18px_4px_rgba(129, 140, 248,0.6)]"
+            className="absolute w-4 h-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[--color-accent-cyan] glow-dot-cyan"
             style={{ left: `${dot.x}%`, top: `${dot.y}%` }}
           />
         )}
@@ -142,7 +142,7 @@ export function JourneyDiagram({ sendKey = 0, onArrived }: { sendKey?: number; o
                 className={clsx(
                   'w-14 h-14 rounded-xl border flex items-center justify-center transition-all duration-300',
                   done
-                    ? 'border-[--color-accent-cyan]/60 bg-[--color-accent-cyan]/10 text-[--color-accent-cyan] shadow-[0_0_16px_rgba(129, 140, 248,0.35)]'
+                    ? 'border-[--color-accent-cyan]/60 bg-[--color-accent-cyan]/10 text-[--color-accent-cyan] glow-ring-cyan'
                     : i === 0 || status === 'idle'
                       ? 'border-[--color-border-secondary] bg-[--color-bg-secondary] text-[--color-text-secondary]'
                       : 'border-[--color-border-primary] bg-[--color-bg-secondary] text-[--color-text-muted]'
@@ -175,14 +175,14 @@ export function JourneyDiagram({ sendKey = 0, onArrived }: { sendKey?: number; o
         {status === 'idle' && (
           <span className="text-[--color-text-muted]">
             Clique em <strong className="text-[--color-blue-400]">Enviar mensagem</strong> para ver o que acontece com{' '}
-            <code className="font-mono px-1 py-0.5 rounded bg-[--color-bg-tertiary] text-[--color-accent-green]">"Olá servidor!"</code> até chegar ao destino.
+            <code className="font-mono px-1 py-0.5 rounded bg-[--color-bg-tertiary] text-[--color-accent-green]">"OlÃ¡ servidor!"</code> atÃ© chegar ao destino.
           </span>
         )}
         {status === 'arrived' && (
           <div className="flex-1 rounded-lg border border-[--color-accent-green]/30 bg-[--color-accent-green]/8 px-3 py-2">
-            <p className="text-[--color-accent-green] font-semibold mb-1">✓ Mensagem recebida no SERVER: "Olá servidor!"</p>
+            <p className="text-[--color-accent-green] font-semibold mb-1">âœ“ Mensagem recebida no SERVER: "OlÃ¡ servidor!"</p>
             <p className="text-[11px] text-[--color-text-muted]">
-              A informação desceu pelas camadas do PC (virou <b>bits</b>), atravessou a rede pelo switch e pelo roteador, e subiu de volta pelas camadas do servidor até virar texto de novo.
+              A informaÃ§Ã£o desceu pelas camadas do PC (virou <b>bits</b>), atravessou a rede pelo switch e pelo roteador, e subiu de volta pelas camadas do servidor atÃ© virar texto de novo.
             </p>
           </div>
         )}

@@ -350,7 +350,7 @@ function LabWorkspace({ exercise }: { exercise: Exercise }) {
       <div className="shrink-0 border-b border-[--color-border-primary] bg-[--color-bg-secondary]">
         <button
           onClick={() => setInstructionsOpen((v) => !v)}
-          className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-[--color-bg-hover] cursor-pointer"
+          className="w-full flex items-center justify-between px-4 py-2 hover:bg-[--color-bg-hover] cursor-pointer"
         >
           <div className="flex items-center gap-3 min-w-0">
             <span className="flex items-center gap-2 flex-shrink-0">

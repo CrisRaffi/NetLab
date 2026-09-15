@@ -1,4 +1,4 @@
-import { clsx } from 'clsx';
+﻿import { clsx } from 'clsx';
 
 type BadgeTone = 'default' | 'green' | 'yellow' | 'red' | 'blue' | 'purple' | 'cyan';
 
@@ -10,10 +10,10 @@ interface BadgeProps {
 
 const TONE_CLASSES: Record<BadgeTone, string> = {
   default: 'bg-[--color-bg-tertiary] text-[--color-text-secondary] border-[--color-border-primary]/70',
-  green: 'bg-[--color-accent-green]/10 text-[--color-accent-green] border-[--color-accent-green]/30 [box-shadow:0_0_0_1px_rgba(39,198,106,0.06)]',
+  green: 'bg-[--color-accent-green]/10 text-[--color-accent-green] border-[--color-accent-green]/30 ring-tint-green',
   yellow: 'bg-[--color-accent-yellow]/10 text-[--color-accent-yellow] border-[--color-accent-yellow]/30',
   red: 'bg-[--color-accent-red]/10 text-[--color-accent-red] border-[--color-accent-red]/30',
-  blue: 'bg-[--color-accent-blue]/10 text-[--color-accent-blue] border-[--color-accent-blue]/30 [box-shadow:0_0_0_1px_rgba(0,140,255,0.06)]',
+  blue: 'bg-[--color-accent-blue]/10 text-[--color-accent-blue] border-[--color-accent-blue]/30 ring-tint-blue',
   purple: 'bg-[--color-accent-purple]/10 text-[--color-accent-purple] border-[--color-accent-purple]/30',
   cyan: 'bg-[--color-accent-cyan]/10 text-[--color-accent-cyan] border-[--color-accent-cyan]/30',
 };

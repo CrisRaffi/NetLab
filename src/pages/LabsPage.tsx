@@ -35,7 +35,7 @@ export function LabsPage() {
   const completedIds = progress.completedExercises;
 
   return (
-    <div className="page-container space-y-6">
+    <div className="page-container space-y-3">
       <PageHeader
         title="Laboratórios"
         subtitle="Complete na ordem para liberar desafios mais complexos."
@@ -53,7 +53,7 @@ export function LabsPage() {
         }
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {INITIAL_EXERCISES.map((ex) => {
           const done = completedIds.includes(ex.id);
           const index = INITIAL_EXERCISES.indexOf(ex);
@@ -71,9 +71,9 @@ export function LabsPage() {
                 unlocked && conceptUnlocked
                   ? 'hover:border-[--color-accent-blue]/40 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#6366F1]/5'
                   : 'opacity-60'
-              } !p-5`}
+              } !p-4`}
             >
-              <div className="flex items-start justify-between gap-3 mb-2">
+              <div className="flex items-start justify-between gap-3 mb-1.5">
                 <div className="flex items-center gap-2.5">
                   <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[--color-bg-tertiary] font-mono text-[11px] font-bold text-[--color-text-secondary]">
                     {String(index + 1).padStart(2, '0')}
@@ -93,11 +93,11 @@ export function LabsPage() {
               <h3 className="text-sm font-semibold text-[--color-text-primary] mb-1">
                 {ex.title}
               </h3>
-              <p className="text-xs text-[--color-text-muted] line-clamp-2 mb-3">
+              <p className="text-xs text-[--color-text-muted] line-clamp-2 mb-2">
                 {ex.description}
               </p>
 
-              <div className="flex items-center gap-3 text-[11px] text-[--color-text-muted] mb-4">
+              <div className="flex items-center gap-3 text-[11px] text-[--color-text-muted] mb-2.5">
                 <Badge tone="default">{CATEGORY_LABEL[ex.category]}</Badge>
                 <span className="flex items-center gap-1">
                   <Clock size={11} /> {ex.estimatedTime} min

@@ -42,7 +42,7 @@ export function LayerColumn({ mode, onMode, selected, onSelect }: LayerColumnPro
                 className={clsx(
                   'w-full flex items-center gap-3 px-3 py-2.5 text-left border-b border-[--color-border-primary]/60 last:border-b-0 cursor-pointer transition-colors',
                   selected === layer.number
-                    ? 'bg-gradient-to-r from-[--color-accent-blue]/12 to-transparent shadow-[inset_2px_0_0_var(--color-accent-blue)]'
+                    ? 'bg-gradient-to-r from-[--color-accent-blue]/12 to-transparent accent-edge-blue'
                     : 'hover:bg-[--color-bg-tertiary]'
                 )}
               >

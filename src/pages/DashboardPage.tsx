@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+﻿import { Link } from 'react-router-dom';
 import {
   ArrowRight,
   Trophy,
@@ -53,7 +53,7 @@ const MODULE_GROUPS: { name: string; conceptIds: string[]; color: string }[] = [
     color: 'bg-[--color-accent-yellow]',
   },
   {
-    name: 'Serviços',
+    name: 'ServiÃ§os',
     conceptIds: ['dhcp', 'dns', 'routing-basics'],
     color: 'bg-[--color-accent-red]',
   },
@@ -91,10 +91,10 @@ export function DashboardPage() {
   const nextId = nextExercise?.id ?? lastCompletedId;
 
   return (
-    <div className="space-y-6 page-container">
+    <div className="space-y-4 page-container">
       <PageHeader
-        title="Olá!"
-        subtitle="Seu laboratório está pronto. Escolha um desafio e comece a experimentar."
+        title="OlÃ¡!"
+        subtitle="Seu laboratÃ³rio estÃ¡ pronto. Escolha um desafio e comece a experimentar."
         accent="blue"
         icon={<Sparkles size={19} />}
         actions={
@@ -109,19 +109,19 @@ export function DashboardPage() {
       />
 
       {/* Hero: continuar + progresso geral */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2 relative overflow-hidden rounded-2xl border border-[--color-border-primary]/40 bg-gradient-to-br from-[#0A2340] via-[#111A2C] to-[#0D1424] shadow-[0_1px_2px_rgba(0,0,0,0.3),0_14px_38px_rgba(0,0,0,0.22)]">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="md:col-span-2 relative overflow-hidden rounded-2xl border border-[--color-border-primary]/40 bg-gradient-to-br from-[#0A2340] via-[#111A2C] to-[#0D1424] card-shadow-soft">
           <div aria-hidden className="absolute inset-0 bg-grid-pattern opacity-30" />
           <div aria-hidden className="absolute -right-16 -top-24 h-64 w-64 rounded-full bg-[--color-accent-blue]/12 blur-3xl" />
-          <div className="relative p-7 lg:p-8 flex flex-col sm:flex-row sm:items-center gap-6">
+          <div className="relative p-5 lg:p-6 flex flex-col sm:flex-row sm:items-center gap-5">
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-2 mb-2">
                 <Badge tone="blue">
-                  {nextExercise ? 'Próximo desafio' : 'Explorando'}
+                  {nextExercise ? 'PrÃ³ximo desafio' : 'Explorando'}
                 </Badge>
                 {nextExercise && (
                   <span className="text-[10px] font-mono text-[--color-text-muted]">
-                    dificuldade {nextExercise.difficulty}/5 · {nextExercise.estimatedTime} min · +{nextExercise.xpReward} XP
+                    dificuldade {nextExercise.difficulty}/5 Â· {nextExercise.estimatedTime} min Â· +{nextExercise.xpReward} XP
                   </span>
                 )}
               </div>
@@ -129,14 +129,14 @@ export function DashboardPage() {
                 {nextExercise
                   ? nextExercise.title
                   : lastCompleted
-                  ? 'Todos os laboratórios concluídos'
+                  ? 'Todos os laboratÃ³rios concluÃ­dos'
                   : 'Comece sua jornada'}
               </h3>
-              <p className="text-sm text-[--color-text-muted] mb-4 max-w-xl line-clamp-2">
+              <p className="text-sm text-[--color-text-muted] mb-3 max-w-xl line-clamp-2">
                 {nextExercise
                   ? nextExercise.description
                   : lastCompleted
-                  ? `Último concluído: ${lastCompleted.title} (+${lastCompleted.xpReward} XP)`
+                  ? `Ãšltimo concluÃ­do: ${lastCompleted.title} (+${lastCompleted.xpReward} XP)`
                   : 'Explore o mapa de aprendizado e monte sua primeira rede.'}
               </p>
               <div className="flex flex-wrap gap-2">
@@ -156,13 +156,13 @@ export function DashboardPage() {
             </div>
             <div className="flex items-center gap-5 shrink-0">
               <div
-                className="relative h-28 w-28 rounded-full p-2"
+                className="relative h-24 w-24 rounded-full p-2"
                 style={{
                   background: `conic-gradient(var(--color-accent-blue) ${overall * 3.6}deg, rgba(255,255,255,0.06) 0deg)`,
                 }}
               >
                 <div className="h-full w-full rounded-full bg-[#0D1424] flex items-center justify-center flex-col shadow-inner">
-                  <span className="text-2xl font-bold font-mono text-[--color-text-primary]">{overall}%</span>
+                  <span className="text-xl font-bold font-mono text-[--color-text-primary]">{overall}%</span>
                   <span className="text-[9px] uppercase tracking-widest text-[--color-text-muted]">geral</span>
                 </div>
               </div>
@@ -173,7 +173,7 @@ export function DashboardPage() {
         <Card className="!rounded-2xl flex flex-col justify-center">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-sm font-semibold text-[--color-text-primary]">
-              Nível {progress.level}
+              NÃ­vel {progress.level}
             </span>
             <span className="text-[11px] font-mono text-[--color-accent-blue]">
               {progress.xp.toLocaleString('pt-BR')} XP
@@ -183,7 +183,7 @@ export function DashboardPage() {
             value={(progress.xp % 1000) / 10}
             colorClass="bg-gradient-to-r from-[#0071D6] to-[--color-accent-cyan]"
           />
-          <div className="grid grid-cols-3 gap-2 mt-5 text-center">
+          <div className="grid grid-cols-3 gap-2 mt-4 text-center">
             <div className="rounded-xl bg-[--color-bg-tertiary]/60 border border-white/5 p-3">
               <div className="text-lg font-bold text-[--color-accent-green]">{masteredCount}</div>
               <div className="text-[10px] text-[--color-text-muted] uppercase tracking-wider mt-0.5">Dominados</div>
@@ -200,13 +200,13 @@ export function DashboardPage() {
         </Card>
       </div>
 
-      {/* módulos de progresso */}
+      {/* mÃ³dulos de progresso */}
       <Card
-        title="Progresso por módulo"
-        subtitle="Sua maestria em cada área do conteúdo"
+        title="Progresso por mÃ³dulo"
+        subtitle="Sua maestria em cada Ã¡rea do conteÃºdo"
         icon={<BookOpen size={16} />}
       >
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-x-8 gap-y-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-x-6 gap-y-3">
           {MODULE_GROUPS.map((group) => {
             const groupProgress =
               group.conceptIds.reduce((sum, id) => sum + getMastery(id), 0) /
@@ -224,7 +224,7 @@ export function DashboardPage() {
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card
           title="Precisa Revisar"
           icon={<Target size={16} />}
@@ -233,11 +233,11 @@ export function DashboardPage() {
         >
           <div className="divide-y divide-[--color-border-primary]/60">
             {weakConcepts.map((c) => (
-              <div key={c.id} className="flex items-center gap-3 p-3.5">
+              <div key={c.id} className="flex items-center gap-3 p-3">
                 <span
                   className={`text-sm ${c.mastery >= 80 ? 'opacity-40' : ''}`}
                 >
-                  {c.mastery === 0 ? '🔴' : c.mastery < 40 ? '🟡' : '🟢'}
+                  {c.mastery === 0 ? 'ðŸ”´' : c.mastery < 40 ? 'ðŸŸ¡' : 'ðŸŸ¢'}
                 </span>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium text-[--color-text-primary] truncate">
@@ -268,11 +268,11 @@ export function DashboardPage() {
                 ))}
               </div>
               <p className="text-xs text-[--color-text-muted] mb-3">
-                Complete laboratórios para ganhar conquistas.
+                Complete laboratÃ³rios para ganhar conquistas.
               </p>
               <Link to="/labs">
                 <Button variant="outline" size="sm">
-                  Ver laboratórios
+                  Ver laboratÃ³rios
                 </Button>
               </Link>
             </div>
@@ -300,19 +300,19 @@ export function DashboardPage() {
       </div>
 
       <Card
-        title="Seus Laboratórios"
+        title="Seus LaboratÃ³rios"
         icon={<Network size={16} />}
         padding="none"
         className="!rounded-2xl"
       >
-        <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center justify-between px-4 py-2.5">
           <span className="text-xs text-[--color-text-muted]">
             {
               completedIds.filter((id) =>
                 INITIAL_EXERCISES.some((ex) => ex.id === id),
               ).length
             }{' '}
-            de {INITIAL_EXERCISES.length} concluídos
+            de {INITIAL_EXERCISES.length} concluÃ­dos
           </span>
           <Link
             to="/labs"
@@ -328,7 +328,7 @@ export function DashboardPage() {
               <Link
                 key={ex.id}
                 to={`/labs/${ex.id}`}
-                className="flex items-center gap-3 px-4 py-3 hover:bg-[--color-bg-hover]/70 transition-colors rounded-lg"
+                className="flex items-center gap-3 px-4 py-2.5 hover:bg-[--color-bg-hover]/70 transition-colors rounded-lg"
               >
                 <span
                   className={
@@ -344,11 +344,11 @@ export function DashboardPage() {
                     {ex.title}
                   </p>
                   <p className="text-[10px] text-[--color-text-muted]">
-                    {ex.estimatedTime} min · {ex.xpReward} XP
+                    {ex.estimatedTime} min Â· {ex.xpReward} XP
                   </p>
                 </div>
                 {done ? (
-                  <Badge tone="green">Concluído</Badge>
+                  <Badge tone="green">ConcluÃ­do</Badge>
                 ) : (
                   <Badge tone="yellow">Pendente</Badge>
                 )}

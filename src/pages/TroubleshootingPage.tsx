@@ -112,21 +112,21 @@ function Intro({ onStart }: { onStart: () => void }) {
   ).length;
 
   return (
-    <div className="page-container space-y-6">
-      <div className="flex flex-col items-start rounded-lg border border-[--color-border-primary] bg-[--color-bg-card] p-6">
+    <div className="page-container space-y-3">
+      <div className="flex flex-col items-start rounded-lg border border-[--color-border-primary] bg-[--color-bg-card] p-5">
         <div className="flex items-center gap-2 mb-1">
           <Bug size={20} className="text-[--color-accent-red]" />
           <h1 className="text-lg font-bold text-[--color-text-primary]">
             Quebrei a Rede!
           </h1>
         </div>
-        <p className="text-sm text-[--color-text-muted] max-w-2xl mb-4">
+        <p className="text-sm text-[--color-text-muted] max-w-2xl mb-3">
           Uma rede foi sabotada: algum IP, máscara, gateway ou rota está errado
           (ou uma interface caiu). Use o console, o diagnóstico e o painel de
           propriedades para descobrir a falha e consertar a rede. A cada desafio
           você começa sempre da mesma rede "quebrada".
         </p>
-        <div className="flex flex-wrap items-center gap-2 mb-5">
+        <div className="flex flex-wrap items-center gap-2 mb-3">
           <Badge tone="red">{breaksDone} desafios resolvidos</Badge>
           <Badge tone="blue">
             {BREAK_SCENARIOS.reduce((n, s) => n + s.variants.length, 0)}{' '}
@@ -138,11 +138,11 @@ function Intro({ onStart }: { onStart: () => void }) {
         </Button>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid md:grid-cols-2 gap-3">
         {BREAK_SCENARIOS.map((sc) => (
           <div
             key={sc.id}
-            className="rounded-lg border border-[--color-border-primary] bg-[--color-bg-card] p-4 flex flex-col gap-2"
+            className="rounded-lg border border-[--color-border-primary] bg-[--color-bg-card] p-3 flex flex-col gap-1.5"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">

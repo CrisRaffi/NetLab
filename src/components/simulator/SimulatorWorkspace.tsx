@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import {
   Cable,
   Trash2,
@@ -199,12 +199,12 @@ export function SimulatorWorkspace({
               className={clsx(
                 'flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-medium cursor-pointer transition-all duration-150',
                 allPassed
-                  ? 'bg-[--color-accent-green]/12 text-[--color-accent-green] shadow-[inset_0_0_0_1px_rgba(39,198,106,0.3)]'
-                  : 'bg-[--color-accent-blue]/12 text-[#818CF8] shadow-[inset_0_0_0_1px_rgba(129, 140, 248,0.3)] hover:bg-[--color-accent-blue]/20',
+                  ? 'bg-[--color-accent-green]/12 text-[--color-accent-green] ring-inset-green'
+                  : 'bg-[--color-accent-blue]/12 text-[#818CF8] ring-inset-blue hover:bg-[--color-accent-blue]/20',
               )}
             >
               <ShieldCheck size={14} />
-              Validar laboratório
+              Validar laboratÃ³rio
               {validationSummary && (
                 <span
                   className={clsx(
@@ -234,8 +234,8 @@ export function SimulatorWorkspace({
                     'flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium cursor-pointer transition-all duration-150',
                     active
                       ? mode === 'wireless'
-                        ? 'bg-[--color-accent-green]/15 text-[--color-accent-green] shadow-[inset_0_0_0_1px_rgba(39,198,106,0.35)]'
-                        : 'bg-[--color-accent-red]/15 text-[--color-accent-red] shadow-[inset_0_0_0_1px_rgba(240,72,92,0.35)]'
+                        ? 'bg-[--color-accent-green]/15 text-[--color-accent-green] ring-inset-green-strong'
+                        : 'bg-[--color-accent-red]/15 text-[--color-accent-red] ring-inset-red'
                       : 'text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/[0.04]',
                   )}
                 >
@@ -247,7 +247,7 @@ export function SimulatorWorkspace({
                   {active
                     ? mode === 'wireless'
                       ? 'Cancelar WiFi'
-                      : 'Cancelar conexão'
+                      : 'Cancelar conexÃ£o'
                     : mode === 'wireless'
                       ? 'WiFi'
                       : 'Conectar'}
@@ -279,11 +279,11 @@ export function SimulatorWorkspace({
 
           <span className="flex items-center gap-2">
             <Copy size={12} className="text-[#818CF8]" />
-            <strong>Copiar/Colar:</strong> Ctrl+C · Ctrl+V · Ctrl+D (duplicar)
+            <strong>Copiar/Colar:</strong> Ctrl+C Â· Ctrl+V Â· Ctrl+D (duplicar)
           </span>
 
           <span className="text-[#94A3B8] shrink-0">
-            Roda do mouse = zoom · arraste o fundo = mover
+            Roda do mouse = zoom Â· arraste o fundo = mover
           </span>
         </div>
       )}
@@ -316,7 +316,7 @@ export function SimulatorWorkspace({
                 className={clsx(
                   'flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-[11px] font-medium cursor-pointer transition-all duration-150',
                   bottomExpanded && bottomTab === 'console'
-                    ? 'bg-[--color-accent-green]/15 text-[--color-accent-green] shadow-[inset_0_0_0_1px_rgba(39,198,106,0.3)]'
+                    ? 'bg-[--color-accent-green]/15 text-[--color-accent-green] ring-inset-green'
                     : 'text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/[0.04]',
                 )}
               >
@@ -335,7 +335,7 @@ export function SimulatorWorkspace({
                 className={clsx(
                   'flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-[11px] font-medium cursor-pointer transition-all duration-150',
                   bottomExpanded && bottomTab === 'packets'
-                    ? 'bg-[--color-accent-blue]/15 text-[--color-accent-blue] shadow-[inset_0_0_0_1px_rgba(129, 140, 248,0.3)]'
+                    ? 'bg-[--color-accent-blue]/15 text-[--color-accent-blue] ring-inset-blue'
                     : 'text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/[0.04]',
                 )}
               >
@@ -355,7 +355,7 @@ export function SimulatorWorkspace({
                   className={clsx(
                     'flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-[11px] font-medium cursor-pointer transition-all duration-150',
                     bottomExpanded && bottomTab === 'evaluation'
-                      ? 'bg-[--color-accent-yellow]/15 text-[--color-accent-yellow] shadow-[inset_0_0_0_1px_rgba(245,179,1,0.3)]'
+                      ? 'bg-[--color-accent-yellow]/15 text-[--color-accent-yellow] ring-inset-yellow'
                       : 'text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/[0.04]',
                   )}
                 >
@@ -398,7 +398,7 @@ export function SimulatorWorkspace({
                     </p>
 
                     <p className="text-[10px] text-[#64748B] mt-1">
-                      No console você pode executar ipconfig, ping, tracert, arp
+                      No console vocÃª pode executar ipconfig, ping, tracert, arp
                       e mais.
                     </p>
                   </div>
