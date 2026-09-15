@@ -27,13 +27,13 @@ export const DEVICE_ICONS: Record<DeviceType, React.ComponentType<{ size?: numbe
 
 /** Node card colors: accent stroke, translucent fill, icon/text tone. */
 export const DEVICE_COLORS: Record<DeviceType, { stroke: string; fill: string; text: string }> = {
-  pc: { stroke: '#008CFF', fill: 'rgba(0,140,255,0.14)', text: '#66BDFF' },
-  server: { stroke: '#27C66A', fill: 'rgba(39,198,106,0.14)', text: '#5FE08F' },
-  switch: { stroke: '#F5B301', fill: 'rgba(245,179,1,0.13)', text: '#FFD75E' },
+  pc: { stroke: '#6366F1', fill: 'rgba(0,140,255,0.14)', text: '#66BDFF' },
+  server: { stroke: '#10B981', fill: 'rgba(39,198,106,0.14)', text: '#5FE08F' },
+  switch: { stroke: '#F59E0B', fill: 'rgba(245,179,1,0.13)', text: '#FFD75E' },
   router: { stroke: '#8B7CF6', fill: 'rgba(139,124,246,0.14)', text: '#B3A8FF' },
-  access_point: { stroke: '#00A8FF', fill: 'rgba(0,168,255,0.13)', text: '#5CC9FF' },
-  firewall: { stroke: '#F0485C', fill: 'rgba(240,72,92,0.13)', text: '#FF8493' },
-  printer: { stroke: '#7891AA', fill: 'rgba(120,145,170,0.14)', text: '#A9BFD6' },
+  access_point: { stroke: '#818CF8', fill: 'rgba(129, 140, 248,0.13)', text: '#5CC9FF' },
+  firewall: { stroke: '#F43F5E', fill: 'rgba(240,72,92,0.13)', text: '#FF8493' },
+  printer: { stroke: '#94A3B8', fill: 'rgba(120,145,170,0.14)', text: '#A9BFD6' },
   ip_camera: { stroke: '#F5901E', fill: 'rgba(245,144,30,0.13)', text: '#FFB95E' },
   ip_phone: { stroke: '#00C9FF', fill: 'rgba(0,201,255,0.13)', text: '#5ED9FF' },
   cloud: { stroke: '#4E9EF5', fill: 'rgba(78,158,245,0.13)', text: '#8CC2FF' },

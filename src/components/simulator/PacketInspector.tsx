@@ -3,12 +3,12 @@ import { useSimulatorStore } from '../../stores/useSimulatorStore';
 import { clsx } from 'clsx';
 
 const TYPE_STYLES: Record<string, string> = {
-  icmp: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10',
-  arp: 'text-yellow-400 border-yellow-500/30 bg-yellow-500/10',
-  tcp: 'text-blue-400 border-blue-500/30 bg-blue-500/10',
-  udp: 'text-cyan-400 border-cyan-500/30 bg-cyan-500/10',
-  dns: 'text-purple-400 border-purple-500/30 bg-purple-500/10',
-  dhcp: 'text-orange-400 border-orange-500/30 bg-orange-500/10',
+  icmp: 'text-[--color-accent-green] border-[--color-accent-green]/30 bg-[--color-accent-green]/10',
+  arp: 'text-[--color-accent-yellow] border-[--color-accent-yellow]/30 bg-[--color-accent-yellow]/10',
+  tcp: 'text-[--color-accent-blue] border-[--color-accent-blue]/30 bg-[--color-accent-blue]/10',
+  udp: 'text-[--color-accent-cyan] border-[--color-accent-cyan]/30 bg-[--color-accent-cyan]/10',
+  dns: 'text-[--color-accent-purple] border-[--color-accent-purple]/30 bg-[--color-accent-purple]/10',
+  dhcp: 'text-[--color-accent-red] border-[--color-accent-red]/30 bg-[--color-accent-red]/10',
 };
 
 export function PacketInspector() {
@@ -22,10 +22,10 @@ export function PacketInspector() {
   if (packets.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center px-4">
-        <Layers size={22} className="text-slate-700 mb-2" />
-        <p className="text-xs text-slate-500">Nenhum pacote capturado ainda.</p>
-        <p className="text-[11px] text-slate-600 mt-1">
-          Abra o console de um equipamento e execute <span className="font-mono text-slate-400">ping</span> para ver o tráfego.
+        <Layers size={22} className="text-[--color-text-muted]/60 mb-2" />
+        <p className="text-xs text-[--color-text-muted]">Nenhum pacote capturado ainda.</p>
+        <p className="text-[11px] text-[--color-text-muted]/70 mt-1">
+          Abra o console de um equipamento e execute <span className="font-mono text-[--color-text-secondary]">ping</span> para ver o tráfego.
         </p>
       </div>
     );
@@ -35,12 +35,12 @@ export function PacketInspector() {
     <div className="flex h-full min-h-0">
       <div className="w-64 shrink-0 border-r border-[--color-border-primary] flex flex-col">
         <div className="flex items-center justify-between px-3 py-2 border-b border-[--color-border-primary]">
-          <span className="text-[10px] uppercase tracking-wide text-slate-500">
+          <span className="text-[10px] uppercase tracking-wide text-[--color-text-muted]">
             Pacotes ({packets.length})
           </span>
           <button
             onClick={clearPackets}
-            className="p-1 rounded text-slate-500 hover:text-red-400 hover:bg-red-500/10 cursor-pointer"
+            className="p-1 rounded text-[--color-text-muted] hover:text-[--color-accent-red] hover:bg-[--color-accent-red]/10 cursor-pointer"
             title="Limpar captura"
           >
             <Trash2 size={12} />
@@ -60,15 +60,15 @@ export function PacketInspector() {
                 <span
                   className={clsx(
                     'text-[9px] font-bold px-1.5 py-0.5 rounded border',
-                    TYPE_STYLES[pkt.type] ?? 'text-slate-400 border-slate-600 bg-slate-800'
+                    TYPE_STYLES[pkt.type] ?? 'text-[--color-text-muted] border-[--color-border-secondary] bg-[--color-bg-tertiary]'
                   )}
                 >
                   {pkt.type.toUpperCase()}
                 </span>
               </div>
-              <div className="flex items-center gap-1 text-[10px] font-mono text-slate-400 mt-1">
+              <div className="flex items-center gap-1 text-[10px] font-mono text-[--color-text-muted] mt-1">
                 <span className="truncate">{pkt.source.ip}</span>
-                <ArrowRight size={9} className="shrink-0 text-slate-600" />
+                <ArrowRight size={9} className="shrink-0 text-[--color-text-muted]/60" />
                 <span className="truncate">{pkt.destination.ip}</span>
               </div>
             </button>
@@ -82,17 +82,17 @@ export function PacketInspector() {
             <span
               className={clsx(
                 'text-[10px] font-bold px-2 py-0.5 rounded border',
-                TYPE_STYLES[selected.type] ?? 'text-slate-400 border-slate-600 bg-slate-800'
+                TYPE_STYLES[selected.type] ?? 'text-[--color-text-muted] border-[--color-border-secondary] bg-[--color-bg-tertiary]'
               )}
             >
               {selected.type.toUpperCase()}
             </span>
-            <span className="text-xs text-slate-300">
+            <span className="text-xs text-[--color-text-secondary]">
               {selected.source.ip} → {selected.destination.ip}
             </span>
           </div>
 
-          <p className="text-[10px] uppercase tracking-wide text-slate-500 mb-2">
+          <p className="text-[10px] uppercase tracking-wide text-[--color-text-muted] mb-2">
             Encapsulamento (modelo de camadas)
           </p>
           <div className="space-y-2">
@@ -103,14 +103,14 @@ export function PacketInspector() {
                 style={{ marginLeft: idx * 10 }}
               >
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs font-semibold text-slate-200">{layer.name}</span>
-                  <span className="text-[9px] text-slate-500">{layer.protocol}</span>
+                  <span className="text-xs font-semibold text-[--color-text-primary]">{layer.name}</span>
+                  <span className="text-[9px] text-[--color-text-muted]">{layer.protocol}</span>
                 </div>
                 <dl className="space-y-0.5">
                   {Object.entries(layer.fields).map(([key, value]) => (
                     <div key={key} className="flex justify-between gap-3 text-[10px]">
-                      <dt className="text-slate-500">{key}</dt>
-                      <dd className="font-mono text-slate-300 text-right truncate">{value}</dd>
+                      <dt className="text-[--color-text-muted]">{key}</dt>
+                      <dd className="font-mono text-[--color-text-secondary] text-right truncate">{value}</dd>
                     </div>
                   ))}
                 </dl>

@@ -44,7 +44,7 @@ const INTERFACE_COUNT: Record<DeviceType, number> = {
   pc: 1,
   server: 1,
   switch: 8,
-  router: 2,
+  router: 4,
   access_point: 1,
   firewall: 2,
   printer: 1,
@@ -55,7 +55,7 @@ const INTERFACE_COUNT: Record<DeviceType, number> = {
 
 function createInterfaces(type: DeviceType, deviceIndex: number): NetworkInterface[] {
   const count = INTERFACE_COUNT[type];
-  return Array.from({ length: count }, (_, i) => ({
+  const base: NetworkInterface[] = Array.from({ length: count }, (_, i) => ({
     id: `eth${i}`,
     name: type === 'switch' ? `FastEthernet0/${i + 1}` : `eth${i}`,
     type: 'ethernet' as const,
@@ -66,7 +66,24 @@ function createInterfaces(type: DeviceType, deviceIndex: number): NetworkInterfa
     subnetMask: undefined as string | undefined,
     gateway: undefined as string | undefined,
     dns: undefined as string | undefined,
-  })).map((iface, i) => ({
+  }));
+
+  if (type === 'router' || type === 'access_point') {
+    base.push({
+      id: 'wlan0',
+      name: 'WiFi',
+      type: 'wireless' as const,
+      mac: generateMac(),
+      status: 'up' as const,
+      speed: 150,
+      ip: undefined as string | undefined,
+      subnetMask: undefined as string | undefined,
+      gateway: undefined as string | undefined,
+      dns: undefined as string | undefined,
+    });
+  }
+
+  return base.map((iface, i) => ({
     ...iface,
     mac: `AA:BB:CC:${deviceIndex.toString(16).padStart(2, '0').toUpperCase()}:${(i + 1).toString(16).padStart(2, '0').toUpperCase()}:00`,
   }));
@@ -125,6 +142,8 @@ interface SimulatorState {
   selectedDeviceId: string | null;
   selectedConnectionId: string | null;
   connectingFromId: string | null;
+  connectType: 'ethernet' | 'wireless' | null;
+  copiedDeviceId: string | null;
   packetLog: { id: string; from: string; to: string; type: string; timestamp: number }[];
   arpTables: Record<string, ArpEntry[]>;
   packets: SimulatedPacket[];
@@ -137,11 +156,15 @@ interface SimulatorState {
   removeDevice: (deviceId: string) => void;
   moveDevice: (deviceId: string, x: number, y: number) => void;
   renameDevice: (deviceId: string, name: string) => void;
+  explodeTopology: () => void;
+  copyDevice: (deviceId: string) => void;
+  pasteDevice: (position?: { x: number; y: number }) => void;
+  clearCopiedDevice: () => void;
 
   selectDevice: (deviceId: string | null) => void;
   selectConnection: (connectionId: string | null) => void;
 
-  startConnection: (deviceId: string) => void;
+  startConnection: (deviceId: string, type?: 'ethernet' | 'wireless') => void;
   completeConnection: (deviceId: string) => void;
   cancelConnection: () => void;
   addConnection: (deviceId1: string, deviceId2: string) => void;
@@ -179,8 +202,8 @@ function makeConnection(topology: Topology, deviceId1: string, deviceId2: string
   const dev2 = topology.devices.find(d => d.id === deviceId2);
   if (!dev1 || !dev2) return null;
 
-  const iface1 = dev1.interfaces.find(i => !usedInterfaces(deviceId1).includes(i.id));
-  const iface2 = dev2.interfaces.find(i => !usedInterfaces(deviceId2).includes(i.id));
+  const iface1 = dev1.interfaces.find(i => i.type !== 'wireless' && !usedInterfaces(deviceId1).includes(i.id));
+  const iface2 = dev2.interfaces.find(i => i.type !== 'wireless' && !usedInterfaces(deviceId2).includes(i.id));
   if (!iface1 || !iface2) return null;
 
   return {
@@ -196,6 +219,54 @@ function makeConnection(topology: Topology, deviceId1: string, deviceId2: string
   };
 }
 
+function makeWifiConnection(topology: Topology, deviceId1: string, deviceId2: string): Connection | null {
+  if (deviceId1 === deviceId2) return null;
+
+  const alreadyConnected = topology.connections.some(
+    c =>
+      (c.deviceId1 === deviceId1 && c.deviceId2 === deviceId2) ||
+      (c.deviceId1 === deviceId2 && c.deviceId2 === deviceId1)
+  );
+  if (alreadyConnected) return null;
+
+  const usedInterfaces = (deviceId: string) =>
+    topology.connections
+      .filter(c => c.deviceId1 === deviceId || c.deviceId2 === deviceId)
+      .map(c => (c.deviceId1 === deviceId ? c.interfaceId1 : c.interfaceId2));
+
+  const dev1 = topology.devices.find(d => d.id === deviceId1);
+  const dev2 = topology.devices.find(d => d.id === deviceId2);
+  if (!dev1 || !dev2) return null;
+
+  const provider = dev1.type === 'router' || dev1.type === 'access_point'
+    ? dev1
+    : dev2.type === 'router' || dev2.type === 'access_point'
+      ? dev2
+      : null;
+  if (!provider) return null;
+  const isProviderFirst = provider.id === dev1.id;
+  const client = isProviderFirst ? dev2 : dev1;
+  if (client.type === 'router' || client.type === 'access_point') return null;
+
+  // O rádio (wlan0) é compartilhado: comporta vários clientes sem fio ao mesmo tempo.
+  const wlan = provider.interfaces.find(i => i.type === 'wireless');
+  const otherIface = client.interfaces.find(i => i.type !== 'wireless' && !usedInterfaces(client.id).includes(i.id));
+  if (!wlan || !otherIface) return null;
+
+  const providerId = provider.id;
+  return {
+    id: `conn-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    deviceId1,
+    interfaceId1: isProviderFirst ? wlan.id : otherIface.id,
+    deviceId2,
+    interfaceId2: isProviderFirst ? otherIface.id : wlan.id,
+    type: 'wireless',
+    status: 'connected',
+    bandwidth: wlan.speed ?? 150,
+    latency: 5,
+  };
+}
+
 export const useSimulatorStore = create<SimulatorState>()(
   persist(
     (set, get) => ({
@@ -203,6 +274,8 @@ export const useSimulatorStore = create<SimulatorState>()(
   selectedDeviceId: null,
   selectedConnectionId: null,
   connectingFromId: null,
+  connectType: null,
+  copiedDeviceId: null,
   packetLog: [],
   arpTables: {},
   packets: [],
@@ -215,6 +288,7 @@ export const useSimulatorStore = create<SimulatorState>()(
       selectedDeviceId: null,
       selectedConnectionId: null,
       connectingFromId: null,
+      connectType: null,
       arpTables: {},
       packets: [],
       selectedPacketId: null,
@@ -227,6 +301,7 @@ export const useSimulatorStore = create<SimulatorState>()(
       selectedDeviceId: null,
       selectedConnectionId: null,
       connectingFromId: null,
+      connectType: null,
       packetLog: [],
       arpTables: {},
       packets: [],
@@ -251,6 +326,7 @@ export const useSimulatorStore = create<SimulatorState>()(
       selectedDeviceId: device.id,
       selectedConnectionId: null,
       connectingFromId: null,
+      connectType: null,
     });
   },
 
@@ -294,24 +370,93 @@ export const useSimulatorStore = create<SimulatorState>()(
     });
   },
 
+  explodeTopology: () => {
+    const { topology } = get();
+    const devices = topology.devices;
+    if (devices.length === 0) return;
+
+    const spacingX = 200;
+    const spacingY = 180;
+    const cols = devices.length <= 1 ? 1 : Math.ceil(Math.sqrt(devices.length));
+    const rows = Math.ceil(devices.length / cols);
+
+    const centerX = devices.reduce((s, d) => s + d.position.x, 0) / devices.length;
+    const centerY = devices.reduce((s, d) => s + d.position.y, 0) / devices.length;
+
+    const startX = centerX - ((cols - 1) * spacingX) / 2;
+    const startY = centerY - ((rows - 1) * spacingY) / 2;
+
+    set({
+      topology: {
+        ...topology,
+        devices: devices.map((d, i) => ({
+          ...d,
+          position: {
+            x: startX + (i % cols) * spacingX,
+            y: startY + Math.floor(i / cols) * spacingY,
+          },
+        })),
+      },
+    });
+  },
+
+  copyDevice: (deviceId) => set({ copiedDeviceId: deviceId }),
+
+  pasteDevice: (position) => {
+    const { topology, copiedDeviceId } = get();
+    if (!copiedDeviceId) return;
+    const source = topology.devices.find(d => d.id === copiedDeviceId);
+    if (!source) return;
+
+    const index = topology.devices.length + 1;
+    const name = nextDeviceName(source.type, topology.devices);
+    const device: Device = {
+      id: `dev-${source.type}-${Date.now()}`,
+      type: source.type,
+      name,
+      position: position ?? { x: source.position.x + 60, y: source.position.y + 60 },
+      interfaces: source.interfaces.map(iface => ({
+        ...iface,
+        id: `${iface.id}-copy-${Date.now()}`,
+        mac: `AA:BB:CC:${index.toString(16).padStart(2, '0').toUpperCase()}:${(iface.id === 'wlan0' ? 5 : 1).toString(16).padStart(2, '0').toUpperCase()}:00`,
+      })),
+      config: {
+        hostname: name,
+        routes: source.config.routes.map(route => ({ ...route })),
+      },
+    };
+    set({
+      topology: { ...topology, devices: [...topology.devices, device] },
+      selectedDeviceId: device.id,
+      selectedConnectionId: null,
+      connectingFromId: null,
+      connectType: null,
+    });
+  },
+
+  clearCopiedDevice: () => set({ copiedDeviceId: null }),
+
   selectDevice: (deviceId) => set({ selectedDeviceId: deviceId, selectedConnectionId: null }),
 
   selectConnection: (connectionId) =>
     set({ selectedConnectionId: connectionId, selectedDeviceId: null }),
 
-  startConnection: (deviceId) => set({ connectingFromId: deviceId, selectedDeviceId: null, selectedConnectionId: null }),
+  startConnection: (deviceId, type = 'ethernet') =>
+    set({ connectingFromId: deviceId, connectType: type, selectedDeviceId: null, selectedConnectionId: null }),
 
   completeConnection: (deviceId) => {
-    const { topology, connectingFromId } = get();
+    const { topology, connectingFromId, connectType } = get();
     if (!connectingFromId) return;
-    const conn = makeConnection(topology, connectingFromId, deviceId);
+    const conn = connectType === 'wireless'
+      ? makeWifiConnection(topology, connectingFromId, deviceId)
+      : makeConnection(topology, connectingFromId, deviceId);
     if (conn) {
       set({ topology: { ...topology, connections: [...topology.connections, conn] } });
     }
-    set({ connectingFromId: null });
+    set({ connectingFromId: null, connectType: null });
   },
 
-  cancelConnection: () => set({ connectingFromId: null }),
+  cancelConnection: () => set({ connectingFromId: null, connectType: null }),
 
   addConnection: (deviceId1, deviceId2) => {
     const { topology } = get();

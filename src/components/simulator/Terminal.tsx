@@ -256,22 +256,22 @@ export function Terminal() {
       {/* Cabeçalho */}
       <div className="flex items-center justify-between px-3 py-1.5 border-b border-[--color-border-primary] bg-[--color-bg-secondary] shrink-0">
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-semibold text-slate-300">
+          <span className="text-[11px] font-semibold text-[--color-text-secondary]">
             Console
           </span>
 
-          <span className="text-[10px] font-mono text-emerald-400">
+          <span className="text-[10px] font-mono text-[--color-accent-green]">
             {device.name}
           </span>
 
-          <span className="text-[10px] text-slate-600">
+          <span className="text-[10px] text-[--color-text-muted]/70">
             digite "help" para ver os comandos
           </span>
         </div>
 
         <button
           onClick={closeTerminal}
-          className="p-1 rounded text-slate-500 hover:text-slate-200 hover:bg-[--color-bg-hover] cursor-pointer"
+          className="p-1 rounded text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-[--color-bg-hover] cursor-pointer"
           title="Fechar console"
           type="button"
         >
@@ -286,7 +286,7 @@ export function Terminal() {
         onClick={() => inputRef.current?.focus()}
       >
         {lines.length === 0 && (
-          <p className="text-slate-600">
+          <p className="text-[--color-text-muted]/70">
             Laboratório NetLab — console de {device.name}
           </p>
         )}
@@ -296,8 +296,8 @@ export function Terminal() {
             key={`${i}-${line}`}
             className={
               line.startsWith(prompt)
-                ? 'text-slate-300 whitespace-pre-wrap'
-                : 'text-slate-400 whitespace-pre-wrap'
+                ? 'text-[--color-text-secondary] whitespace-pre-wrap'
+                : 'text-[--color-text-muted] whitespace-pre-wrap'
             }
           >
             {line}
@@ -307,7 +307,7 @@ export function Terminal() {
 
       {/* Linha de comando */}
       <div className="flex items-center gap-1 px-3 py-1.5 border-t border-[--color-border-primary] bg-[--color-bg-secondary] shrink-0">
-        <span className="font-mono text-[11px] text-emerald-400">{prompt}</span>
+        <span className="font-mono text-[11px] text-[--color-accent-green]">{prompt}</span>
 
         <input
           ref={inputRef}
@@ -316,7 +316,7 @@ export function Terminal() {
           onKeyDown={onKeyDown}
           spellCheck={false}
           autoComplete="off"
-          className="flex-1 bg-transparent font-mono text-[11px] text-slate-100 focus:outline-none caret-emerald-400"
+          className="flex-1 bg-transparent font-mono text-[11px] text-[--color-text-primary] focus:outline-none caret-[--color-accent-green]"
           aria-label="Comando do terminal"
         />
       </div>

@@ -20,21 +20,27 @@ export function Card({ title, subtitle, icon, actions, padding = 'md', className
   return (
     <div
       className={clsx(
-        'rounded-lg bg-[--color-bg-card] border border-[--color-border-primary]',
+        'card-flair relative rounded-xl border border-[--color-border-primary]/45 bg-[--color-bg-card]/70 backdrop-blur-sm',
+        'shadow-[0_1px_2px_rgba(0,0,0,0.25),0_10px_28px_rgba(0,0,0,0.14)]',
+        'hover:border-[--color-border-primary]/80 transition-colors duration-150',
         className
       )}
       {...props}
     >
       {(title || icon || actions) && (
-        <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-[--color-border-primary]">
-          <div className="flex items-center gap-3">
-            {icon && <span className="text-slate-400">{icon}</span>}
-            <div>
-              {title && <h3 className="text-sm font-semibold text-slate-200">{title}</h3>}
-              {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
+        <div className="flex items-center justify-between px-5 pt-4 pb-3.5 border-b border-[--color-border-primary]/40">
+          <div className="flex items-center gap-2.5 min-w-0">
+            {icon && (
+              <span className="text-[--color-accent-blue] shrink-0 [&>svg]:drop-shadow-[0_0_6px_rgba(0,140,255,0.25)]">
+                {icon}
+              </span>
+            )}
+            <div className="min-w-0">
+              {title && <h3 className="text-sm font-semibold text-[--color-text-primary] tracking-tight truncate">{title}</h3>}
+              {subtitle && <p className="text-xs text-[--color-text-muted] mt-0.5 truncate">{subtitle}</p>}
             </div>
           </div>
-          {actions && <div className="flex items-center gap-2">{actions}</div>}
+          {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
         </div>
       )}
       <div className={clsx(PADDING_CLASSES[padding])}>{children}</div>

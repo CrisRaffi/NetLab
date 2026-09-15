@@ -9,20 +9,20 @@ interface BadgeProps {
 }
 
 const TONE_CLASSES: Record<BadgeTone, string> = {
-  default: 'bg-slate-700/50 text-slate-300 border-slate-600/50',
-  green: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
-  yellow: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30',
-  red: 'bg-red-500/10 text-red-400 border-red-500/30',
-  blue: 'bg-blue-500/10 text-blue-400 border-blue-500/30',
-  purple: 'bg-purple-500/10 text-purple-400 border-purple-500/30',
-  cyan: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30',
+  default: 'bg-[--color-bg-tertiary] text-[--color-text-secondary] border-[--color-border-primary]/70',
+  green: 'bg-[--color-accent-green]/10 text-[--color-accent-green] border-[--color-accent-green]/30 [box-shadow:0_0_0_1px_rgba(39,198,106,0.06)]',
+  yellow: 'bg-[--color-accent-yellow]/10 text-[--color-accent-yellow] border-[--color-accent-yellow]/30',
+  red: 'bg-[--color-accent-red]/10 text-[--color-accent-red] border-[--color-accent-red]/30',
+  blue: 'bg-[--color-accent-blue]/10 text-[--color-accent-blue] border-[--color-accent-blue]/30 [box-shadow:0_0_0_1px_rgba(0,140,255,0.06)]',
+  purple: 'bg-[--color-accent-purple]/10 text-[--color-accent-purple] border-[--color-accent-purple]/30',
+  cyan: 'bg-[--color-accent-cyan]/10 text-[--color-accent-cyan] border-[--color-accent-cyan]/30',
 };
 
 export function Badge({ tone = 'default', children, className }: BadgeProps) {
   return (
     <span
       className={clsx(
-        'inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium border',
+        'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium border transition-colors shrink-0',
         TONE_CLASSES[tone],
         className
       )}
@@ -36,11 +36,11 @@ type StatusDotColor = 'green' | 'yellow' | 'red' | 'gray' | 'blue';
 
 export function StatusDot({ color }: { color: StatusDotColor }) {
   const dotClass = {
-    green: 'bg-emerald-500',
-    yellow: 'bg-yellow-500',
-    red: 'bg-red-500',
-    gray: 'bg-slate-500',
-    blue: 'bg-blue-500',
+    green: 'bg-[--color-accent-green]',
+    yellow: 'bg-[--color-accent-yellow]',
+    red: 'bg-[--color-accent-red]',
+    gray: 'bg-[--color-status-disabled]',
+    blue: 'bg-[--color-accent-blue]',
   }[color];
   return <span className={clsx('inline-block w-2 h-2 rounded-full', dotClass)} />;
 }

@@ -9,6 +9,7 @@ import { TroubleshootingPage } from './pages/TroubleshootingPage';
 import { ProvaPage } from './pages/ProvaPage';
 import { AchievementsPage } from './pages/AchievementsPage';
 import { ConfigPage } from './pages/ConfigPage';
+import { PacketJourneyPage } from './features/packet-journey/pages/PacketJourneyPage';
 
 export default function App() {
   return (
@@ -24,7 +25,8 @@ export default function App() {
           <Route path="/prova" element={<ProvaPage />} />
           <Route path="/conquistas" element={<AchievementsPage />} />
           <Route path="/config" element={<ConfigPage />} />
-          <Route path="*" element={<div className="text-center py-20 text-slate-500">Página não encontrada</div>} />
+          <Route path="/viagem" element={<PacketJourneyPage />} />
+          <Route path="*" element={<div className="text-center py-20 text-[--color-text-muted]">Página não encontrada</div>} />
         </Route>
       </Routes>
     </BrowserRouter>

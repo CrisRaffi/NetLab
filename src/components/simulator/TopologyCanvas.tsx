@@ -204,7 +204,7 @@ export const TopologyCanvas = forwardRef<TopologyCanvasHandle, TopologyCanvasPro
       : undefined;
 
     return (
-      <div className="relative flex-1 bg-[#020914] overflow-hidden">
+      <div className="relative flex-1 bg-[#0A0E1A] overflow-hidden">
         <svg
           ref={svgRef}
           className="w-full h-full"
@@ -222,13 +222,13 @@ export const TopologyCanvas = forwardRef<TopologyCanvasHandle, TopologyCanvasPro
           <defs>
             {/* Dot grid */}
             <pattern id="netlab-grid" width="24" height="24" patternUnits="userSpaceOnUse">
-              <circle cx="12" cy="12" r="0.7" fill="#1B4D7A" opacity="0.5" />
+              <circle cx="12" cy="12" r="0.7" fill="#273651" opacity="0.5" />
             </pattern>
             {/* Grid accent lines every 5 cells */}
             <pattern id="netlab-grid-major" width="120" height="120" patternUnits="userSpaceOnUse">
               <rect width="120" height="120" fill="url(#netlab-grid)" />
-              <line x1="0" y1="0" x2="120" y2="0" stroke="#123B61" strokeWidth="0.4" opacity="0.45" />
-              <line x1="0" y1="0" x2="0" y2="120" stroke="#123B61" strokeWidth="0.4" opacity="0.45" />
+              <line x1="0" y1="0" x2="120" y2="0" stroke="#273651" strokeWidth="0.4" opacity="0.45" />
+              <line x1="0" y1="0" x2="0" y2="120" stroke="#273651" strokeWidth="0.4" opacity="0.45" />
             </pattern>
             {/* Node glow */}
             <filter id="node-glow" x="-50%" y="-50%" width="200%" height="200%">
@@ -279,7 +279,7 @@ export const TopologyCanvas = forwardRef<TopologyCanvasHandle, TopologyCanvasPro
                 y1={sourceDevice.position.y}
                 x2={cursorWorld.x}
                 y2={cursorWorld.y}
-                stroke="#00A8FF"
+                stroke="#818CF8"
                 strokeWidth={1.5}
                 strokeDasharray="6 4"
                 vectorEffect="non-scaling-stroke"
@@ -309,14 +309,14 @@ export const TopologyCanvas = forwardRef<TopologyCanvasHandle, TopologyCanvasPro
 
         {/* Connect mode banner */}
         {connectMode && (
-          <div className="absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-2 rounded-lg bg-[#0A2037]/90 border border-[--color-accent-cyan]/40 px-4 py-2 text-xs text-[--color-accent-cyan] shadow-lg animate-fade-in-up">
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-2 rounded-lg bg-[#1C2538]/90 border border-[--color-accent-cyan]/40 px-4 py-2 text-xs text-[--color-accent-cyan] shadow-lg animate-fade-in-up">
             <Crosshair size={13} />
             <span className="font-medium">{connectingFromId ? 'Clique no segundo equipamento para conectar' : 'Clique no primeiro equipamento'}</span>
           </div>
         )}
 
         {/* Status chip */}
-        <div className="absolute bottom-3 left-3 px-3 py-1.5 rounded-lg bg-[#071A2C]/80 border border-[--color-border-primary]/60 text-[10px] font-mono text-[--color-text-muted] glass">
+        <div className="absolute bottom-3 left-3 px-3 py-1.5 rounded-lg bg-[#111A2C]/80 border border-[--color-border-primary]/60 text-[10px] font-mono text-[--color-text-muted] glass">
           {Math.round(viewport.zoom * 100)}% · {topology.devices.length} disp. · {topology.connections.length} conexões
         </div>
       </div>

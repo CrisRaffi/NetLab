@@ -8,6 +8,8 @@ import {
   ChevronDown,
   ChevronUp,
   ShieldCheck,
+  Wifi,
+  Copy,
 } from 'lucide-react';
 import { DevicePalette } from './DevicePalette';
 import { TopologyCanvas } from './TopologyCanvas';
@@ -43,8 +45,61 @@ export function SimulatorWorkspace({
   const selectedDeviceId = useSimulatorStore((s) => s.selectedDeviceId);
   const addDevice = useSimulatorStore((s) => s.addDevice);
   const packets = useSimulatorStore(useShallow((s) => s.packets));
+  const copyDevice = useSimulatorStore((s) => s.copyDevice);
+  const pasteDevice = useSimulatorStore((s) => s.pasteDevice);
+  const removeDevice = useSimulatorStore((s) => s.removeDevice);
+  const removeConnection = useSimulatorStore((s) => s.removeConnection);
+  const selectedConnectionId = useSimulatorStore((s) => s.selectedConnectionId);
+  const copiedDeviceId = useSimulatorStore((s) => s.copiedDeviceId);
 
-  const [connectMode, setConnectMode] = useState(false);
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const isTyping =
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable);
+      if (isTyping) return;
+
+      const mod = e.ctrlKey || e.metaKey;
+
+      if (mod && e.key.toLowerCase() === 'c') {
+        if (selectedDeviceId) copyDevice(selectedDeviceId);
+        return;
+      }
+      if (mod && e.key.toLowerCase() === 'v') {
+        if (copiedDeviceId) pasteDevice();
+        return;
+      }
+      if (mod && e.key.toLowerCase() === 'd') {
+        if (selectedDeviceId) {
+          copyDevice(selectedDeviceId);
+          requestAnimationFrame(() => pasteDevice());
+        }
+        return;
+      }
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (selectedDeviceId) removeDevice(selectedDeviceId);
+        else if (selectedConnectionId) removeConnection(selectedConnectionId);
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [
+    selectedDeviceId,
+    selectedConnectionId,
+    copiedDeviceId,
+    copyDevice,
+    pasteDevice,
+    removeDevice,
+    removeConnection,
+  ]);
+
+  const [connectMode, setConnectMode] = useState<
+    'ethernet' | 'wireless' | null
+  >(null);
   const [showHelp] = useState(true);
   const [propertyPanelOpen, setPropertyPanelOpen] = useState(true);
   const [bottomTab, setBottomTab] = useState<
@@ -59,7 +114,8 @@ export function SimulatorWorkspace({
   const terminalDeviceId = useTerminalStore((s) => s.deviceId);
 
   const terminalDeviceName = useSimulatorStore(
-    (s) => s.topology.devices.find((d) => d.id === terminalDeviceId)?.name ?? null,
+    (s) =>
+      s.topology.devices.find((d) => d.id === terminalDeviceId)?.name ?? null,
   );
 
   const prevTerminalOpenRef = useRef(terminalOpen);
@@ -74,7 +130,7 @@ export function SimulatorWorkspace({
   const handleDeviceClick = (deviceId: string) => {
     if (connectMode) {
       if (!connectingFromId) {
-        startConnection(deviceId);
+        startConnection(deviceId, connectMode);
       } else if (connectingFromId === deviceId) {
         cancelConnection();
       } else {
@@ -94,11 +150,6 @@ export function SimulatorWorkspace({
     }
 
     selectDevice(null);
-  };
-
-  const toggleConnectMode = () => {
-    setConnectMode((v) => !v);
-    cancelConnection();
   };
 
   const handleValidate = () => {
@@ -136,45 +187,31 @@ export function SimulatorWorkspace({
   return (
     <div className="flex flex-col h-full">
       {/* Toolbar */}
-      <div className="flex items-center justify-between gap-3 px-4 py-2.5 border-b border-[--color-border-primary]/50 bg-[#03111F]/60 backdrop-blur-md shrink-0 glass">
+      <div className="flex items-center justify-between gap-4 px-5 py-3 border-b border-[--color-border-primary]/25 bg-[#0D1424]/50 backdrop-blur-md shrink-0">
         {/* Left: Brand & Title */}
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#123B61] to-[#0A2037] flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-lg shadow-blue-500/20">
-            NL
-          </div>
-
-          <div className="hidden lg:block">
-            <span className="text-sm font-semibold text-[#EAF4FF] tracking-tight">
-              NetLab
-            </span>
-
-            <span className="block text-[9px] text-[#7891AA] uppercase tracking-wider">
-              Simulador de Redes
-            </span>
-          </div>
-        </div>
+        <div className="flex items-center gap-2.5"></div>
 
         {/* Right: Validate + Connect */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-3 shrink-0">
           {onValidate && (
             <button
               onClick={handleValidate}
               className={clsx(
-                'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium border cursor-pointer transition-colors',
+                'flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-medium cursor-pointer transition-all duration-150',
                 allPassed
-                  ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400'
-                  : 'bg-blue-600/15 border-blue-500/40 text-blue-300 hover:bg-blue-600/25',
+                  ? 'bg-[--color-accent-green]/12 text-[--color-accent-green] shadow-[inset_0_0_0_1px_rgba(39,198,106,0.3)]'
+                  : 'bg-[--color-accent-blue]/12 text-[#818CF8] shadow-[inset_0_0_0_1px_rgba(129, 140, 248,0.3)] hover:bg-[--color-accent-blue]/20',
               )}
             >
-              <ShieldCheck size={13} />
+              <ShieldCheck size={14} />
               Validar laboratório
               {validationSummary && (
                 <span
                   className={clsx(
-                    'text-[9px] px-1.5 rounded-full font-mono',
+                    'text-[10px] px-2 py-0.5 rounded-full font-mono',
                     allPassed
-                      ? 'bg-emerald-500/20 text-emerald-300'
-                      : 'bg-slate-700 text-slate-300',
+                      ? 'bg-[--color-accent-green]/20 text-[--color-accent-green]'
+                      : 'bg-[--color-bg-tertiary] text-[--color-text-secondary]',
                   )}
                 >
                   {validationSummary.passed}/{validationSummary.total}
@@ -183,42 +220,69 @@ export function SimulatorWorkspace({
             </button>
           )}
 
-          <button
-            onClick={toggleConnectMode}
-            className={clsx(
-              'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium border cursor-pointer transition-colors',
-              connectMode
-                ? 'bg-[#0A2037] border-[#F0485C]/40 text-[#F0485C]'
-                : 'border-[#123B61] text-[#7891AA] hover:text-[#C4D8EC] hover:bg-[#081C30]',
-            )}
-          >
-            <MousePointer2 size={13} />
-
-            {connectMode ? 'Cancelar conexão' : 'Conectar'}
-          </button>
+          <div className="flex items-center rounded-xl border border-[--color-border-primary]/25 bg-[#111A2C]/60 p-1 gap-1">
+            {(['ethernet', 'wireless'] as const).map((mode) => {
+              const active = connectMode === mode;
+              return (
+                <button
+                  key={mode}
+                  onClick={() => {
+                    setConnectMode(active ? null : mode);
+                    cancelConnection();
+                  }}
+                  className={clsx(
+                    'flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium cursor-pointer transition-all duration-150',
+                    active
+                      ? mode === 'wireless'
+                        ? 'bg-[--color-accent-green]/15 text-[--color-accent-green] shadow-[inset_0_0_0_1px_rgba(39,198,106,0.35)]'
+                        : 'bg-[--color-accent-red]/15 text-[--color-accent-red] shadow-[inset_0_0_0_1px_rgba(240,72,92,0.35)]'
+                      : 'text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/[0.04]',
+                  )}
+                >
+                  {mode === 'wireless' ? (
+                    <Wifi size={14} />
+                  ) : (
+                    <MousePointer2 size={14} />
+                  )}
+                  {active
+                    ? mode === 'wireless'
+                      ? 'Cancelar WiFi'
+                      : 'Cancelar conexão'
+                    : mode === 'wireless'
+                      ? 'WiFi'
+                      : 'Conectar'}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
       {/* Instructions */}
       {showHelp && (
-        <div className="flex items-center gap-4 px-4 py-2 bg-[#0A2037]/80 border-b border-[#123B61]/30 text-xs text-[#7891AA] shrink-0 overflow-x-auto">
-          <span className="flex items-center gap-1.5">
-            <MousePointer2 size={12} className="text-[#008CFF]" />
+        <div className="flex items-center gap-5 px-4 py-2.5 bg-[#1C2538]/70 border-b border-[#273651]/25 text-xs text-[#94A3B8] shrink-0 overflow-x-auto">
+          <span className="flex items-center gap-2">
+            <MousePointer2 size={12} className="text-[#6366F1]" />
             <strong>Selecionar:</strong> clique num equipamento
           </span>
 
-          <span className="flex items-center gap-1.5">
-            <Cable size={12} className="text-[#00A8FF]" />
+          <span className="flex items-center gap-2">
+            <Cable size={12} className="text-[#818CF8]" />
             <strong>Conectar:</strong> ative 'Conectar' e clique em dois
             equipamentos
           </span>
 
-          <span className="flex items-center gap-1.5">
-            <Trash2 size={12} className="text-[#F0485C]" />
+          <span className="flex items-center gap-2">
+            <Trash2 size={12} className="text-[#F43F5E]" />
             <strong>Remover:</strong> selecione e pressione Delete
           </span>
 
-          <span className="text-[#7891AA] shrink-0">
+          <span className="flex items-center gap-2">
+            <Copy size={12} className="text-[#818CF8]" />
+            <strong>Copiar/Colar:</strong> Ctrl+C · Ctrl+V · Ctrl+D (duplicar)
+          </span>
+
+          <span className="text-[#94A3B8] shrink-0">
             Roda do mouse = zoom · arraste o fundo = mover
           </span>
         </div>
@@ -230,7 +294,7 @@ export function SimulatorWorkspace({
           <DevicePalette onAdd={addDevice} />
 
           <TopologyCanvas
-            connectMode={connectMode}
+            connectMode={!!connectMode}
             onDeviceClick={handleDeviceClick}
             onBackgroundClick={handleBackgroundClick}
             onConnectionSelect={() => setPropertyPanelOpen(true)}
@@ -244,22 +308,22 @@ export function SimulatorWorkspace({
 
         {/* Bottom panel */}
         <div className="flex flex-col min-h-0">
-          <div className="flex items-center justify-between px-4 py-1.5 border-t border-[--color-border-primary]/40 bg-[#03111F] shrink-0 glass">
-            <div className="flex items-center gap-1">
+          <div className="flex items-center justify-between px-5 py-2.5 border-t border-[--color-border-primary]/25 bg-[#0D1424]/90 shrink-0">
+            <div className="flex items-center gap-2.5">
               {/* Console */}
               <button
                 onClick={handleConsoleTab}
                 className={clsx(
-                  'flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-medium cursor-pointer transition-colors',
+                  'flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-[11px] font-medium cursor-pointer transition-all duration-150',
                   bottomExpanded && bottomTab === 'console'
-                    ? 'bg-emerald-500/15 text-emerald-400'
-                    : 'text-[#7891AA] hover:text-[#C4D8EC] hover:bg-[#081C30]',
+                    ? 'bg-[--color-accent-green]/15 text-[--color-accent-green] shadow-[inset_0_0_0_1px_rgba(39,198,106,0.3)]'
+                    : 'text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/[0.04]',
                 )}
               >
-                <TerminalSquare size={13} />
+                <TerminalSquare size={14} />
                 Console
                 {terminalDeviceName && (
-                  <span className="text-[9px] text-[#7891AA] truncate">
+                  <span className="text-[10px] text-[--color-text-muted] truncate">
                     {terminalDeviceName}
                   </span>
                 )}
@@ -269,16 +333,16 @@ export function SimulatorWorkspace({
               <button
                 onClick={handlePacketsTab}
                 className={clsx(
-                  'flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-medium cursor-pointer transition-colors',
+                  'flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-[11px] font-medium cursor-pointer transition-all duration-150',
                   bottomExpanded && bottomTab === 'packets'
-                    ? 'bg-blue-500/15 text-blue-400'
-                    : 'text-[#7891AA] hover:text-[#C4D8EC] hover:bg-[#081C30]',
+                    ? 'bg-[--color-accent-blue]/15 text-[--color-accent-blue] shadow-[inset_0_0_0_1px_rgba(129, 140, 248,0.3)]'
+                    : 'text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/[0.04]',
                 )}
               >
-                <Layers size={13} />
+                <Layers size={14} />
                 Pacotes
                 {packets.length > 0 && (
-                  <span className="text-[9px] px-1.5 rounded-full bg-blue-500/20 text-blue-300">
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[--color-accent-blue]/20 text-[#818CF8]">
                     {packets.length}
                   </span>
                 )}
@@ -289,14 +353,13 @@ export function SimulatorWorkspace({
                 <button
                   onClick={handleEvaluationTab}
                   className={clsx(
-                    'flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-medium cursor-pointer transition-colors',
+                    'flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-[11px] font-medium cursor-pointer transition-all duration-150',
                     bottomExpanded && bottomTab === 'evaluation'
-                      ? 'bg-amber-500/15 text-amber-400'
-                      : 'text-[#7891AA] hover:text-[#C4D8EC] hover:bg-[#081C30]',
+                      ? 'bg-[--color-accent-yellow]/15 text-[--color-accent-yellow] shadow-[inset_0_0_0_1px_rgba(245,179,1,0.3)]'
+                      : 'text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/[0.04]',
                   )}
                 >
-                  <ShieldCheck size={13} />
-
+                  <ShieldCheck size={14} />
                   {evaluationTab.label}
                 </button>
               )}
@@ -305,13 +368,13 @@ export function SimulatorWorkspace({
             {/* Bottom panel toggle */}
             <button
               onClick={handleBottomToggle}
-              className="p-1 rounded text-[#7891AA] hover:text-[#C4D8EC] hover:bg-[#081C30] cursor-pointer"
+              className="p-2.5 rounded-xl text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/[0.04] cursor-pointer"
               title={bottomExpanded ? 'Recolher painel' : 'Expandir painel'}
             >
               {bottomExpanded ? (
-                <ChevronDown size={15} />
+                <ChevronDown size={16} />
               ) : (
-                <ChevronUp size={15} />
+                <ChevronUp size={16} />
               )}
             </button>
           </div>
@@ -324,14 +387,17 @@ export function SimulatorWorkspace({
                   <Terminal />
                 ) : (
                   <div className="flex flex-col items-center justify-center h-full text-center px-4">
-                    <TerminalSquare size={22} className="text-[#7891AA] mb-2" />
+                    <TerminalSquare size={22} className="text-[#94A3B8] mb-2" />
 
-                    <p className="text-xs text-[#7891AA]">
+                    <p className="text-xs text-[#94A3B8]">
                       Selecione um equipamento e clique em{' '}
-                      <span className="text-emerald-400">Abrir console</span>.
+                      <span className="text-[--color-accent-green]">
+                        Abrir console
+                      </span>
+                      .
                     </p>
 
-                    <p className="text-[10px] text-[#5A7088] mt-1">
+                    <p className="text-[10px] text-[#64748B] mt-1">
                       No console você pode executar ipconfig, ping, tracert, arp
                       e mais.
                     </p>

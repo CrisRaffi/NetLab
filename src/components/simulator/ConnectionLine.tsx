@@ -1,10 +1,12 @@
 import type { Connection, Device } from '../../types';
 
 const STATUS_COLORS: Record<Connection['status'], string> = {
-  connected: '#27C66A',
-  negotiating: '#F5B301',
-  disconnected: '#F0485C',
+  connected: '#10B981',
+  negotiating: '#F59E0B',
+  disconnected: '#F43F5E',
 };
+
+const WIRELESS_COLOR = '#10B981';
 
 interface ConnectionLineProps {
   connection: Connection;
@@ -18,7 +20,7 @@ export function ConnectionLine({ connection, devices, selected, onSelect }: Conn
   const dev2 = devices.find(d => d.id === connection.deviceId2);
   if (!dev1 || !dev2) return null;
 
-  const color = STATUS_COLORS[connection.status];
+  const color = connection.type === 'wireless' ? WIRELESS_COLOR : STATUS_COLORS[connection.status];
   const midX = (dev1.position.x + dev2.position.x) / 2;
   const midY = (dev1.position.y + dev2.position.y) / 2;
 
@@ -30,7 +32,7 @@ export function ConnectionLine({ connection, devices, selected, onSelect }: Conn
         y1={dev1.position.y}
         x2={dev2.position.x}
         y2={dev2.position.y}
-        stroke={selected ? '#008CFF' : color}
+        stroke={selected ? '#6366F1' : color}
         strokeWidth={selected ? 7 : 5}
         strokeOpacity={selected ? 0.12 : 0.08}
         strokeLinecap="round"
@@ -44,11 +46,11 @@ export function ConnectionLine({ connection, devices, selected, onSelect }: Conn
         y1={dev1.position.y}
         x2={dev2.position.x}
         y2={dev2.position.y}
-        stroke={selected ? '#008CFF' : color}
+        stroke={selected ? '#6366F1' : color}
         strokeWidth={selected ? 2.5 : 1.5}
         strokeLinecap="round"
-        strokeDasharray={connection.status === 'negotiating' ? '6 4' : undefined}
-        strokeOpacity={connection.status === 'disconnected' ? 0.6 : 1}
+        strokeDasharray={connection.type === 'wireless' ? '4 6' : connection.status === 'negotiating' ? '6 4' : undefined}
+        strokeOpacity={connection.type === 'wireless' ? 0.9 : connection.status === 'disconnected' ? 0.6 : 1}
         vectorEffect="non-scaling-stroke"
       >
         {connection.status === 'negotiating' && (
@@ -64,7 +66,7 @@ export function ConnectionLine({ connection, devices, selected, onSelect }: Conn
       {/* Delete indicator when selected */}
       {selected && (
         <>
-          <circle cx={midX} cy={midY} r={10} fill="#071A2C" stroke="#008CFF" strokeWidth={1.5} />
+          <circle cx={midX} cy={midY} r={10} fill="#111A2C" stroke="#6366F1" strokeWidth={1.5} />
           <text
             x={midX}
             y={midY + 3.5}

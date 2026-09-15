@@ -45,7 +45,12 @@ export function computeL2Neighbors(topology: Topology): Map<string, Set<string>>
       visited.add(id);
       const node = deviceById.get(id);
       if (!node) continue;
-      if (isSwitch(node)) {
+      if (node.type === 'switch') {
+        queue.push(...connectionsFrom(id));
+      } else if (node.type === 'router' || node.type === 'firewall' || node.type === 'access_point') {
+        // Roteador/AP funcionam como ponte nas portas LAN (estilização de roteador doméstico):
+        // visíveis como vizinhos (gateway) e transparentes na camada 2.
+        neighbors.get(dev.id)!.add(id);
         queue.push(...connectionsFrom(id));
       } else {
         neighbors.get(dev.id)!.add(id);
@@ -81,7 +86,7 @@ export function findL2Path(topology: Topology, from: string, to: string): string
       if (visited.has(nb)) continue;
       const node = deviceById.get(nb);
       if (!node) continue;
-      if (node.type !== 'switch' && nb !== to) continue;
+      if (node.type !== 'switch' && node.type !== 'router' && node.type !== 'firewall' && node.type !== 'access_point' && nb !== to) continue;
       visited.add(nb);
       prev.set(nb, cur);
       queue.push(nb);

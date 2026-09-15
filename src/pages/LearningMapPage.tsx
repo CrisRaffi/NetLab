@@ -1,7 +1,11 @@
 import { Link } from 'react-router-dom';
-import { Lock, ChevronRight, Play } from 'lucide-react';
-import { useProgressStore, type ProgressState } from '../stores/useProgressStore';
+import { Lock, ChevronRight, Play, Map as MapIcon } from 'lucide-react';
+import {
+  useProgressStore,
+  type ProgressState,
+} from '../stores/useProgressStore';
 import { CONCEPT_DEFINITIONS, CONCEPT_ORDER } from '../data/content/concepts';
+import { PageHeader } from '../components/common/PageHeader';
 import {
   getWeakConcepts,
   getDueForReview,
@@ -51,10 +55,7 @@ const DIAGRAM: DiagramNode[] = [
 
 type StoreState = ProgressState;
 
-function getConceptMastery(
-  store: StoreState,
-  conceptId: string,
-): number {
+function getConceptMastery(store: StoreState, conceptId: string): number {
   return (
     store.progress.concepts.find((c) => c.conceptId === conceptId)?.mastery ?? 0
   );
@@ -117,19 +118,13 @@ export function LearningMapPage() {
   const nextLocked = getNextLocked();
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-slate-100">
-            Mapa de Aprendizado
-          </h1>
-
-          <p className="text-sm text-slate-400 mt-0.5">
-            Fundamentos liberam conceitos mais avançados. Domine cada nível para
-            avançar.
-          </p>
-        </div>
-      </div>
+    <div className="space-y-6" style={{ paddingInline: 20, paddingBlock: 20 }}>
+      <PageHeader
+        title="Mapa de Aprendizado"
+        subtitle="Fundamentos liberam conceitos mais avançados. Domine cada nível para avançar."
+        accent="purple"
+        icon={<MapIcon size={19} />}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-6">
         <div className="flex flex-col gap-3">
@@ -154,17 +149,17 @@ export function LearningMapPage() {
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="w-7 h-7 rounded-md bg-slate-800 flex items-center justify-center text-[11px] font-bold text-slate-400">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[--color-bg-tertiary] text-[11px] font-bold text-[--color-accent-blue]">
                         {level}
                       </span>
 
-                      <span className="text-xs font-semibold text-slate-300">
+                      <span className="text-xs font-semibold text-[--color-text-secondary]">
                         Nível {level}
                       </span>
                     </div>
 
                     {!levelUnlocked && (
-                      <Lock size={13} className="text-slate-600" />
+                      <Lock size={13} className="text-[--color-text-muted]" />
                     )}
                   </div>
 
@@ -176,9 +171,9 @@ export function LearningMapPage() {
                           'px-2 py-0.5 rounded text-[10px] border',
                           c.unlocked
                             ? c.mastery >= 80
-                              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
-                              : 'border-blue-500/30 bg-blue-500/10 text-blue-400'
-                            : 'border-slate-700 text-slate-600',
+                              ? 'border-[--color-accent-green]/30 bg-[--color-accent-green]/10 text-[--color-accent-green]'
+                              : 'border-[--color-accent-blue]/30 bg-[--color-accent-blue]/10 text-[--color-accent-blue]'
+                            : 'border-[--color-border-primary] text-[--color-text-muted]',
                         )}
                       >
                         {c.unlocked && c.mastery >= 80 ? '✅ ' : ''}
@@ -187,11 +182,13 @@ export function LearningMapPage() {
                     ))}
                   </div>
 
-                  <div className="h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                  <div className="h-2 rounded-full bg-[--color-bg-tertiary] overflow-hidden">
                     <div
                       className={clsx(
                         'h-full rounded-full',
-                        pct >= 80 ? 'bg-emerald-500' : 'bg-blue-500',
+                        pct >= 80
+                          ? 'bg-[--color-accent-green]'
+                          : 'bg-[--color-accent-blue]',
                       )}
                       style={{ width: `${pct}%` }}
                     />
@@ -201,8 +198,8 @@ export function LearningMapPage() {
             })}
 
           {weakConcepts.length > 0 && (
-            <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-4 mb-4">
-              <h4 className="text-xs font-medium text-red-400 mb-2">
+            <div className="rounded-lg border border-[--color-accent-red]/30 bg-[--color-accent-red]/5 p-4 mb-4">
+              <h4 className="text-xs font-medium text-[--color-accent-red] mb-2">
                 Conceitos Fraquezas
               </h4>
 
@@ -210,7 +207,7 @@ export function LearningMapPage() {
                 {weakConcepts.map((c) => (
                   <span
                     key={c.conceptId}
-                    className="text-[10px] text-red-400 font-medium px-2 py-1 rounded bg-red-500/20"
+                    className="text-[10px] text-[--color-accent-red] font-medium px-2 py-1 rounded bg-[--color-accent-red]/10"
                   >
                     {c.name}
                   </span>
@@ -220,8 +217,8 @@ export function LearningMapPage() {
           )}
 
           {dueForReview.length > 0 && (
-            <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/5 p-4 mb-4">
-              <h4 className="text-xs font-medium text-yellow-400 mb-2">
+            <div className="rounded-lg border border-[--color-accent-yellow]/30 bg-[--color-accent-yellow]/5 p-4 mb-4">
+              <h4 className="text-xs font-medium text-[--color-accent-yellow] mb-2">
                 Para Revisão Hoje
               </h4>
 
@@ -229,7 +226,7 @@ export function LearningMapPage() {
                 {dueForReview.map((c) => (
                   <span
                     key={c.conceptId}
-                    className="text-[10px] text-yellow-400 font-medium px-2 py-1 rounded bg-yellow-500/20"
+                    className="text-[10px] text-[--color-accent-yellow] font-medium px-2 py-1 rounded bg-[--color-accent-yellow]/10"
                   >
                     {c.name}
                   </span>
@@ -239,8 +236,8 @@ export function LearningMapPage() {
           )}
 
           {reinforcementSuggestions.length > 0 && (
-            <div className="rounded-lg border border-green-500/30 bg-green-500/5 p-4 mb-4">
-              <h4 className="text-xs font-medium text-green-400 mb-2">
+            <div className="rounded-lg border border-[--color-accent-green]/30 bg-[--color-accent-green]/5 p-4 mb-4">
+              <h4 className="text-xs font-medium text-[--color-accent-green] mb-2">
                 Sugestões de Reforço
               </h4>
 
@@ -248,20 +245,22 @@ export function LearningMapPage() {
                 {reinforcementSuggestions.map((s) => (
                   <div key={s.conceptId} className="flex items-start gap-2">
                     <div className="flex-shrink-0">
-                      <span className="text-[10px] text-green-400 font-medium">
+                      <span className="text-[10px] text-[--color-accent-green] font-medium">
                         📚
                       </span>
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <p className="text-[10px] text-slate-300">
+                      <p className="text-[10px] text-[--color-text-secondary]">
                         {s.conceptName}
                       </p>
 
-                      <p className="text-[9px] text-slate-500">{s.reason}</p>
+                      <p className="text-[9px] text-[--color-text-muted]">
+                        {s.reason}
+                      </p>
                     </div>
 
-                    <div className="flex-shrink-0 text-[9px] text-slate-500">
+                    <div className="flex-shrink-0 text-[9px] text-[--color-text-muted]">
                       {s.suggestedExercises.join(', ')}
                     </div>
                   </div>
@@ -271,12 +270,12 @@ export function LearningMapPage() {
           )}
 
           {nextLocked && (
-            <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/5 p-4">
-              <p className="text-xs text-yellow-400 font-medium mb-1">
+            <div className="rounded-lg border border-[--color-accent-yellow]/30 bg-[--color-accent-yellow]/5 p-4">
+              <p className="text-xs text-[--color-accent-yellow] font-medium mb-1">
                 Domine: {nextLocked.name}
               </p>
 
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-[--color-text-muted]">
                 Domine os pré-requisitos para liberar este conceito.
               </p>
             </div>
@@ -285,7 +284,7 @@ export function LearningMapPage() {
           {nextLocked && (
             <Link
               to="/labs"
-              className="mt-6 inline-flex items-center gap-1.5 text-sm text-blue-400 hover:text-blue-300"
+              className="mt-6 inline-flex items-center gap-1.5 text-sm text-[--color-accent-blue] hover:text-[--color-text-primary]"
             >
               <Play size={14} />
               Praticar: {nextLocked.name}
@@ -293,8 +292,8 @@ export function LearningMapPage() {
           )}
         </div>
 
-        <div className="rounded-lg border border-[--color-border-primary] bg-[--color-bg-card] p-6 overflow-x-auto">
-          <h3 className="text-sm font-semibold text-slate-200 mb-6">
+        <div className="rounded-lg border border-[--color-border-primary]/70 bg-[--color-bg-card] p-6 overflow-x-auto">
+          <h3 className="text-sm font-semibold text-[--color-text-primary] mb-6 uppercase tracking-wider">
             REDES DE COMPUTADORES
           </h3>
 
@@ -341,7 +340,7 @@ export function LearningMapPage() {
                     <div className="flex justify-center py-1">
                       <ChevronRight
                         size={14}
-                        className="text-slate-700 rotate-90"
+                        className="text-[--color-text-muted] rotate-90"
                       />
                     </div>
                   )}
@@ -350,7 +349,7 @@ export function LearningMapPage() {
                     className={clsx(
                       'flex items-center gap-3 rounded-md border p-3',
                       row.isChild
-                        ? 'ml-8 border-slate-800 bg-slate-800/30'
+                        ? 'ml-8 border-[--color-border-primary]/60 bg-[--color-bg-tertiary]/50'
                         : 'border-[--color-border-secondary] bg-[--color-bg-tertiary]',
                       !unlocked && 'opacity-50',
                     )}
@@ -358,31 +357,36 @@ export function LearningMapPage() {
                     <span
                       className={clsx(
                         'text-lg',
-                        unlocked ? '' : 'text-slate-600',
+                        unlocked ? '' : 'text-[--color-text-muted]',
                       )}
                     >
                       {mastery >= 80 ? '✅' : unlocked ? '📘' : '🔒'}
                     </span>
 
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-slate-200">
+                      <p className="text-sm font-medium text-[--color-text-primary]">
                         {row.label}
                       </p>
 
                       <div className="flex flex-wrap gap-1 mt-1">
                         {row.concepts.map((id) => (
-                          <span key={id} className="text-[10px] text-slate-500">
+                          <span
+                            key={id}
+                            className="text-[10px] text-[--color-text-muted]"
+                          >
                             {CONCEPT_DEFINITIONS[id]?.name}
                           </span>
                         ))}
                       </div>
                     </div>
 
-                    <div className="h-1.5 w-20 rounded-full bg-slate-800 overflow-hidden shrink-0">
+                    <div className="h-2 w-20 rounded-full bg-[--color-bg-tertiary] overflow-hidden shrink-0">
                       <div
                         className={clsx(
                           'h-full',
-                          mastery >= 80 ? 'bg-emerald-500' : 'bg-blue-500',
+                          mastery >= 80
+                            ? 'bg-[--color-accent-green]'
+                            : 'bg-[--color-accent-blue]',
                         )}
                         style={{
                           width: `${mastery}%`,
@@ -398,7 +402,7 @@ export function LearningMapPage() {
           {nextLocked && (
             <Link
               to="/labs"
-              className="mt-6 inline-flex items-center gap-1.5 text-sm text-blue-400 hover:text-blue-300"
+              className="mt-6 inline-flex items-center gap-1.5 text-sm text-[--color-accent-blue] hover:text-[--color-text-primary]"
             >
               <Play size={14} />
               Praticar: {nextLocked.name}

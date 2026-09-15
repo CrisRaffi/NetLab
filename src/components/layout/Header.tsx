@@ -8,63 +8,83 @@ export function Header() {
   const [showNotifications, setShowNotifications] = useState(false);
 
   return (
-    <header className="flex items-center justify-between gap-3 h-14 px-4 lg:px-5 bg-[#03111F] border-b border-white/5 shrink-0">
+    <header className="relative flex items-center justify-between gap-4 h-16 px-4 lg:px-6 bg-[--color-bg-secondary]/55 backdrop-blur-md shrink-0 z-30">
+      <div
+        aria-hidden
+        className="absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-[--color-accent-blue]/45 to-transparent"
+      />
       {/*  Brand */}
-      <div className="flex items-center gap-2.5 shrink-0">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[--color-accent-blue] to-[--color-accent-cyan] flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-blue-500/20">
-          NL
+      <div className="flex items-center gap-3 shrink-0">
+        <div className="relative shrink-0">
+          <div className="absolute inset-0 rounded-xl bg-[--color-accent-blue]/30 blur-md" />
+          <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-[--color-accent-blue] via-[#4F46E5] to-[--color-accent-cyan] flex items-center justify-center text-white font-bold text-sm basis-9">
+            NL
+          </div>
         </div>
         <div className="hidden md:block leading-tight">
           <p className="text-sm font-bold text-[--color-text-primary] tracking-tight">NetLab</p>
-          <p className="text-[9px] text-[--color-text-muted] uppercase tracking-widest">Simulador de Redes</p>
+          <p className="text-[9px] text-[--color-text-muted] uppercase tracking-[0.16em]">
+            Simulador de Redes
+          </p>
         </div>
       </div>
 
       {/* Search */}
-      <div className="flex items-center gap-3 flex-1 max-w-lg mx-auto">
-        <div className="relative flex-1 group">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[--color-text-muted]" />
+      <div className="flex flex-1 max-w-xl mx-auto">
+        <div className="relative w-full group">
+          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[--color-text-muted] transition-colors group-focus-within:text-[--color-accent-blue]" />
           <input
             type="text"
             placeholder="Buscar conceito, laboratório, comando..."
             className={clsx(
-              'w-full bg-[#0A2037] border border-[--color-border-primary]/80 rounded-lg pl-9 pr-16 py-2 text-sm',
-              'text-[--color-text-primary] placeholder:text-[--color-text-muted]/70',
-              'focus:outline-none focus:border-[--color-accent-blue] focus:ring-2 focus:ring-[--color-accent-blue]/20',
+              'w-full bg-[#0D1424]/80 border border-[--color-border-primary]/45 rounded-xl pl-10 pr-16 py-2 text-sm',
+              'text-[--color-text-primary] placeholder:text-[--color-text-muted]/60',
+              'focus:outline-none focus:border-[--color-accent-blue] focus:ring-2 focus:ring-[--color-accent-blue]/15 focus:bg-[#0D1424]',
               'transition-all duration-200',
-              'hover:border-[--color-border-secondary]'
+              'hover:border-[--color-border-secondary]/80'
             )}
           />
-          <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 hidden sm:flex items-center px-1.5 py-0.5 rounded border border-white/10 bg-white/5 text-[9px] text-[--color-text-muted] font-mono">
+          <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:flex items-center px-2 py-1 rounded-md border border-white/10 bg-white/5 text-[9px] text-[--color-text-muted] font-mono">
             Ctrl K
           </kbd>
         </div>
       </div>
 
-      <div className="flex items-center gap-1 shrink-0">
+      {/* Right actions */}
+      <div className="flex items-center gap-1.5 shrink-0">
         <button
           onClick={() => {}}
-          className="p-2 rounded-lg text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/5 transition-colors cursor-pointer"
+          className="relative p-2.5 rounded-xl text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/5 transition-colors cursor-pointer"
           title="Status do sistema"
           aria-label="Status"
         >
-          <Activity size={16} />
-          <span className="absolute mt-[5px] ml-[12px] w-1.5 h-1.5 rounded-full bg-[--color-status-connected] animate-pulse-soft" />
+          <Activity size={17} />
+          <span className="absolute right-2 top-2 w-1.5 h-1.5 rounded-full bg-[--color-status-connected]" />
         </button>
 
         <div className="relative">
           <button
             onClick={() => setShowNotifications(v => !v)}
-            className="relative p-2 rounded-lg text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/5 transition-colors cursor-pointer"
+            className={clsx(
+              'relative p-2.5 rounded-xl text-[--color-text-muted] transition-all cursor-pointer',
+              showNotifications
+                ? 'bg-white/5 text-[--color-text-primary]'
+                : 'hover:text-[--color-text-primary] hover:bg-white/5',
+            )}
             aria-label="Notificações"
           >
-            <Bell size={16} />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[--color-accent-blue] ring-2 ring-[#03111F]" />
+            <Bell size={17} />
+            <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[--color-accent-blue] ring-2 ring-[#0D1424]" />
           </button>
           {showNotifications && (
-            <div className="absolute right-0 top-full mt-2 w-72 rounded-xl bg-[--color-bg-card] border border-[--color-border-primary] shadow-2xl shadow-black/50 overflow-hidden z-40 glass-strong animate-fade-in-up">
-              <div className="px-4 py-3 border-b border-[--color-border-primary]/60 text-xs font-semibold text-[--color-text-primary]">
-                Notificações
+            <div className="absolute right-0 top-full mt-2.5 w-72 rounded-2xl bg-[--color-bg-card] border border-[--color-border-primary] shadow-2xl shadow-black/50 overflow-hidden z-40 glass-strong animate-fade-in-up">
+              <div className="px-4 py-3 border-b border-[--color-border-primary]/50 flex items-center justify-between">
+                <span className="text-xs font-semibold text-[--color-text-primary]">
+                  Notificações
+                </span>
+                <span className="chip bg-[--color-accent-blue]/10 text-[--color-accent-blue]">
+                  0
+                </span>
               </div>
               <div className="flex flex-col items-center gap-2 p-6 text-xs text-[--color-text-muted] text-center">
                 <Sparkles size={18} className="text-[--color-accent-blue]/60" />
@@ -75,13 +95,13 @@ export function Header() {
         </div>
 
         {/* Profile */}
-        <div className="flex items-center gap-2.5 pl-3 ml-1 border-l border-white/5">
-          <div className="flex h-8 w-8 rounded-full bg-gradient-to-br from-[--color-border-secondary] to-[#0A2037] border border-[--color-accent-blue]/30 items-center justify-center text-[--color-text-primary] text-xs font-bold shadow-inner">
+        <div className="flex items-center gap-2.5 pl-3 ml-1.5 border-l border-[--color-border-primary]/25">
+          <div className="flex h-9 w-9 rounded-full bg-gradient-to-br from-[--color-border-secondary] to-[#1C2538] border border-[--color-accent-blue]/25 items-center justify-center text-[--color-text-primary] text-xs font-bold">
             AL
           </div>
-          <div className="hidden lg:block">
-            <p className="text-xs font-medium text-[--color-text-primary]">Aluno</p>
-            <div className="flex items-center gap-1.5">
+          <div className="hidden lg:block leading-tight">
+            <p className="text-xs font-semibold text-[--color-text-primary]">Aluno</p>
+            <div className="flex items-center gap-1.5 mt-0.5">
               <span className="flex items-center gap-1 text-[9px] text-[--color-status-connected] font-medium">
                 <span className="w-1 h-1 rounded-full bg-[--color-status-connected]" /> Online
               </span>
@@ -90,7 +110,7 @@ export function Header() {
               </span>
             </div>
           </div>
-          <ChevronDown size={12} className="hidden lg:block text-[--color-text-muted]" />
+          <ChevronDown size={12} className="hidden lg:block text-[--color-text-muted]/60" />
         </div>
       </div>
     </header>
