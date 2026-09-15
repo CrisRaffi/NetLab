@@ -1,18 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Cable,
   Trash2,
   MousePointer2,
-  RotateCcw,
-  Info,
   TerminalSquare,
   Layers,
   ChevronDown,
   ChevronUp,
   ShieldCheck,
-  Plus as PlusIcon,
-  Maximize as MaximizeIcon,
-  Minimize as MinimizeIcon,
 } from 'lucide-react';
 import { DevicePalette } from './DevicePalette';
 import { TopologyCanvas } from './TopologyCanvas';
@@ -22,50 +17,35 @@ import { PacketInspector } from './PacketInspector';
 import { useSimulatorStore } from '../../stores/useSimulatorStore';
 import { useTerminalStore } from '../../stores/useTerminalStore';
 import { clsx } from 'clsx';
+import { useShallow } from 'zustand/react/shallow';
 
 interface SimulatorWorkspaceProps {
-  title: string;
-  subtitle?: string;
-  extraHeaderActions?: React.ReactNode;
   onValidate?: (topology: any) => void;
   validationSummary?: { passed: number; total: number } | null;
-  resetTopologyTo?: any;
   evaluationTab?: {
     label: string;
     content: React.ReactNode;
   } | null;
-  flashHint?: boolean;
   defaultBottomTab?: 'console' | 'packets' | 'evaluation';
 }
 
 export function SimulatorWorkspace({
-  title,
-  subtitle,
-  extraHeaderActions,
   onValidate,
   validationSummary,
-  resetTopologyTo,
   evaluationTab,
-  flashHint,
   defaultBottomTab,
 }: SimulatorWorkspaceProps) {
-  const addDevice = useSimulatorStore((s) => s.addDevice);
-  const resetTopology = useSimulatorStore((s) => s.resetTopology);
-  const loadTopology = useSimulatorStore((s) => s.loadTopology);
   const selectDevice = useSimulatorStore((s) => s.selectDevice);
   const connectingFromId = useSimulatorStore((s) => s.connectingFromId);
   const startConnection = useSimulatorStore((s) => s.startConnection);
   const completeConnection = useSimulatorStore((s) => s.completeConnection);
   const cancelConnection = useSimulatorStore((s) => s.cancelConnection);
   const selectedDeviceId = useSimulatorStore((s) => s.selectedDeviceId);
-  const selectedConnectionId = useSimulatorStore((s) => s.selectedConnectionId);
-  const removeDevice = useSimulatorStore((s) => s.removeDevice);
-  const removeConnection = useSimulatorStore((s) => s.removeConnection);
-  const deviceCount = useSimulatorStore((s) => s.topology.devices.length);
-  const packets = useSimulatorStore((s) => s.packets);
+  const addDevice = useSimulatorStore((s) => s.addDevice);
+  const packets = useSimulatorStore(useShallow((s) => s.packets));
 
   const [connectMode, setConnectMode] = useState(false);
-  const [showHelp, setShowHelp] = useState(true);
+  const [showHelp] = useState(true);
   const [propertyPanelOpen, setPropertyPanelOpen] = useState(true);
   const [bottomTab, setBottomTab] = useState<
     'console' | 'packets' | 'evaluation'
@@ -79,31 +59,16 @@ export function SimulatorWorkspace({
   const terminalDeviceId = useTerminalStore((s) => s.deviceId);
 
   const terminalDeviceName = useSimulatorStore(
-    (s) => s.topology.devices.find((d) => d.id === terminalDeviceId)?.name,
+    (s) => s.topology.devices.find((d) => d.id === terminalDeviceId)?.name ?? null,
   );
 
-  const topology = useSimulatorStore((s) => s.topology);
-
-  /*
-   * Quando o console é aberto, selecionamos automaticamente
-   * a aba "console" e expandimos o painel inferior.
-   *
-   * Antes havia uma assinatura manual:
-   *
-   * useTerminalStore.subscribe(...)
-   *
-   * Isso podia causar conflito com o mecanismo de
-   * atualização do Zustand/React e gerar:
-   *
-   * Maximum update depth exceeded
-   *
-   * Agora usamos diretamente o estado já observado pelo componente.
-   */
+  const prevTerminalOpenRef = useRef(terminalOpen);
   useEffect(() => {
-    if (terminalOpen) {
+    if (terminalOpen && !prevTerminalOpenRef.current) {
       setBottomTab('console');
       setBottomExpanded(true);
     }
+    prevTerminalOpenRef.current = terminalOpen;
   }, [terminalOpen]);
 
   const handleDeviceClick = (deviceId: string) => {
@@ -262,13 +227,7 @@ export function SimulatorWorkspace({
       {/* Main workspace */}
       <div className="flex flex-1 min-h-0 flex-col">
         <div className="flex min-h-0 flex-1">
-          <DevicePalette
-            onAdd={() => {
-              // Mantido conforme código original.
-              // A lógica de adicionar dispositivos continua
-              // sendo controlada pelo componente DevicePalette/store.
-            }}
-          />
+          <DevicePalette onAdd={addDevice} />
 
           <TopologyCanvas
             connectMode={connectMode}

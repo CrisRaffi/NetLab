@@ -153,7 +153,6 @@ function BreakSession({
   const [diagnosis, setDiagnosis] = useState<DiagnosisFinding[] | null>(null);
   const [hintsRevealed, setHintsRevealed] = useState(0);
   const [showSolution, setShowSolution] = useState(false);
-  const [flash, setFlash] = useState(false);
 
   const brokenTopology = useMemo(() => buildBrokenTopology(scenario, variant), [scenario, variant]);
 
@@ -167,8 +166,6 @@ function BreakSession({
   const handleValidate = (topology: Topology) => {
     const result = runValidation(topology, scenario.validation, { arpTables });
     setValidation(result);
-    setFlash(true);
-    window.setTimeout(() => setFlash(false), 800);
 
     if (result.passed && !alreadyComplete) {
       completeExercise(challengeId, scenario.concepts, scenario.xpReward);
@@ -359,22 +356,10 @@ function BreakSession({
 
       <div className="flex-1 min-h-0">
         <SimulatorWorkspace
-          title={`${scenario.title} — desafio`}
-          subtitle={`${scenario.estimatedTime} min · ${scenario.xpReward} XP · ${scenario.health.devices.length} equipamentos`}
           onValidate={handleValidate}
           validationSummary={summary}
-          resetTopologyTo={brokenTopology}
           evaluationTab={{ label: 'Avaliação', content: evaluation }}
-          flashHint={flash}
           defaultBottomTab="evaluation"
-          extraHeaderActions={
-            <button
-              onClick={onNewChallenge}
-              className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium border border-[--color-border-primary] text-slate-400 hover:text-slate-200 hover:bg-[--color-bg-hover] cursor-pointer transition-colors"
-            >
-              <Shuffle size={13} /> Novo desafio
-            </button>
-          }
         />
       </div>
 

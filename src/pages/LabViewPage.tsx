@@ -69,7 +69,6 @@ function LabWorkspace({ exercise }: { exercise: Exercise }) {
   const [hintsRevealed, setHintsRevealed] = useState(0);
   const [showSolution, setShowSolution] = useState(false);
   const [instructionsOpen, setInstructionsOpen] = useState(true);
-  const [flash, setFlash] = useState(false);
 
   useEffect(() => {
     loadTopology(normalizeTopology(exercise.initialTopology));
@@ -85,8 +84,6 @@ function LabWorkspace({ exercise }: { exercise: Exercise }) {
   const handleValidate = (topology: Topology) => {
     const result = runValidation(topology, exercise.validation, { arpTables });
     setValidation(result);
-    setFlash(true);
-    window.setTimeout(() => setFlash(false), 800);
 
     if (result.passed && !alreadyComplete) {
       completeExercise(exercise.id, exercise.concepts, exercise.xpReward);
@@ -271,13 +268,9 @@ function LabWorkspace({ exercise }: { exercise: Exercise }) {
 
       <div className="flex-1 min-h-0">
         <SimulatorWorkspace
-          title={exercise.title}
-          subtitle={`${exercise.estimatedTime} min · ${exercise.xpReward} XP`}
           onValidate={handleValidate}
           validationSummary={summary}
-          resetTopologyTo={normalizeTopology(exercise.initialTopology)}
           evaluationTab={{ label: 'Avaliação', content: evaluation }}
-          flashHint={flash}
         />
       </div>
     </div>

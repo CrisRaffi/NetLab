@@ -1,13 +1,28 @@
-import type { DeviceType } from '../../types';
+import { useState } from 'react';
+import type { DeviceType, Position } from '../../types';
 import { DEVICE_ICONS, DEVICE_COLORS, DEVICE_ORDER } from './deviceIcons';
 import { DEVICE_LABELS } from '../../stores/useSimulatorStore';
 import { Plus } from 'lucide-react';
 
 interface DevicePaletteProps {
-  onAdd: (type: DeviceType) => void;
+  onAdd: (type: DeviceType, position: Position) => void;
 }
 
 export function DevicePalette({ onAdd }: DevicePaletteProps) {
+  const [deviceCounter, setDeviceCounter] = useState(0);
+
+  const getPosition = (): Position => {
+    const baseX = 200;
+    const baseY = 150;
+    const offset = deviceCounter * 60;
+    return { x: baseX + (offset % 400), y: baseY + Math.floor(offset / 400) * 80 };
+  };
+
+  const handleAdd = (type: DeviceType) => {
+    onAdd(type, getPosition());
+    setDeviceCounter((c) => c + 1);
+  };
+
   return (
     <div className="w-36 shrink-0 border-r border-[--color-border-primary]/50 bg-[#03111F] overflow-y-auto flex flex-col">
       <div className="px-3 py-3 flex-1">
@@ -23,7 +38,7 @@ export function DevicePalette({ onAdd }: DevicePaletteProps) {
             return (
               <button
                 key={type}
-                onClick={() => onAdd(type)}
+                onClick={() => handleAdd(type)}
                 className="group w-full flex items-center gap-2 px-2 py-2 rounded-xl bg-[#071A2C]/60 border border-transparent hover:border-[#123B61] hover:bg-[#081C30] transition-all duration-150 cursor-pointer hover:-translate-y-px"
               >
                 <span

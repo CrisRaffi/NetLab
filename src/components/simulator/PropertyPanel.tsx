@@ -20,10 +20,17 @@ import { useTerminalStore } from '../../stores/useTerminalStore';
 import { DEVICE_ICONS, DEVICE_COLORS } from './deviceIcons';
 import { isValidIp, isValidMask } from '../../utils/ip';
 import type { NetworkInterface, Device, Route as NetworkRoute, DeviceType } from '../../types';
+import type { ArpEntry } from '../../engine/protocols/arp';
 import { clsx } from 'clsx';
 import { useState } from 'react';
 
 type PanelTab = 'config' | 'interfaces' | 'ports' | 'rotas';
+
+/*
+ * Constante fora do componente para que o selector nunca crie
+ * um novo [] a cada render (evita loop infinito no useSyncExternalStore).
+ */
+const EMPTY_ARP: ArpEntry[] = [];
 
 function getTabs(type: DeviceType): PanelTab[] {
   switch (type) {
@@ -216,7 +223,7 @@ function SwitchPorts({ device }: { device: Device }) {
 }
 
 function ArpTable({ deviceId }: { deviceId: string }) {
-  const arpTable = useSimulatorStore(s => s.arpTables[deviceId] ?? []);
+  const arpTable = useSimulatorStore(s => s.arpTables[deviceId] ?? EMPTY_ARP);
 
   return (
     <Section title="Tabela ARP">
