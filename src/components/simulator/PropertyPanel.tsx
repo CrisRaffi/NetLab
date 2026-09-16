@@ -591,7 +591,7 @@ interface PropertyPanelProps {
 
 export function PropertyPanel({ open, onToggle }: PropertyPanelProps) {
   const topology = useSimulatorStore((s) => s.topology);
-  const selectedDeviceId = useSimulatorStore((s) => s.selectedDeviceId);
+  const selectedDeviceId = useSimulatorStore((s) => s.selectedDeviceIds[0] ?? null);
   const selectedConnectionId = useSimulatorStore((s) => s.selectedConnectionId);
   const renameDevice = useSimulatorStore((s) => s.renameDevice);
   const removeDevice = useSimulatorStore((s) => s.removeDevice);

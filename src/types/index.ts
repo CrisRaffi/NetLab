@@ -57,11 +57,21 @@ export interface Connection {
   latency: number;
 }
 
+export interface NetworkBlock {
+  id: string;
+  name: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export interface Topology {
   id: string;
   name: string;
   devices: Device[];
   connections: Connection[];
+  blocks?: NetworkBlock[];
 }
 
 export interface Hint {

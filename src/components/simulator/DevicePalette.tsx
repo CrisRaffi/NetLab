@@ -4,7 +4,7 @@ import { DEVICE_ICONS, DEVICE_COLORS, DEVICE_ORDER } from './deviceIcons';
 import { DEVICE_LABELS } from '../../stores/useSimulatorStore';
 import { useSimulatorStore } from '../../stores/useSimulatorStore';
 import { useSavedBoardsStore } from '../../stores/useSavedBoardsStore';
-import { Plus, Waypoints, Save, History, Upload } from 'lucide-react';
+import { Plus, Save, History, Upload } from 'lucide-react';
 
 interface DevicePaletteProps {
   onAdd: (type: DeviceType, position: Position) => void;

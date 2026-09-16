@@ -138,13 +138,15 @@ export function createDefaultTopology(): Topology {
     name: 'Laboratório Livre',
     devices,
     connections: [],
+    blocks: [],
   };
 }
 
 interface SimulatorState {
   topology: Topology;
-  selectedDeviceId: string | null;
+  selectedDeviceIds: string[];
   selectedConnectionId: string | null;
+  selectedBlockIds: string[];
   connectingFromId: string | null;
   connectType: 'ethernet' | 'wireless' | null;
   copiedDeviceId: string | null;
@@ -168,7 +170,9 @@ interface SimulatorState {
   resetTopology: () => void;
   addDevice: (type: DeviceType, position: { x: number; y: number }) => void;
   removeDevice: (deviceId: string) => void;
+  removeSelection: (deviceIds: string[], blockIds: string[]) => void;
   moveDevice: (deviceId: string, x: number, y: number) => void;
+  commitMove: (previous: Topology) => void;
   renameDevice: (deviceId: string, name: string) => void;
   explodeTopology: () => void;
   copyDevice: (deviceId: string) => void;
@@ -177,12 +181,19 @@ interface SimulatorState {
 
   selectDevice: (deviceId: string | null) => void;
   selectConnection: (connectionId: string | null) => void;
+  selectBlock: (blockId: string | null) => void;
+  setSelection: (deviceIds: string[], blockIds: string[]) => void;
 
   startConnection: (deviceId: string, type?: 'ethernet' | 'wireless') => void;
   completeConnection: (deviceId: string) => void;
   cancelConnection: () => void;
   addConnection: (deviceId1: string, deviceId2: string) => void;
   removeConnection: (connectionId: string) => void;
+
+  addBlock: (block: { name: string; x: number; y: number; width: number; height: number }) => void;
+  removeBlock: (blockId: string) => void;
+  moveBlock: (blockId: string, x: number, y: number) => void;
+  resizeBlock: (blockId: string, x: number, y: number, width: number, height: number) => void;
 
   updateInterface: (deviceId: string, interfaceId: string, updates: Partial<NetworkInterface>) => void;
   toggleInterfaceStatus: (deviceId: string, interfaceId: string) => void;
@@ -291,8 +302,9 @@ export const useSimulatorStore = create<SimulatorState>()(
   persist(
     (set, get) => ({
   topology: createDefaultTopology(),
-  selectedDeviceId: null,
+  selectedDeviceIds: [],
   selectedConnectionId: null,
+  selectedBlockIds: [],
   connectingFromId: null,
   connectType: null,
   copiedDeviceId: null,
@@ -307,9 +319,10 @@ export const useSimulatorStore = create<SimulatorState>()(
 
   loadTopology: (topology) =>
     set({
-      topology: normalizeTopology(topology),
-      selectedDeviceId: null,
+topology: normalizeTopology(topology),
+      selectedDeviceIds: [],
       selectedConnectionId: null,
+      selectedBlockIds: [],
       connectingFromId: null,
       connectType: null,
       arpTables: {},
@@ -323,9 +336,10 @@ export const useSimulatorStore = create<SimulatorState>()(
 
   resetTopology: () =>
     set({
-      topology: createDefaultTopology(),
-      selectedDeviceId: null,
+topology: createDefaultTopology(),
+      selectedDeviceIds: [],
       selectedConnectionId: null,
+      selectedBlockIds: [],
       connectingFromId: null,
       connectType: null,
       packetLog: [],
@@ -352,7 +366,8 @@ export const useSimulatorStore = create<SimulatorState>()(
     };
     set({
       topology: { ...topology, devices: [...topology.devices, device] },
-      selectedDeviceId: device.id,
+      selectedDeviceIds: [device.id],
+      selectedBlockIds: [],
       selectedConnectionId: null,
       connectingFromId: null,
       connectType: null,
@@ -374,7 +389,8 @@ export const useSimulatorStore = create<SimulatorState>()(
         ),
       },
       arpTables: nextArp,
-      selectedDeviceId: null,
+      selectedDeviceIds: [],
+      selectedBlockIds: [],
       connectingFromId: null,
       undoStack: pushUndo(topology, undoStack),
       redoStack: [],
@@ -388,6 +404,33 @@ export const useSimulatorStore = create<SimulatorState>()(
         ...topology,
         devices: topology.devices.map(d => (d.id === deviceId ? { ...d, position: { x, y } } : d)),
       },
+    });
+  },
+
+  commitMove: (previous) => {
+    const { undoStack } = get();
+    set({ undoStack: pushUndo(previous, undoStack), redoStack: [] });
+  },
+
+  removeSelection: (deviceIds, blockIds) => {
+    const { topology, arpTables, undoStack } = get();
+    const nextArp = { ...arpTables };
+    deviceIds.forEach(id => delete nextArp[id]);
+    set({
+      topology: {
+        ...topology,
+        devices: topology.devices.filter(d => !deviceIds.includes(d.id)),
+        blocks: (topology.blocks ?? []).filter(b => !blockIds.includes(b.id)),
+        connections: topology.connections.filter(
+          c => !deviceIds.includes(c.deviceId1) && !deviceIds.includes(c.deviceId2)
+        ),
+      },
+      arpTables: nextArp,
+      selectedDeviceIds: [],
+      selectedBlockIds: [],
+      connectingFromId: null,
+      undoStack: pushUndo(topology, undoStack),
+      redoStack: [],
     });
   },
 
@@ -462,7 +505,8 @@ export const useSimulatorStore = create<SimulatorState>()(
     };
     set({
       topology: { ...topology, devices: [...topology.devices, device] },
-      selectedDeviceId: device.id,
+      selectedDeviceIds: [device.id],
+      selectedBlockIds: [],
       selectedConnectionId: null,
       connectingFromId: null,
       connectType: null,
@@ -473,13 +517,19 @@ export const useSimulatorStore = create<SimulatorState>()(
 
   clearCopiedDevice: () => set({ copiedDeviceId: null }),
 
-  selectDevice: (deviceId) => set({ selectedDeviceId: deviceId, selectedConnectionId: null }),
+  selectDevice: (deviceId) => set({ selectedDeviceIds: deviceId ? [deviceId] : [], selectedBlockIds: [], selectedConnectionId: null }),
 
   selectConnection: (connectionId) =>
-    set({ selectedConnectionId: connectionId, selectedDeviceId: null }),
+    set({ selectedConnectionId: connectionId, selectedDeviceIds: [], selectedBlockIds: [] }),
+
+  selectBlock: (blockId) =>
+    set({ selectedBlockIds: blockId ? [blockId] : [], selectedDeviceIds: [], selectedConnectionId: null }),
+
+  setSelection: (deviceIds, blockIds) =>
+    set({ selectedDeviceIds: deviceIds, selectedBlockIds: blockIds, selectedConnectionId: null }),
 
   startConnection: (deviceId, type = 'ethernet') =>
-    set({ connectingFromId: deviceId, connectType: type, selectedDeviceId: null, selectedConnectionId: null }),
+    set({ connectingFromId: deviceId, connectType: type, selectedDeviceIds: [], selectedConnectionId: null }),
 
   completeConnection: (deviceId) => {
     const { topology, connectingFromId, connectType, undoStack } = get();
@@ -513,6 +563,56 @@ export const useSimulatorStore = create<SimulatorState>()(
       selectedConnectionId: null,
       undoStack: pushUndo(topology, undoStack),
       redoStack: [],
+    });
+  },
+
+  addBlock: (block) => {
+    const { topology, undoStack } = get();
+    const id = `block-${Date.now()}`;
+    set({
+      topology: {
+        ...topology,
+        blocks: [...(topology.blocks ?? []), { id, ...block }],
+      },
+      undoStack: pushUndo(topology, undoStack),
+      redoStack: [],
+    });
+  },
+
+  removeBlock: (blockId) => {
+    const { topology, undoStack } = get();
+    set({
+      topology: {
+        ...topology,
+        blocks: (topology.blocks ?? []).filter(b => b.id !== blockId),
+      },
+      selectedBlockIds: [],
+      undoStack: pushUndo(topology, undoStack),
+      redoStack: [],
+    });
+  },
+
+  moveBlock: (blockId, x, y) => {
+    const { topology } = get();
+    set({
+      topology: {
+        ...topology,
+        blocks: (topology.blocks ?? []).map(b =>
+          b.id === blockId ? { ...b, x, y } : b
+        ),
+      },
+    });
+  },
+
+  resizeBlock: (blockId, x, y, width, height) => {
+    const { topology } = get();
+    set({
+      topology: {
+        ...topology,
+        blocks: (topology.blocks ?? []).map(b =>
+          b.id === blockId ? { ...b, x, y, width, height } : b
+        ),
+      },
     });
   },
 
@@ -632,7 +732,8 @@ export const useSimulatorStore = create<SimulatorState>()(
       undoStack: undoStack.slice(0, -1),
       redoStack: [...redoStack, topology],
       topology: prev,
-      selectedDeviceId: null,
+      selectedDeviceIds: [],
+      selectedBlockIds: [],
       selectedConnectionId: null,
       deviceValidation: {},
     });
@@ -646,7 +747,8 @@ export const useSimulatorStore = create<SimulatorState>()(
       redoStack: redoStack.slice(0, -1),
       undoStack: [...undoStack, topology],
       topology: next,
-      selectedDeviceId: null,
+      selectedDeviceIds: [],
+      selectedBlockIds: [],
       selectedConnectionId: null,
       deviceValidation: {},
     });

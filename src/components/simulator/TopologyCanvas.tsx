@@ -1,8 +1,9 @@
 import { useRef, useState, useCallback, useEffect, forwardRef, useImperativeHandle } from 'react';
-import { Crosshair } from 'lucide-react';
+import { Download, Upload, Crosshair } from 'lucide-react';
 import { useSimulatorStore } from '../../stores/useSimulatorStore';
 import { DeviceNode } from './DeviceNode';
 import { ConnectionLine } from './ConnectionLine';
+import { NetworkBlock } from './NetworkBlock';
 import { PacketAnimator } from './PacketAnimator';
 import { ContextMenu } from './ContextMenu';
 
@@ -39,7 +40,9 @@ export interface TopologyCanvasHandle {
 
 interface TopologyCanvasProps {
   connectMode: boolean;
-  onDeviceClick: (deviceId: string) => void;
+  blockMode?: boolean;
+  selectMode?: boolean;
+  onDeviceClick: (deviceId: string, additive?: boolean) => void;
   onBackgroundClick: () => void;
   onConnectionSelect?: (connectionId: string) => void;
   onZoomChange?: (zoom: number) => void;
@@ -50,21 +53,44 @@ const MIN_ZOOM = 0.3;
 const MAX_ZOOM = 2.5;
 
 export const TopologyCanvas = forwardRef<TopologyCanvasHandle, TopologyCanvasProps>(
-  function TopologyCanvas({ connectMode, onDeviceClick, onBackgroundClick, onConnectionSelect, onZoomChange, onDeviceContextAction }, ref) {
+  function TopologyCanvas({ connectMode, blockMode = false, selectMode = false, onDeviceClick, onBackgroundClick, onConnectionSelect, onZoomChange, onDeviceContextAction }, ref) {
     const svgRef = useRef<SVGSVGElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const viewportRef = useRef<Viewport>({ x: 0, y: 0, zoom: 1 });
 
     const topology = useSimulatorStore(s => s.topology);
-    const selectedDeviceId = useSimulatorStore(s => s.selectedDeviceId);
+    const loadTopology = useSimulatorStore(s => s.loadTopology);
+    const addBlock = useSimulatorStore(s => s.addBlock);
+    const removeBlock = useSimulatorStore(s => s.removeBlock);
+    const moveBlock = useSimulatorStore(s => s.moveBlock);
+    const resizeBlock = useSimulatorStore(s => s.resizeBlock);
+    const selectedDeviceIds = useSimulatorStore(s => s.selectedDeviceIds);
     const selectedConnectionId = useSimulatorStore(s => s.selectedConnectionId);
+    const selectedBlockIds = useSimulatorStore(s => s.selectedBlockIds);
+    const setSelection = useSimulatorStore(s => s.setSelection);
+    const selectBlock = useSimulatorStore(s => s.selectBlock);
+    const handleBlockSelect = useCallback((id: string, additive = false) => {
+      if (additive) {
+        const next = selectedBlockIds.includes(id)
+          ? selectedBlockIds.filter(x => x !== id)
+          : [...selectedBlockIds, id];
+        setSelection(selectedDeviceIds, next);
+      } else {
+        selectBlock(id);
+      }
+    }, [selectedBlockIds, selectedDeviceIds, setSelection, selectBlock]);
     const connectingFromId = useSimulatorStore(s => s.connectingFromId);
     const moveDevice = useSimulatorStore(s => s.moveDevice);
+    const commitMove = useSimulatorStore(s => s.commitMove);
     const selectConnection = useSimulatorStore(s => s.selectConnection);
     const deviceValidation = useSimulatorStore(s => s.deviceValidation);
 
     const [viewport, setViewport] = useState<Viewport>({ x: 0, y: 0, zoom: 1 });
     const [cursorWorld, setCursorWorld] = useState<{ x: number; y: number } | null>(null);
+    const [drawBlock, setDrawBlock] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
+    const [marquee, setMarquee] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
     const [panning, setPanning] = useState(false);
+    const [loaded, setLoaded] = useState(false);
     const [contextMenu, setContextMenu] = useState<{ x: number; y: number; deviceId: string | null } | null>(null);
 
     useEffect(() => {
@@ -91,13 +117,15 @@ export const TopologyCanvas = forwardRef<TopologyCanvasHandle, TopologyCanvasPro
 
     const fitToContent = useCallback(() => {
       const rect = svgRef.current?.getBoundingClientRect();
-      if (!rect || topology.devices.length === 0) return;
-      const xs = topology.devices.map(d => d.position.x);
-      const ys = topology.devices.map(d => d.position.y);
+      if (!rect || (topology.devices.length === 0 && !(topology.blocks?.length))) return;
+      const xs = [...topology.devices.map(d => d.position.x), ...(topology.blocks ?? []).map(b => b.x)];
+      const ys = [...topology.devices.map(d => d.position.y), ...(topology.blocks ?? []).map(b => b.y)];
+      const xs2 = [...topology.devices.map(d => d.position.x), ...(topology.blocks ?? []).map(b => b.x + b.width)];
+      const ys2 = [...topology.devices.map(d => d.position.y), ...(topology.blocks ?? []).map(b => b.y + b.height)];
       const minX = Math.min(...xs) - 100;
-      const maxX = Math.max(...xs) + 100;
+      const maxX = Math.max(...xs2) + 100;
       const minY = Math.min(...ys) - 100;
-      const maxY = Math.max(...ys) + 100;
+      const maxY = Math.max(...ys2) + 100;
       const width = maxX - minX;
       const height = maxY - minY;
       const zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Math.min(rect.width / width, rect.height / height)));
@@ -106,7 +134,16 @@ export const TopologyCanvas = forwardRef<TopologyCanvasHandle, TopologyCanvasPro
         x: (rect.width - width * zoom) / 2 - minX * zoom,
         y: (rect.height - height * zoom) / 2 - minY * zoom,
       });
-    }, [topology.devices]);
+    }, [topology.devices, topology.blocks]);
+
+    useEffect(() => {
+      const id = requestAnimationFrame(() => {
+        fitToContent();
+        setLoaded(true);
+      });
+      return () => cancelAnimationFrame(id);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     useImperativeHandle(ref, () => ({
       zoomIn: () => zoomBy(1.25),
@@ -129,6 +166,10 @@ export const TopologyCanvas = forwardRef<TopologyCanvasHandle, TopologyCanvasPro
         if (!device) return;
         const world = getWorldPoint(e.clientX, e.clientY);
 
+        const group = selectedDeviceIds.length > 1 && selectedDeviceIds.includes(deviceId)
+          ? topology.devices.filter(d => selectedDeviceIds.includes(d.id)).map(d => ({ id: d.id, x: d.position.x, y: d.position.y }))
+          : null;
+
         const drag: DragState = {
           deviceId,
           offsetX: world.x - device.position.x,
@@ -137,6 +178,8 @@ export const TopologyCanvas = forwardRef<TopologyCanvasHandle, TopologyCanvasPro
           startY: e.clientY,
           moved: false,
         };
+        const startWorld = { x: world.x, y: world.y };
+        const originalTopology = topology;
 
         const onMove = (ev: PointerEvent) => {
           const dx = ev.clientX - drag.startX;
@@ -144,24 +187,99 @@ export const TopologyCanvas = forwardRef<TopologyCanvasHandle, TopologyCanvasPro
           if (!drag.moved && Math.hypot(dx, dy) < 4) return;
           drag.moved = true;
           const p = getWorldPoint(ev.clientX, ev.clientY);
-          moveDevice(drag.deviceId, p.x - drag.offsetX, p.y - drag.offsetY);
+          if (group) {
+            const ddx = p.x - startWorld.x;
+            const ddy = p.y - startWorld.y;
+            group.forEach(g => moveDevice(g.id, g.x + ddx, g.y + ddy));
+          } else {
+            moveDevice(drag.deviceId, p.x - drag.offsetX, p.y - drag.offsetY);
+          }
         };
 
-        const onUp = () => {
+        const onUp = (ev: PointerEvent) => {
           window.removeEventListener('pointermove', onMove);
           window.removeEventListener('pointerup', onUp);
-          if (!drag.moved) onDeviceClick(deviceId);
+          if (drag.moved) commitMove(originalTopology);
+          else onDeviceClick(deviceId, ev.ctrlKey || ev.metaKey);
         };
 
         window.addEventListener('pointermove', onMove);
         window.addEventListener('pointerup', onUp);
       },
-      [topology.devices, getWorldPoint, moveDevice, onDeviceClick]
+      [topology, selectedDeviceIds, getWorldPoint, moveDevice, commitMove, onDeviceClick]
     );
 
     const handleBackgroundPointerDown = useCallback(
       (e: React.PointerEvent) => {
         if (e.button !== 0 && e.button !== 1) return;
+        const start = getWorldPoint(e.clientX, e.clientY);
+
+        if (blockMode) {
+          setDrawBlock({ x1: start.x, y1: start.y, x2: start.x, y2: start.y });
+          const onMove = (ev: PointerEvent) => {
+            const p = getWorldPoint(ev.clientX, ev.clientY);
+            setDrawBlock(d => (d ? { ...d, x2: p.x, y2: p.y } : d));
+          };
+          const onUp = () => {
+            window.removeEventListener('pointermove', onMove);
+            window.removeEventListener('pointerup', onUp);
+            setDrawBlock(d => {
+              if (d) {
+                const x = Math.min(d.x1, d.x2);
+                const y = Math.min(d.y1, d.y2);
+                const width = Math.abs(d.x2 - d.x1);
+                const height = Math.abs(d.y2 - d.y1);
+                if (width > 20 && height > 20)
+                  addBlock({
+                    name: `Bloco ${(topology.blocks?.length ?? 0) + 1}`,
+                    x,
+                    y,
+                    width,
+                    height,
+                  });
+              }
+              return null;
+            });
+          };
+          window.addEventListener('pointermove', onMove);
+          window.addEventListener('pointerup', onUp);
+          return;
+        }
+
+        if (selectMode || e.ctrlKey || e.metaKey) {
+          const sel = { x1: start.x, y1: start.y, x2: start.x, y2: start.y, moved: false };
+          setMarquee({ x1: start.x, y1: start.y, x2: start.x, y2: start.y });
+
+          const apply = (ev: PointerEvent) => {
+            const p = getWorldPoint(ev.clientX, ev.clientY);
+            sel.x2 = p.x;
+            sel.y2 = p.y;
+            if (!sel.moved && Math.hypot(ev.clientX - e.clientX, ev.clientY - e.clientY) < 4) return;
+            sel.moved = true;
+            setMarquee({ x1: sel.x1, y1: sel.y1, x2: sel.x2, y2: sel.y2 });
+            const x = Math.min(sel.x1, sel.x2);
+            const y = Math.min(sel.y1, sel.y2);
+            const w = Math.abs(sel.x2 - sel.x1);
+            const h = Math.abs(sel.y2 - sel.y1);
+            setSelection(
+              topology.devices.filter(d => d.position.x >= x && d.position.x <= x + w && d.position.y >= y && d.position.y <= y + h).map(d => d.id),
+              (topology.blocks ?? []).filter(b => b.x < x + w && b.x + b.width > x && b.y < y + h && b.y + b.height > y).map(b => b.id)
+            );
+          };
+
+          const onUp = () => {
+            window.removeEventListener('pointermove', onMove);
+            window.removeEventListener('pointerup', onUp);
+            setMarquee(null);
+            if (!sel.moved) onBackgroundClick();
+          };
+
+          const onMove = (ev: PointerEvent) => apply(ev);
+          window.addEventListener('pointermove', onMove);
+          window.addEventListener('pointerup', onUp);
+          return;
+        }
+
         const pan: PanState = {
           startX: e.clientX,
           startY: e.clientY,
@@ -189,7 +307,7 @@ export const TopologyCanvas = forwardRef<TopologyCanvasHandle, TopologyCanvasPro
         window.addEventListener('pointermove', onMove);
         window.addEventListener('pointerup', onUp);
       },
-      [onBackgroundClick]
+      [blockMode, selectMode, getWorldPoint, addBlock, topology, onBackgroundClick, setSelection]
     );
 
     const handleWheel = useCallback((e: React.WheelEvent) => {
@@ -222,6 +340,11 @@ export const TopologyCanvas = forwardRef<TopologyCanvasHandle, TopologyCanvasPro
 
     return (
       <div className="relative flex-1 bg-[#0A0E1A] overflow-hidden">
+        {!loaded && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#0A0E1A]">
+            <span className="text-xs text-[#64748B]">Carregando quadro…</span>
+          </div>
+        )}
         <svg
           ref={svgRef}
           className="w-full h-full"
@@ -277,6 +400,46 @@ export const TopologyCanvas = forwardRef<TopologyCanvasHandle, TopologyCanvasPro
               fill="url(#netlab-grid-major)"
             />
 
+            {topology.blocks?.map(block => (
+              <NetworkBlock
+                key={block.id}
+                block={block}
+                selected={selectedBlockIds.includes(block.id)}
+                onSelect={handleBlockSelect}
+                onRemove={removeBlock}
+                onMove={moveBlock}
+                onResize={resizeBlock}
+              />
+            ))}
+
+            {drawBlock && (
+              <rect
+                x={Math.min(drawBlock.x1, drawBlock.x2)}
+                y={Math.min(drawBlock.y1, drawBlock.y2)}
+                width={Math.abs(drawBlock.x2 - drawBlock.x1)}
+                height={Math.abs(drawBlock.y2 - drawBlock.y1)}
+                fill="rgba(56,189,248,0.06)"
+                stroke="#38BDF8"
+                strokeWidth={1}
+                strokeDasharray="6 4"
+                vectorEffect="non-scaling-stroke"
+              />
+            )}
+
+            {marquee && (
+              <rect
+                x={Math.min(marquee.x1, marquee.x2)}
+                y={Math.min(marquee.y1, marquee.y2)}
+                width={Math.abs(marquee.x2 - marquee.x1)}
+                height={Math.abs(marquee.y2 - marquee.y1)}
+                fill="rgba(99,102,241,0.08)"
+                stroke="#818CF8"
+                strokeWidth={1}
+                strokeDasharray="4 3"
+                vectorEffect="non-scaling-stroke"
+              />
+            )}
+
             {topology.connections.map(conn => (
               <ConnectionLine
                 key={conn.id}
@@ -309,7 +472,7 @@ export const TopologyCanvas = forwardRef<TopologyCanvasHandle, TopologyCanvasPro
               <DeviceNode
                 key={device.id}
                 device={device}
-                selected={selectedDeviceId === device.id}
+                selected={selectedDeviceIds.includes(device.id)}
                 connecting={connectMode || !!connectingFromId}
                 isConnectionSource={connectingFromId === device.id}
                 connected={topology.connections.some(
@@ -340,6 +503,56 @@ export const TopologyCanvas = forwardRef<TopologyCanvasHandle, TopologyCanvasPro
         {/* Status chip */}
         <div className="absolute bottom-3 left-3 px-3 py-1.5 rounded-lg bg-[#111A2C]/80 border border-[--color-border-primary]/60 text-[10px] font-mono text-[--color-text-muted] glass">
           {Math.round(viewport.zoom * 100)}% · {topology.devices.length} disp. · {topology.connections.length} conexões
+        </div>
+
+        {/* Export / Import */}
+        <div className="absolute bottom-3 right-3 flex items-center gap-1">
+          <button
+            onClick={() => {
+              const json = JSON.stringify(topology, null, 2);
+              const blob = new Blob([json], { type: 'application/json' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `netlab-${new Date().toISOString().slice(0, 10)}.json`;
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+            title="Exportar quadro (.json)"
+            className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-[#111A2C]/80 border border-[--color-border-primary]/60 text-[10px] font-medium text-[--color-text-muted] hover:text-[--color-text-primary] hover:border-[--color-accent-cyan]/40 transition-colors cursor-pointer glass"
+          >
+            <Download size={11} />
+            Exportar
+          </button>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            title="Importar quadro (.json)"
+            className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-[#111A2C]/80 border border-[--color-border-primary]/60 text-[10px] font-medium text-[--color-text-muted] hover:text-[--color-text-primary] hover:border-[--color-accent-cyan]/40 transition-colors cursor-pointer glass"
+          >
+            <Upload size={11} />
+            Importar
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              const reader = new FileReader();
+              reader.onload = () => {
+                try {
+                  const data = JSON.parse(reader.result as string);
+                  if (data?.devices && data?.connections) {
+                    loadTopology(data);
+                  }
+                } catch {}
+              };
+              reader.readAsText(file);
+              e.target.value = '';
+            }}
+          />
         </div>
 
         {/* Context menu */}

@@ -15,6 +15,7 @@ import {
   Minimize2,
   Undo2,
   Redo2,
+  BoxSelect,
 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { DevicePalette } from './DevicePalette';
@@ -49,7 +50,7 @@ export function SimulatorWorkspace({
   const startConnection = useSimulatorStore((s) => s.startConnection);
   const completeConnection = useSimulatorStore((s) => s.completeConnection);
   const cancelConnection = useSimulatorStore((s) => s.cancelConnection);
-  const selectedDeviceId = useSimulatorStore((s) => s.selectedDeviceId);
+  const selectedDeviceIds = useSimulatorStore((s) => s.selectedDeviceIds);
   const addDevice = useSimulatorStore((s) => s.addDevice);
   const packets = useSimulatorStore(useShallow((s) => s.packets));
   const topology = useSimulatorStore((s) => s.topology);
@@ -58,6 +59,9 @@ export function SimulatorWorkspace({
   const removeDevice = useSimulatorStore((s) => s.removeDevice);
   const removeConnection = useSimulatorStore((s) => s.removeConnection);
   const selectedConnectionId = useSimulatorStore((s) => s.selectedConnectionId);
+  const selectedBlockIds = useSimulatorStore((s) => s.selectedBlockIds);
+  const setSelection = useSimulatorStore((s) => s.setSelection);
+  const removeSelection = useSimulatorStore((s) => s.removeSelection);
   const copiedDeviceId = useSimulatorStore((s) => s.copiedDeviceId);
   const undo = useSimulatorStore((s) => s.undo);
   const redo = useSimulatorStore((s) => s.redo);
@@ -88,7 +92,7 @@ export function SimulatorWorkspace({
         return;
       }
       if (mod && e.key.toLowerCase() === 'c') {
-        if (selectedDeviceId) copyDevice(selectedDeviceId);
+        if (selectedDeviceIds.length) copyDevice(selectedDeviceIds[0]);
         return;
       }
       if (mod && e.key.toLowerCase() === 'v') {
@@ -96,27 +100,30 @@ export function SimulatorWorkspace({
         return;
       }
       if (mod && e.key.toLowerCase() === 'd') {
-        if (selectedDeviceId) {
-          copyDevice(selectedDeviceId);
+        if (selectedDeviceIds.length) {
+          copyDevice(selectedDeviceIds[0]);
           requestAnimationFrame(() => pasteDevice());
         }
         return;
       }
       if (e.key === 'Delete' || e.key === 'Backspace') {
-        if (selectedDeviceId) removeDevice(selectedDeviceId);
-        else if (selectedConnectionId) removeConnection(selectedConnectionId);
+        if (selectedDeviceIds.length || selectedBlockIds.length) {
+          removeSelection(selectedDeviceIds, selectedBlockIds);
+        } else if (selectedConnectionId) removeConnection(selectedConnectionId);
       }
     };
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [
-    selectedDeviceId,
+    selectedDeviceIds,
     selectedConnectionId,
+    selectedBlockIds,
     copiedDeviceId,
     copyDevice,
     pasteDevice,
     removeDevice,
+    removeSelection,
     removeConnection,
     undo,
     redo,
@@ -125,6 +132,7 @@ export function SimulatorWorkspace({
   const [connectMode, setConnectMode] = useState<
     'ethernet' | 'wireless' | null
   >(null);
+  const [selectMode, setSelectMode] = useState(false);
   const [showHelp] = useState(true);
   const [propertyPanelOpen, setPropertyPanelOpen] = useState(true);
   const [bottomTab, setBottomTab] = useState<
@@ -284,7 +292,7 @@ export function SimulatorWorkspace({
     return { iface, device, conn };
   }
 
-  const handleDeviceClick = (deviceId: string) => {
+  const handleDeviceClick = (deviceId: string, additive = false) => {
     if (connectMode) {
       if (!connectingFromId) {
         startConnection(deviceId, connectMode);
@@ -294,6 +302,15 @@ export function SimulatorWorkspace({
         completeConnection(deviceId);
       }
 
+      return;
+    }
+
+    if (additive) {
+      const next = selectedDeviceIds.includes(deviceId)
+        ? selectedDeviceIds.filter((x) => x !== deviceId)
+        : [...selectedDeviceIds, deviceId];
+      setSelection(next, selectedBlockIds);
+      setPropertyPanelOpen(true);
       return;
     }
 
@@ -355,8 +372,8 @@ export function SimulatorWorkspace({
     setBottomTab('console');
     setBottomExpanded(true);
 
-    if (!terminalOpen && selectedDeviceId) {
-      useTerminalStore.getState().openTerminal(selectedDeviceId);
+    if (!terminalOpen && selectedDeviceIds.length) {
+      useTerminalStore.getState().openTerminal(selectedDeviceIds[0]);
     }
   };
 
@@ -425,6 +442,7 @@ export function SimulatorWorkspace({
             <TopologyCanvas
               ref={canvasRef}
               connectMode={!!connectMode}
+              selectMode={selectMode}
               onDeviceClick={handleDeviceClick}
               onBackgroundClick={handleBackgroundClick}
               onConnectionSelect={() => setPropertyPanelOpen(true)}
@@ -432,7 +450,7 @@ export function SimulatorWorkspace({
             />
 
             <ContextualHintOverlay
-              device={topology.devices.find((d) => d.id === selectedDeviceId) ?? null}
+              device={topology.devices.find((d) => d.id === selectedDeviceIds[0]) ?? null}
               topology={topology}
             />
 
@@ -445,6 +463,7 @@ export function SimulatorWorkspace({
                     key={mode}
                     onClick={() => {
                       setConnectMode(active ? null : mode);
+                      setSelectMode(false);
                       cancelConnection();
                     }}
                     className={clsx(
@@ -471,6 +490,35 @@ export function SimulatorWorkspace({
                   </button>
                 );
               })}
+              <button
+                onClick={() => {
+                  setSelectMode(s => !s);
+                  setConnectMode(null);
+                  cancelConnection();
+                }}
+                title="Seleção múltipla: arraste no fundo para selecionar vários equipamentos"
+                className={clsx(
+                  'flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium cursor-pointer transition-all duration-150',
+                  selectMode
+                    ? 'bg-[--color-accent-blue]/15 text-[--color-accent-blue] ring-inset-blue'
+                    : 'text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/[0.04]',
+                )}
+              >
+                <BoxSelect size={14} />
+                {selectMode ? 'Cancelar seleção' : 'Selecionar'}
+              </button>
+              {(selectedDeviceIds.length > 1 || selectedBlockIds.length > 1) && (
+                <button
+                  onClick={() => {
+                  removeSelection(selectedDeviceIds, selectedBlockIds);
+                }}
+                  title="Excluir todos os selecionados"
+                  className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium cursor-pointer transition-all duration-150 text-[#F87171] hover:bg-[#F87171]/15"
+                >
+                  <Trash2 size={14} />
+                  Excluir seleção
+                </button>
+              )}
             </div>
           </div>
 

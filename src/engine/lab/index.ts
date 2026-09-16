@@ -90,7 +90,7 @@ export function normalizeTopology(topo: Topology): Topology {
     latency: c.latency ?? 1,
   })) satisfies Connection[];
 
-  return { ...topo, devices, connections };
+  return { ...topo, devices, connections, blocks: topo.blocks ?? [] };
 }
 
 function findDevice(topology: Topology, ref: string): Device | undefined {
