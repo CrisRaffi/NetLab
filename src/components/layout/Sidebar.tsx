@@ -19,7 +19,7 @@ const NAV_SECTIONS = [
   {
     label: 'Plataforma',
     items: [
-      { to: '/', label: 'Dashboard', icon: LayoutDashboard },
+      { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
       { to: '/mapa', label: 'Mapa de Aprendizado', icon: Map },
     ],
   },
