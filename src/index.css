@@ -1042,3 +1042,21 @@ h1,h2,h3,h4,h5,h6 { font-size: inherit; font-weight: inherit; letter-spacing: in
   animation: landingParticleFloat 4s ease-in-out infinite;
 }
 @keyframes landingParticleFloat { 0% { transform: translateY(0) scale(1); opacity: 0; } 30% { opacity: .7; } to { transform: translateY(-90px) scale(.3); opacity: 0; } }
+
+/* Nav highlight (featured item in sidebar) */
+.nav-highlight {
+  border: 1px solid rgba(56, 189, 248, .3);
+  background: linear-gradient(90deg, rgba(56, 189, 248, .12), rgba(99, 102, 241, .05) 70%);
+  color: var(--color-accent-cyan);
+  box-shadow: 0 0 10px rgba(56, 189, 248, .14), inset 0 0 0 1px rgba(56, 189, 248, .1);
+  animation: navGlowPulse 2.6s ease-in-out infinite;
+}
+.nav-highlight:hover {
+  border-color: rgba(56, 189, 248, .55);
+  color: #fff;
+  box-shadow: 0 0 22px rgba(56, 189, 248, .3), inset 0 0 0 1px rgba(56, 189, 248, .18);
+}
+@keyframes navGlowPulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(56, 189, 248, .14), inset 0 0 0 1px rgba(56, 189, 248, .1); }
+  50% { box-shadow: 0 0 20px rgba(56, 189, 248, .3), inset 0 0 0 1px rgba(56, 189, 248, .18); }
+}

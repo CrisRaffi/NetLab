@@ -13,22 +13,6 @@ export function Header() {
         aria-hidden
         className="absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-[--color-accent-blue]/45 to-transparent"
       />
-      {/*  Brand */}
-      <div className="flex items-center gap-3 shrink-0">
-        <div className="relative shrink-0">
-          <div className="absolute inset-0 rounded-xl bg-[--color-accent-blue]/30 blur-md" />
-          <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-[--color-accent-blue] via-[#4F46E5] to-[--color-accent-cyan] flex items-center justify-center text-white font-bold text-sm basis-9">
-            NL
-          </div>
-        </div>
-        <div className="hidden md:block leading-tight">
-          <p className="text-sm font-bold text-[--color-text-primary] tracking-tight">NetLab</p>
-          <p className="text-[9px] text-[--color-text-muted] uppercase tracking-[0.16em]">
-            Simulador de Redes
-          </p>
-        </div>
-      </div>
-
       {/* Search */}
       <div className="flex flex-1 max-w-xl mx-auto">
         <div className="relative w-full group">
