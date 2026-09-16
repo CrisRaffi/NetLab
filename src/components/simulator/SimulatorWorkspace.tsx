@@ -26,6 +26,7 @@ import { PacketInspector } from './PacketInspector';
 import { ContextualHintOverlay } from './ContextualHint';
 import { useSimulatorStore } from '../../stores/useSimulatorStore';
 import { useTerminalStore } from '../../stores/useTerminalStore';
+import { NETWORK_EXAMPLES } from '../../data/examples';
 import { clsx } from 'clsx';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -133,6 +134,7 @@ export function SimulatorWorkspace({
   const [connectMode, setConnectMode] = useState<
     'ethernet' | 'wireless' | null
   >(null);
+  const [exampleIndex, setExampleIndex] = useState(0);
   const [showHelp] = useState(true);
   const [propertyPanelOpen, setPropertyPanelOpen] = useState(true);
   const [bottomTab, setBottomTab] = useState<
@@ -163,134 +165,13 @@ export function SimulatorWorkspace({
     prevTerminalOpenRef.current = terminalOpen;
   }, [terminalOpen]);
 
-  const createHomeNetworkExample = () => {
+  const createExample = () => {
     const loadTopology = useSimulatorStore.getState().loadTopology;
-    const resetTopology = useSimulatorStore.getState().resetTopology;
-    resetTopology();
-    const { device, iface, conn } = createTopologyHelpers();
-    const topology = {
-      id: 'home-network-example',
-      name: 'Rede Doméstica Exemplo',
-      devices: [
-        device('core1', 'core', 'CORE-01', 440, 120, [
-          iface('eth0', '192.168.1.1', { mask: '255.255.255.0' }),
-          iface('eth1', '192.168.2.1', { mask: '255.255.255.0' }),
-          iface('eth2', '192.168.3.1', { mask: '255.255.255.0' }),
-          iface('eth3', '203.0.113.1', { mask: '255.255.255.252' }),
-        ]),
-        device('switch1', 'switch', 'SW-LAN', 200, 120, [
-          iface('f0/1'),
-          iface('f0/2'),
-          iface('f0/3'),
-          iface('f0/4'),
-        ]),
-        device('pc1', 'pc', 'PC-Sala', 80, 60, [
-          iface('eth0', '192.168.1.10', {
-            mask: '255.255.255.0',
-            gw: '192.168.1.1',
-            dns: '8.8.8.8',
-          }),
-        ]),
-        device('pc2', 'pc', 'PC-Quarto', 80, 180, [
-          iface('eth0', '192.168.1.11', {
-            mask: '255.255.255.0',
-            gw: '192.168.1.1',
-            dns: '8.8.8.8',
-          }),
-        ]),
-        device('server1', 'server', 'NAS', 80, 300, [
-          iface('eth0', '192.168.2.10', {
-            mask: '255.255.255.0',
-            gw: '192.168.2.1',
-            dns: '8.8.8.8',
-          }),
-        ]),
-        device('ap1', 'access_point', 'WiFi-Casa', 200, 300, [
-          iface('eth0', '192.168.3.10', {
-            mask: '255.255.255.0',
-            gw: '192.168.3.1',
-            dns: '8.8.8.8',
-          }),
-        ]),
-        device('printer1', 'printer', 'Impressora', 320, 300, [
-          iface('eth0', '192.168.3.11', {
-            mask: '255.255.255.0',
-            gw: '192.168.3.1',
-            dns: '8.8.8.8',
-          }),
-        ]),
-        device('cloud1', 'cloud', 'Internet', 680, 120, [
-          iface('eth0', '203.0.113.2', {
-            mask: '255.255.255.252',
-            gw: '203.0.113.1',
-          }),
-        ]),
-      ],
-      connections: [
-        conn('core1', 'eth0', 'switch1', 'f0/1'),
-        conn('switch1', 'f0/2', 'pc1', 'eth0'),
-        conn('switch1', 'f0/3', 'pc2', 'eth0'),
-        conn('core1', 'eth1', 'server1', 'eth0'),
-        conn('core1', 'eth2', 'ap1', 'eth0'),
-        conn('switch1', 'f0/4', 'printer1', 'eth0'),
-        conn('core1', 'eth3', 'cloud1', 'eth0'),
-      ],
-    };
-    loadTopology(topology);
+    const organizeLayout = useSimulatorStore.getState().organizeLayout;
+    loadTopology(NETWORK_EXAMPLES[exampleIndex % NETWORK_EXAMPLES.length]());
+    setExampleIndex((i) => i + 1);
+    organizeLayout();
   };
-
-  function createTopologyHelpers() {
-    function iface(
-      id: string,
-      ip?: string,
-      opts: { mask?: string; gw?: string; dns?: string } = {},
-    ) {
-      return {
-        id,
-        name: id,
-        type: 'ethernet' as const,
-        mac: `AA:BB:CC:DD:${id.charCodeAt(0).toString(16).padStart(2, '0')}:00`,
-        ip: ip ?? undefined,
-        subnetMask: opts.mask,
-        gateway: opts.gw,
-        dns: opts.dns,
-        status: 'up' as const,
-        speed: 100,
-      };
-    }
-    function device(
-      id: string,
-      type: any,
-      name: string,
-      x: number,
-      y: number,
-      interfaces: any[],
-      routes: any[] = [],
-    ) {
-      return {
-        id,
-        type,
-        name,
-        position: { x, y },
-        interfaces,
-        config: { hostname: name, routes },
-      };
-    }
-    function conn(a: string, ia: string, b: string, ib: string) {
-      return {
-        id: `conn-${a}-${b}`,
-        deviceId1: a,
-        interfaceId1: ia,
-        deviceId2: b,
-        interfaceId2: ib,
-        type: 'ethernet' as const,
-        status: 'connected' as const,
-        bandwidth: 100,
-        latency: 1,
-      };
-    }
-    return { iface, device, conn };
-  }
 
   const handleDeviceClick = (deviceId: string, additive = false) => {
     if (connectMode) {
@@ -565,12 +446,12 @@ export function SimulatorWorkspace({
 
               {/* Example */}
               <button
-                onClick={createHomeNetworkExample}
+                onClick={createExample}
                 className={clsx(
                   'flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] font-medium cursor-pointer transition-all duration-150',
                   'text-[--color-accent-cyan] hover:text-[--color-text-primary] hover:bg-[--color-accent-cyan]/10',
                 )}
-                title="Carregar rede doméstica de exemplo (resetar e criar nova)"
+                title="Carregar um modelo de rede de exemplo (cada clique traz um modelo diferente)"
               >
                 <Home size={13} />
                 Exemplo

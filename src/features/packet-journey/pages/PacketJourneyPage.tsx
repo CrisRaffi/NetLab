@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, Fragment } from 'react';
 import {
   Gamepad2,
   MessageSquareText,
@@ -9,6 +9,7 @@ import {
   ClipboardCheck,
   RotateCcw,
   Trophy,
+  Layers,
 } from 'lucide-react';
 import { PageHeader } from '../../../components/common/PageHeader';
 import { Card } from '../../../components/common/Card';
@@ -23,6 +24,7 @@ import { totalXp, accuracyOf } from '../engine/scoring';
 import type { ExerciseResult } from '../engine/scoring';
 import { OSI_LAYERS, TCP_IP_LAYERS } from '../data/osi';
 import { PROTOCOL_TIPS } from '../../../data/protocolTips';
+import { clsx } from 'clsx';
 
 function Chip({
   children,
@@ -51,6 +53,22 @@ function Chip({
   );
 }
 
+function StepBadge({ n, accent = 'cyan' }: { n: number; accent?: string }) {
+  const colors: Record<string, string> = {
+    cyan: 'text-[--color-accent-cyan] border-[--color-accent-cyan]/30 bg-[--color-accent-cyan]/10',
+    blue: 'text-[--color-accent-blue] border-[--color-accent-blue]/30 bg-[--color-accent-blue]/10',
+    purple: 'text-[--color-accent-purple] border-[--color-accent-purple]/30 bg-[--color-accent-purple]/10',
+    green: 'text-[--color-accent-green] border-[--color-accent-green]/30 bg-[--color-accent-green]/10',
+  };
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md border text-[10px] font-semibold ${colors[accent]}`}
+    >
+      <span className="font-mono">{n}</span> Passo
+    </span>
+  );
+}
+
 export function PacketJourneyPage() {
   const [mode, setMode] = useState<'osi' | 'tcpip'>('osi');
   const [selected, setSelected] = useState<number>(7);
@@ -59,10 +77,20 @@ export function PacketJourneyPage() {
   const [exIdx, setExIdx] = useState(0);
   const [exResults, setExResults] = useState<ExerciseResult[]>([]);
 
+  const allDone = exIdx >= JOURNEY_EXERCISES.length;
+  const reached = exIdx > 0 ? 4 : journeyKey > 0 ? 3 : built ? 2 : 1;
+
   const layer =
     mode === 'osi'
       ? OSI_LAYERS.find((l) => l.number === selected)
       : TCP_IP_LAYERS[selected - 1];
+
+  const JOURNEY_STEPS = [
+    { label: 'Montar o pacote', icon: Package },
+    { label: 'Enviar pela rede', icon: SendHorizonal },
+    { label: 'Desencapsular', icon: Layers },
+    { label: 'Avaliar', icon: ClipboardCheck },
+  ];
 
   return (
     <div className="space-y-3 w-full" style={{ padding: 16 }}>
@@ -78,16 +106,52 @@ export function PacketJourneyPage() {
         }
       />
 
-      <div className="rounded-lg border border-[--color-accent-cyan]/20 bg-gradient-to-r from-[--color-accent-cyan]/6 to-transparent px-4 py-2.5 flex items-center gap-3">
-        <MessageSquareText
-          size={16}
-          className="text-[--color-accent-cyan] shrink-0"
-        />
-        <p className="text-xs text-[--color-text-secondary]">
-          O que acontece com uma informação quando ela sai do seu computador e
-          chega em outro computador? Siga o fluxo abaixo — depois explore as
-          camadas ao lado.
-        </p>
+      <div className="rounded-xl border border-[--color-accent-cyan]/20 bg-gradient-to-r from-[--color-accent-cyan]/8 via-transparent to-transparent px-4 py-3 flex items-start gap-3 card-flair">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[--color-accent-cyan]/10 border border-[--color-accent-cyan]/25 text-[--color-accent-cyan]">
+          <MessageSquareText size={16} />
+        </span>
+        <div className="min-w-0">
+          <p className="text-xs font-semibold text-[--color-text-primary]">
+            Siga o fluxo abaixo, passo a passo
+          </p>
+          <p className="text-[11px] text-[--color-text-secondary] mt-0.5 leading-relaxed">
+            O que acontece com uma informação quando ela sai do seu computador e
+            chega em outro computador? Monte, envie e desmonte o pacote — depois
+            explore as camadas ao lado.
+          </p>
+        </div>
+      </div>
+
+      {/* Journey stepper */}
+      <div className="flex items-center gap-1.5 flex-wrap rounded-xl border border-[--color-border-primary]/45 bg-[--color-bg-card]/60 px-3 py-2.5">
+        {JOURNEY_STEPS.map((s, i) => {
+          const n = i + 1;
+          const done = n < reached || allDone;
+          const active = n === reached && !allDone;
+          const Icon = s.icon;
+          return (
+            <Fragment key={s.label}>
+              {i > 0 && (
+                <span className="hidden sm:block h-px flex-1 min-w-4 bg-[--color-border-secondary]/60" />
+              )}
+              <div
+                className={clsx(
+                  'flex items-center gap-2 px-2.5 py-1.5 rounded-lg border transition-colors',
+                  done
+                    ? 'border-[--color-accent-green]/30 bg-[--color-accent-green]/8 text-[--color-accent-green]'
+                    : active
+                      ? 'border-[--color-accent-cyan]/40 bg-[--color-accent-cyan]/10 text-[--color-accent-cyan]'
+                      : 'border-[--color-border-primary] text-[--color-text-muted]',
+                )}
+              >
+                <Icon size={13} />
+                <span className="text-[10px] font-semibold whitespace-nowrap">
+                  {s.label}
+                </span>
+              </div>
+            </Fragment>
+          );
+        })}
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-4 items-start">
@@ -97,6 +161,7 @@ export function PacketJourneyPage() {
             subtitle="Coloque cada cartão na ordem em que ele envelopa os dados"
             icon={<Package size={16} />}
             padding="md"
+            actions={<StepBadge n={1} accent="cyan" />}
           >
             <div className="flex flex-col gap-3">
               <EncapsulationBuilder onComplete={() => setBuilt(true)} />
@@ -121,6 +186,7 @@ export function PacketJourneyPage() {
             title="Envio de mensagem"
             subtitle="PC → SWITCH → ROUTER → SERVER"
             padding="md"
+            actions={<StepBadge n={2} accent="blue" />}
           >
             <JourneyDiagram sendKey={journeyKey} />
           </Card>
@@ -129,6 +195,7 @@ export function PacketJourneyPage() {
             title="Desencapsulando no SERVER"
             subtitle="O pacote chega cheio de cabeçalhos — vamos removê-los um a um até a mensagem"
             padding="md"
+            actions={<StepBadge n={3} accent="purple" />}
           >
             <DecapsulationPlayback />
           </Card>
@@ -138,6 +205,7 @@ export function PacketJourneyPage() {
             subtitle="Responda, erre, use dicas e entenda o porquê — a nota é só uma consequência"
             icon={<ClipboardCheck size={16} />}
             padding="md"
+            actions={<StepBadge n={4} accent="green" />}
           >
             {exIdx < JOURNEY_EXERCISES.length ? (
               <ExerciseCard
@@ -184,7 +252,12 @@ export function PacketJourneyPage() {
                     setMode('osi');
                     setSelected(l.number);
                   }}
-                  className="text-left rounded-lg border border-[--color-border-primary] bg-[--color-bg-tertiary]/50 p-3 hover:border-[--color-accent-blue]/40 transition-colors cursor-pointer"
+                  className={clsx(
+                    'text-left rounded-lg border bg-[--color-bg-tertiary]/50 p-3 transition-colors cursor-pointer',
+                    mode === 'osi' && selected === l.number
+                      ? 'border-[--color-accent-cyan]/50 ring-inset-blue-soft'
+                      : 'border-[--color-border-primary] hover:border-[--color-accent-blue]/40',
+                  )}
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-semibold text-[--color-text-secondary]">
@@ -203,7 +276,7 @@ export function PacketJourneyPage() {
           </Card>
         </div>
 
-        <div className="space-y-3 min-w-0">
+        <div className="space-y-3 min-w-0 lg:sticky lg:top-4">
           <Card padding="none" className="overflow-hidden">
             <div className="p-3.5">
               <LayerColumn
@@ -214,7 +287,10 @@ export function PacketJourneyPage() {
               />
             </div>
             {layer && (
-              <div className="border-t border-[--color-border-primary] px-3.5 py-2.5 space-y-2.5 bg-[--color-bg-tertiary]/30">
+              <div
+                key={`${mode}-${selected}`}
+                className="border-t border-[--color-border-primary] px-3.5 py-2.5 space-y-2.5 bg-[--color-bg-tertiary]/30 animate-fade-in-up"
+              >
                 <p className="text-[10px] uppercase tracking-wider text-[--color-text-muted]">
                   Como funciona
                 </p>
