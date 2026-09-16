@@ -16,6 +16,7 @@ import {
   Undo2,
   Redo2,
   LayoutGrid,
+  Grid3x3,
 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { DevicePalette } from './DevicePalette';
@@ -137,6 +138,7 @@ export function SimulatorWorkspace({
     'ethernet' | 'wireless' | null
   >(null);
   const [exampleIndex, setExampleIndex] = useState(0);
+  const [gridMode, setGridMode] = useState(false);
   const [showHelp] = useState(true);
   const [propertyPanelOpen, setPropertyPanelOpen] = useState(true);
   const [bottomTab, setBottomTab] = useState<
@@ -314,10 +316,11 @@ export function SimulatorWorkspace({
           <DevicePalette
             onAdd={(type, position) => {
               const center = canvasRef.current?.getVisibleCenter();
-              addDevice(
-                type,
-                center ?? position,
-              );
+              const p = center ?? position;
+              addDevice(type, {
+                x: gridMode ? Math.round(p.x / 24) * 24 : p.x,
+                y: gridMode ? Math.round(p.y / 24) * 24 : p.y,
+              });
             }}
           />
 
@@ -325,6 +328,7 @@ export function SimulatorWorkspace({
             <TopologyCanvas
               ref={canvasRef}
               connectMode={!!connectMode}
+              gridMode={gridMode}
               onDeviceClick={handleDeviceClick}
               onBackgroundClick={handleBackgroundClick}
               onConnectionSelect={() => setPropertyPanelOpen(true)}
@@ -382,6 +386,19 @@ export function SimulatorWorkspace({
               >
                 <LayoutGrid size={14} />
                 Organizar
+              </button>
+              <button
+                onClick={() => setGridMode((g) => !g)}
+                title={gridMode ? 'Desativar alinhamento ao grid' : 'Ativar alinhamento ao grid'}
+                className={clsx(
+                  'flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium cursor-pointer transition-all duration-150',
+                  gridMode
+                    ? 'bg-[--color-accent-blue]/15 text-[--color-accent-blue] ring-inset-blue'
+                    : 'text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/[0.04]',
+                )}
+              >
+                <Grid3x3 size={14} />
+                {gridMode ? 'Grid: on' : 'Grid: off'}
               </button>
               {(selectedDeviceIds.length > 1 || selectedBlockIds.length > 1) && (
                 <button

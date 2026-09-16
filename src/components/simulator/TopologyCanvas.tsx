@@ -42,6 +42,7 @@ interface TopologyCanvasProps {
   connectMode: boolean;
   blockMode?: boolean;
   selectMode?: boolean;
+  gridMode?: boolean;
   onDeviceClick: (deviceId: string, additive?: boolean) => void;
   onBackgroundClick: () => void;
   onConnectionSelect?: (connectionId: string) => void;
@@ -53,7 +54,7 @@ const MIN_ZOOM = 0.3;
 const MAX_ZOOM = 2.5;
 
 export const TopologyCanvas = forwardRef<TopologyCanvasHandle, TopologyCanvasProps>(
-  function TopologyCanvas({ connectMode, blockMode = false, selectMode = false, onDeviceClick, onBackgroundClick, onConnectionSelect, onZoomChange, onDeviceContextAction }, ref) {
+  function TopologyCanvas({ connectMode, blockMode = false, selectMode = false, gridMode = false, onDeviceClick, onBackgroundClick, onConnectionSelect, onZoomChange, onDeviceContextAction }, ref) {
     const svgRef = useRef<SVGSVGElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const viewportRef = useRef<Viewport>({ x: 0, y: 0, zoom: 1 });
@@ -110,6 +111,8 @@ export const TopologyCanvas = forwardRef<TopologyCanvasHandle, TopologyCanvasPro
         y: (clientY - rect.top - vp.y) / vp.zoom,
       };
     }, []);
+
+    const snap = (v: number) => (gridMode ? Math.round(v / 24) * 24 : v);
 
     const zoomBy = useCallback((factor: number) => {
       setViewport(v => ({ ...v, zoom: Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, v.zoom * factor)) }));
@@ -190,9 +193,15 @@ export const TopologyCanvas = forwardRef<TopologyCanvasHandle, TopologyCanvasPro
           if (group) {
             const ddx = p.x - startWorld.x;
             const ddy = p.y - startWorld.y;
-            group.forEach(g => moveDevice(g.id, g.x + ddx, g.y + ddy));
+            group.forEach((g) =>
+              moveDevice(g.id, snap(g.x + ddx), snap(g.y + ddy)),
+            );
           } else {
-            moveDevice(drag.deviceId, p.x - drag.offsetX, p.y - drag.offsetY);
+            moveDevice(
+              drag.deviceId,
+              snap(p.x - drag.offsetX),
+              snap(p.y - drag.offsetY),
+            );
           }
         };
 
@@ -225,10 +234,10 @@ export const TopologyCanvas = forwardRef<TopologyCanvasHandle, TopologyCanvasPro
             window.removeEventListener('pointerup', onUp);
             setDrawBlock(d => {
               if (d) {
-                const x = Math.min(d.x1, d.x2);
-                const y = Math.min(d.y1, d.y2);
-                const width = Math.abs(d.x2 - d.x1);
-                const height = Math.abs(d.y2 - d.y1);
+                const x = snap(Math.min(d.x1, d.x2));
+                const y = snap(Math.min(d.y1, d.y2));
+                const width = snap(Math.abs(d.x2 - d.x1));
+                const height = snap(Math.abs(d.y2 - d.y1));
                 if (width > 20 && height > 20)
                   addBlock({
                     name: `Bloco ${(topology.blocks?.length ?? 0) + 1}`,
@@ -407,8 +416,10 @@ export const TopologyCanvas = forwardRef<TopologyCanvasHandle, TopologyCanvasPro
                 selected={selectedBlockIds.includes(block.id)}
                 onSelect={handleBlockSelect}
                 onRemove={removeBlock}
-                onMove={moveBlock}
-                onResize={resizeBlock}
+                onMove={(id, x, y) => moveBlock(id, snap(x), snap(y))}
+                onResize={(id, x, y, w, h) =>
+                  resizeBlock(id, snap(x), snap(y), snap(w), snap(h))
+                }
               />
             ))}
 
