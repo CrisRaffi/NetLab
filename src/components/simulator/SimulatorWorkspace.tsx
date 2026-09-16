@@ -56,6 +56,7 @@ export function SimulatorWorkspace({
   const packets = useSimulatorStore(useShallow((s) => s.packets));
   const topology = useSimulatorStore((s) => s.topology);
   const copyDevice = useSimulatorStore((s) => s.copyDevice);
+  const copyDevices = useSimulatorStore((s) => s.copyDevices);
   const pasteDevice = useSimulatorStore((s) => s.pasteDevice);
   const removeDevice = useSimulatorStore((s) => s.removeDevice);
   const removeConnection = useSimulatorStore((s) => s.removeConnection);
@@ -64,7 +65,7 @@ export function SimulatorWorkspace({
   const setSelection = useSimulatorStore((s) => s.setSelection);
   const removeSelection = useSimulatorStore((s) => s.removeSelection);
   const organizeLayout = useSimulatorStore((s) => s.organizeLayout);
-  const copiedDeviceId = useSimulatorStore((s) => s.copiedDeviceId);
+  const copiedDeviceIds = useSimulatorStore((s) => s.copiedDeviceIds);
   const undo = useSimulatorStore((s) => s.undo);
   const redo = useSimulatorStore((s) => s.redo);
   const undoStack = useSimulatorStore((s) => s.undoStack);
@@ -94,16 +95,16 @@ export function SimulatorWorkspace({
         return;
       }
       if (mod && e.key.toLowerCase() === 'c') {
-        if (selectedDeviceIds.length) copyDevice(selectedDeviceIds[0]);
+        if (selectedDeviceIds.length) copyDevices(selectedDeviceIds);
         return;
       }
       if (mod && e.key.toLowerCase() === 'v') {
-        if (copiedDeviceId) pasteDevice();
+        if (copiedDeviceIds.length) pasteDevice();
         return;
       }
       if (mod && e.key.toLowerCase() === 'd') {
         if (selectedDeviceIds.length) {
-          copyDevice(selectedDeviceIds[0]);
+          copyDevices(selectedDeviceIds);
           requestAnimationFrame(() => pasteDevice());
         }
         return;
@@ -121,8 +122,9 @@ export function SimulatorWorkspace({
     selectedDeviceIds,
     selectedConnectionId,
     selectedBlockIds,
-    copiedDeviceId,
+    copiedDeviceIds,
     copyDevice,
+    copyDevices,
     pasteDevice,
     removeDevice,
     removeSelection,

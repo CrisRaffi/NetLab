@@ -160,7 +160,7 @@ interface SimulatorState {
   selectedBlockIds: string[];
   connectingFromId: string | null;
   connectType: 'ethernet' | 'wireless' | null;
-  copiedDeviceId: string | null;
+  copiedDeviceIds: string[];
   packetLog: {
     id: string;
     from: string;
@@ -194,6 +194,7 @@ interface SimulatorState {
   explodeTopology: () => void;
   organizeLayout: (deviceIds?: string[]) => void;
   copyDevice: (deviceId: string) => void;
+  copyDevices: (deviceIds: string[]) => void;
   pasteDevice: (position?: { x: number; y: number }) => void;
   clearCopiedDevice: () => void;
 
@@ -356,7 +357,7 @@ export const useSimulatorStore = create<SimulatorState>()(
       selectedBlockIds: [],
       connectingFromId: null,
       connectType: null,
-      copiedDeviceId: null,
+      copiedDeviceIds: [],
       packetLog: [],
       arpTables: {},
       packets: [],
@@ -679,37 +680,67 @@ export const useSimulatorStore = create<SimulatorState>()(
         });
       },
 
-      copyDevice: (deviceId) => set({ copiedDeviceId: deviceId }),
+      copyDevice: (deviceId) => set({ copiedDeviceIds: [deviceId] }),
+
+      copyDevices: (deviceIds) => set({ copiedDeviceIds: deviceIds }),
 
       pasteDevice: (position) => {
-        const { topology, copiedDeviceId, undoStack } = get();
-        if (!copiedDeviceId) return;
-        const source = topology.devices.find((d) => d.id === copiedDeviceId);
-        if (!source) return;
+        const { topology, copiedDeviceIds, undoStack } = get();
+        if (copiedDeviceIds.length === 0) return;
+        const sources = topology.devices.filter((d) =>
+          copiedDeviceIds.includes(d.id),
+        );
+        if (sources.length === 0) return;
 
-        const index = topology.devices.length + 1;
-        const name = nextDeviceName(source.type, topology.devices);
-        const device: Device = {
-          id: `dev-${source.type}-${Date.now()}`,
-          type: source.type,
-          name,
-          position: position ?? {
-            x: source.position.x + 60,
-            y: source.position.y + 60,
-          },
-          interfaces: source.interfaces.map((iface) => ({
-            ...iface,
-            id: `${iface.id}-copy-${Date.now()}`,
-            mac: `AA:BB:CC:${index.toString(16).padStart(2, '0').toUpperCase()}:${(iface.id === 'wlan0' ? 5 : 1).toString(16).padStart(2, '0').toUpperCase()}:00`,
-          })),
-          config: {
-            hostname: name,
-            routes: source.config.routes.map((route) => ({ ...route })),
-          },
+        const now = Date.now();
+        const anchor = sources[0];
+        const anchorPos = position ?? {
+          x: anchor.position.x + 60,
+          y: anchor.position.y + 60,
         };
+
+        const idMap = new Map<string, string>();
+        const clones: Device[] = sources.map((source, i) => {
+          const newId = `dev-${source.type}-${now}-${i}`;
+          idMap.set(source.id, newId);
+          const index = topology.devices.length + i + 1;
+          const name = nextDeviceName(source.type, topology.devices);
+          return {
+            id: newId,
+            type: source.type,
+            name,
+            position: {
+              x: anchorPos.x + (source.position.x - anchor.position.x),
+              y: anchorPos.y + (source.position.y - anchor.position.y),
+            },
+            interfaces: source.interfaces.map((iface) => ({
+              ...iface,
+              id: `${iface.id}-copy-${now}`,
+              mac: `AA:BB:CC:${index.toString(16).padStart(2, '0').toUpperCase()}:${(iface.id === 'wlan0' ? 5 : 1).toString(16).padStart(2, '0').toUpperCase()}:00`,
+            })),
+            config: {
+              hostname: name,
+              routes: source.config.routes.map((route) => ({ ...route })),
+            },
+          };
+        });
+
+        const newConns = topology.connections
+          .filter((c) => idMap.has(c.deviceId1) && idMap.has(c.deviceId2))
+          .map((c) => ({
+            ...c,
+            id: `conn-${now}-${c.id}`,
+            deviceId1: idMap.get(c.deviceId1)!,
+            deviceId2: idMap.get(c.deviceId2)!,
+          }));
+
         set({
-          topology: { ...topology, devices: [...topology.devices, device] },
-          selectedDeviceIds: [device.id],
+          topology: {
+            ...topology,
+            devices: [...topology.devices, ...clones],
+            connections: [...topology.connections, ...newConns],
+          },
+          selectedDeviceIds: clones.map((c) => c.id),
           selectedBlockIds: [],
           selectedConnectionId: null,
           connectingFromId: null,
@@ -719,7 +750,7 @@ export const useSimulatorStore = create<SimulatorState>()(
         });
       },
 
-      clearCopiedDevice: () => set({ copiedDeviceId: null }),
+      clearCopiedDevice: () => set({ copiedDeviceIds: [] }),
 
       selectDevice: (deviceId) =>
         set({

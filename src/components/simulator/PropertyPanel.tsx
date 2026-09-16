@@ -35,7 +35,7 @@ import type {
 } from '../../types';
 import type { ArpEntry } from '../../engine/protocols/arp';
 import { clsx } from 'clsx';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { IpCalculator } from './IpCalculator';
 
 type PanelTab = 'config' | 'interfaces' | 'ports' | 'rotas';
@@ -80,10 +80,14 @@ function IpInput({
   const [draft, setDraft] = useState(value);
   const [error, setError] = useState<string | undefined>(undefined);
   const [prevKey, setPrevKey] = useState(resetKey);
+  const prevValue = useRef(value);
   if (resetKey !== prevKey) {
     setPrevKey(resetKey);
     setDraft(value);
     setError(undefined);
+  } else if (value !== prevValue.current) {
+    prevValue.current = value;
+    setDraft(value);
   }
 
   const onBlur = () => {
@@ -241,7 +245,25 @@ function InterfaceConfig({
     };
 
     const ref = findRef();
-    if (!ref) return;
+    if (!ref) {
+      const used = new Set<string>();
+      topology.devices.forEach((d) =>
+        d.interfaces.forEach((i) => {
+          if (i.ip) used.add(i.ip);
+        }),
+      );
+      for (let n = 2; n < 255; n++) {
+        const candidate = `192.168.1.${n}`;
+        if (!used.has(candidate)) {
+          updateInterface(device.id, iface.id, {
+            ip: candidate,
+            subnetMask: '255.255.255.0',
+          });
+          return;
+        }
+      }
+      return;
+    }
 
     const peer = topology.devices.find((d) => d.id === ref.deviceId);
     const peerIface = peer?.interfaces.find((i) => i.id === ref.ifaceId);
@@ -556,19 +578,19 @@ function RouteEditor({ device }: { device: Device }) {
           value={destination}
           onChange={(e) => setDestination(e.target.value)}
           placeholder="Destino"
-          className="bg-[#0D1424] border border-[--color-border-primary]/70 rounded-lg px-2 py-1.5 text-[10px] font-mono text-[--color-text-primary] placeholder:text-[--color-text-muted]/60 focus:outline-none focus:border-[--color-accent-blue]"
+          className="w-full min-w-0 bg-[#0D1424] border border-[--color-border-primary]/70 rounded-lg px-2 py-1.5 text-[10px] font-mono text-[--color-text-primary] placeholder:text-[--color-text-muted]/60 focus:outline-none focus:border-[--color-accent-blue]"
         />
         <input
           value={mask}
           onChange={(e) => setMask(e.target.value)}
           placeholder="Máscara"
-          className="bg-[#0D1424] border border-[--color-border-primary]/70 rounded-lg px-2 py-1.5 text-[10px] font-mono text-[--color-text-primary] placeholder:text-[--color-text-muted]/60 focus:outline-none focus:border-[--color-accent-blue]"
+          className="w-full min-w-0 bg-[#0D1424] border border-[--color-border-primary]/70 rounded-lg px-2 py-1.5 text-[10px] font-mono text-[--color-text-primary] placeholder:text-[--color-text-muted]/60 focus:outline-none focus:border-[--color-accent-blue]"
         />
         <input
           value={gateway}
           onChange={(e) => setGateway(e.target.value)}
           placeholder="Gateway (próximo salto)"
-          className="bg-[#0D1424] border border-[--color-border-primary]/70 rounded-lg px-2 py-1.5 text-[10px] font-mono text-[--color-text-primary] placeholder:text-[--color-text-muted]/60 focus:outline-none focus:border-[--color-accent-blue] col-span-2"
+          className="w-full min-w-0 bg-[#0D1424] border border-[--color-border-primary]/70 rounded-lg px-2 py-1.5 text-[10px] font-mono text-[--color-text-primary] placeholder:text-[--color-text-muted]/60 focus:outline-none focus:border-[--color-accent-blue] col-span-2"
         />
       </div>
       <button
@@ -862,7 +884,7 @@ export function PropertyPanel({ open, onToggle }: PropertyPanelProps) {
       </div>
 
       {/* Tabs */}
-      <div className="px-4 pb-3 pt-1 flex gap-2 shrink-0 overflow-x-auto">
+      <div className="px-4 pb-3 pt-1 flex flex-wrap gap-2 shrink-0">
         {tabs.map((t) => (
           <button
             key={t}
