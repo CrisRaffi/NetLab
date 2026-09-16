@@ -1,6 +1,7 @@
 import { clsx } from 'clsx';
 import { Layers, Braces } from 'lucide-react';
 import { OSI_LAYERS, TCP_IP_LAYERS } from '../data/osi';
+import { PROTOCOL_TIPS } from '../../../data/protocolTips';
 
 interface LayerColumnProps {
   mode: 'osi' | 'tcpip';
@@ -15,6 +16,7 @@ export function LayerColumn({ mode, onMode, selected, onSelect }: LayerColumnPro
       <div className="flex items-center gap-1 p-1 rounded-lg bg-[--color-bg-tertiary] border border-[--color-border-primary]/60 self-start">
         <button
           onClick={() => onMode('osi')}
+          title="OSI – Open Systems Interconnection (modelo em 7 camadas)"
           className={clsx(
             'flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium cursor-pointer transition-colors',
             mode === 'osi' ? 'bg-[--color-accent-blue]/15 text-[--color-accent-blue]' : 'text-[--color-text-muted] hover:text-[--color-text-secondary]'
@@ -24,6 +26,7 @@ export function LayerColumn({ mode, onMode, selected, onSelect }: LayerColumnPro
         </button>
         <button
           onClick={() => onMode('tcpip')}
+          title="TCP/IP – Transmission Control Protocol / Internet Protocol (modelo em camadas)"
           className={clsx(
             'flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium cursor-pointer transition-colors',
             mode === 'tcpip' ? 'bg-[--color-accent-cyan]/15 text-[--color-accent-cyan]' : 'text-[--color-text-muted] hover:text-[--color-text-secondary]'
@@ -60,9 +63,9 @@ export function LayerColumn({ mode, onMode, selected, onSelect }: LayerColumnPro
                   <span className={clsx('block text-xs font-semibold', selected === layer.number ? 'text-[--color-accent-blue]' : 'text-[--color-text-secondary]')}>
                     {layer.name}
                   </span>
-                  <span className="block text-[10px] text-[--color-text-muted] truncate">PDU: {layer.pdu}</span>
+                  <span className="block text-[10px] text-[--color-text-muted] truncate" title="PDU – Protocol Data Unit (unidade de dados do protocolo)">PDU: {layer.pdu}</span>
                 </div>
-                <span className="text-[9px] font-mono text-[--color-text-muted]/70 shrink-0">{layer.protocols[0]}</span>
+                <span title={PROTOCOL_TIPS[layer.protocols[0]]} className="text-[9px] font-mono text-[--color-text-muted]/70 shrink-0">{layer.protocols[0]}</span>
               </button>
             ))
           : TCP_IP_LAYERS.map((layer, idx) => (

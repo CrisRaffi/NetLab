@@ -31,6 +31,7 @@ const ETH_IFACE_COUNT: Record<string, number> = {
   ip_camera: 1,
   ip_phone: 1,
   cloud: 1,
+  core: 6,
 };
 
 const HEX = '0123456789ABCDEF';

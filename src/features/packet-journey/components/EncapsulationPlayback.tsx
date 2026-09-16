@@ -3,6 +3,7 @@ import { Play, Pause, SkipForward, RotateCcw, Repeat, Search, SendHorizonal } fr
 import { clsx } from 'clsx';
 import { ENCAP_ORDER, ENCAP_STEPS } from '../data/steps';
 import type { EncapStep } from '../data/steps';
+import { PROTOCOL_TIPS } from '../../../data/protocolTips';
 
 const ACCENT: Record<string, string> = {
   green: 'text-[--color-accent-green] border-[--color-accent-green]/40 bg-[--color-accent-green]/10',
@@ -119,7 +120,7 @@ export function EncapsulationPlayback({ enabled, onSent }: PlaybackProps) {
               )}
             >
               <Search size={11} className="opacity-60" />
-              <span className="text-[10px] font-mono font-bold">{step.title}</span>
+              <span className="text-[10px] font-mono font-bold" title={PROTOCOL_TIPS[step.title]}>{step.title}</span>
               <span className="ml-auto text-[9px] text-[--color-text-muted] truncate">{step.detail}</span>
             </button>
           ))}

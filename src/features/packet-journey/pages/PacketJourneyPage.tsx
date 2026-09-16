@@ -22,6 +22,7 @@ import { JOURNEY_EXERCISES } from '../data/exercises';
 import { totalXp, accuracyOf } from '../engine/scoring';
 import type { ExerciseResult } from '../engine/scoring';
 import { OSI_LAYERS, TCP_IP_LAYERS } from '../data/osi';
+import { PROTOCOL_TIPS } from '../../../data/protocolTips';
 
 function Chip({
   children,
@@ -43,6 +44,7 @@ function Chip({
   return (
     <span
       className={`inline-block px-1.5 py-0.5 rounded border text-[10px] font-mono ${colors[accent]}`}
+      title={PROTOCOL_TIPS[children]}
     >
       {children}
     </span>
@@ -191,7 +193,7 @@ export function PacketJourneyPage() {
                       </span>
                       {l.name}
                     </span>
-                    <span className="text-[10px] text-[--color-text-muted]">
+                    <span className="text-[10px] text-[--color-text-muted]" title="PDU – Protocol Data Unit (unidade de dados do protocolo)">
                       PDU: {l.pdu}
                     </span>
                   </div>
@@ -222,7 +224,7 @@ export function PacketJourneyPage() {
 
                 {'pdu' in layer && (
                   <div>
-                    <p className="text-[10px] uppercase tracking-wider text-[--color-text-muted] mb-1">
+                    <p className="text-[10px] uppercase tracking-wider text-[--color-text-muted] mb-1" title="PDU – Protocol Data Unit (unidade de dados do protocolo)">
                       Unidade de dados (PDU)
                     </p>
                     <Chip accent="green">{layer.pdu}</Chip>

@@ -18,6 +18,7 @@ import { PageHeader } from '../components/common/PageHeader';
 import { useProgressStore } from '../stores/useProgressStore';
 import { INITIAL_EXERCISES } from '../data/exercises';
 import { CONCEPT_DEFINITIONS } from '../data/content/concepts';
+import { protocolTip } from '../data/protocolTips';
 
 const MODULE_GROUPS: { name: string; conceptIds: string[]; color: string }[] = [
   {
@@ -214,7 +215,7 @@ export function DashboardPage() {
             return (
               <div key={group.name} className="flex items-center gap-3">
                 <span className={`w-2 h-2 rounded-full shrink-0 ${group.color}`} />
-                <span className="text-xs font-medium text-[--color-text-secondary] w-24 shrink-0">
+                <span className="text-xs font-medium text-[--color-text-secondary] w-24 shrink-0" title={protocolTip(group.name)}>
                   {group.name}
                 </span>
                 <ProgressBar value={groupProgress} className="flex-1" />
@@ -240,7 +241,7 @@ export function DashboardPage() {
                   {c.mastery === 0 ? 'ðŸ”´' : c.mastery < 40 ? 'ðŸŸ¡' : 'ðŸŸ¢'}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-[--color-text-primary] truncate">
+                  <p className="text-xs font-medium text-[--color-text-primary] truncate" title={protocolTip(CONCEPT_DEFINITIONS[c.id]?.name)}>
                     {CONCEPT_DEFINITIONS[c.id]?.name ?? c.id}
                   </p>
                 </div>

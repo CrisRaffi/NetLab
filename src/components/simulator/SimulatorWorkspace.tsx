@@ -11,7 +11,10 @@ import {
   Wifi,
   Copy,
   Home,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react';
+import { createPortal } from 'react-dom';
 import { DevicePalette } from './DevicePalette';
 import { TopologyCanvas } from './TopologyCanvas';
 import { PropertyPanel } from './PropertyPanel';
@@ -111,6 +114,8 @@ export function SimulatorWorkspace({
     Boolean(defaultBottomTab),
   );
 
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
   const terminalOpen = useTerminalStore((s) => s.open);
   const terminalDeviceId = useTerminalStore((s) => s.deviceId);
 
@@ -130,6 +135,8 @@ export function SimulatorWorkspace({
 
   const createHomeNetworkExample = () => {
     const loadTopology = useSimulatorStore.getState().loadTopology;
+    const resetTopology = useSimulatorStore.getState().resetTopology;
+    resetTopology();
     const { device, iface, conn } = createTopologyHelpers();
     const topology = {
       id: 'home-network-example',
@@ -148,22 +155,45 @@ export function SimulatorWorkspace({
           iface('f0/4'),
         ]),
         device('pc1', 'pc', 'PC-Sala', 80, 60, [
-          iface('eth0', '192.168.1.10', { mask: '255.255.255.0', gw: '192.168.1.1', dns: '8.8.8.8' }),
+          iface('eth0', '192.168.1.10', {
+            mask: '255.255.255.0',
+            gw: '192.168.1.1',
+            dns: '8.8.8.8',
+          }),
         ]),
         device('pc2', 'pc', 'PC-Quarto', 80, 180, [
-          iface('eth0', '192.168.1.11', { mask: '255.255.255.0', gw: '192.168.1.1', dns: '8.8.8.8' }),
+          iface('eth0', '192.168.1.11', {
+            mask: '255.255.255.0',
+            gw: '192.168.1.1',
+            dns: '8.8.8.8',
+          }),
         ]),
         device('server1', 'server', 'NAS', 80, 300, [
-          iface('eth0', '192.168.2.10', { mask: '255.255.255.0', gw: '192.168.2.1', dns: '8.8.8.8' }),
+          iface('eth0', '192.168.2.10', {
+            mask: '255.255.255.0',
+            gw: '192.168.2.1',
+            dns: '8.8.8.8',
+          }),
         ]),
         device('ap1', 'access_point', 'WiFi-Casa', 200, 300, [
-          iface('eth0', '192.168.3.10', { mask: '255.255.255.0', gw: '192.168.3.1', dns: '8.8.8.8' }),
+          iface('eth0', '192.168.3.10', {
+            mask: '255.255.255.0',
+            gw: '192.168.3.1',
+            dns: '8.8.8.8',
+          }),
         ]),
         device('printer1', 'printer', 'Impressora', 320, 300, [
-          iface('eth0', '192.168.3.11', { mask: '255.255.255.0', gw: '192.168.3.1', dns: '8.8.8.8' }),
+          iface('eth0', '192.168.3.11', {
+            mask: '255.255.255.0',
+            gw: '192.168.3.1',
+            dns: '8.8.8.8',
+          }),
         ]),
         device('cloud1', 'cloud', 'Internet', 680, 120, [
-          iface('eth0', '203.0.113.2', { mask: '255.255.255.252', gw: '203.0.113.1' }),
+          iface('eth0', '203.0.113.2', {
+            mask: '255.255.255.252',
+            gw: '203.0.113.1',
+          }),
         ]),
       ],
       connections: [
@@ -172,7 +202,7 @@ export function SimulatorWorkspace({
         conn('switch1', 'f0/3', 'pc2', 'eth0'),
         conn('core1', 'eth1', 'server1', 'eth0'),
         conn('core1', 'eth2', 'ap1', 'eth0'),
-        conn('ap1', 'f0/2', 'printer1', 'eth0'),
+        conn('switch1', 'f0/4', 'printer1', 'eth0'),
         conn('core1', 'eth3', 'cloud1', 'eth0'),
       ],
     };
@@ -180,14 +210,54 @@ export function SimulatorWorkspace({
   };
 
   function createTopologyHelpers() {
-    function iface(id: string, ip?: string, opts: { mask?: string; gw?: string; dns?: string } = {}) {
-      return { id, name: id, type: 'ethernet' as const, mac: `AA:BB:CC:DD:${id.charCodeAt(0).toString(16).padStart(2, '0')}:00`, ip: ip ?? undefined, subnetMask: opts.mask, gateway: opts.gw, dns: opts.dns, status: 'up' as const, speed: 100 };
+    function iface(
+      id: string,
+      ip?: string,
+      opts: { mask?: string; gw?: string; dns?: string } = {},
+    ) {
+      return {
+        id,
+        name: id,
+        type: 'ethernet' as const,
+        mac: `AA:BB:CC:DD:${id.charCodeAt(0).toString(16).padStart(2, '0')}:00`,
+        ip: ip ?? undefined,
+        subnetMask: opts.mask,
+        gateway: opts.gw,
+        dns: opts.dns,
+        status: 'up' as const,
+        speed: 100,
+      };
     }
-    function device(id: string, type: any, name: string, x: number, y: number, interfaces: any[], routes: any[] = []) {
-      return { id, type, name, position: { x, y }, interfaces, config: { hostname: name, routes } };
+    function device(
+      id: string,
+      type: any,
+      name: string,
+      x: number,
+      y: number,
+      interfaces: any[],
+      routes: any[] = [],
+    ) {
+      return {
+        id,
+        type,
+        name,
+        position: { x, y },
+        interfaces,
+        config: { hostname: name, routes },
+      };
     }
     function conn(a: string, ia: string, b: string, ib: string) {
-      return { id: `conn-${a}-${b}`, deviceId1: a, interfaceId1: ia, deviceId2: b, interfaceId2: ib, type: 'ethernet' as const, status: 'connected' as const, bandwidth: 100, latency: 1 };
+      return {
+        id: `conn-${a}-${b}`,
+        deviceId1: a,
+        interfaceId1: ia,
+        deviceId2: b,
+        interfaceId2: ib,
+        type: 'ethernet' as const,
+        status: 'connected' as const,
+        bandwidth: 100,
+        latency: 1,
+      };
     }
     return { iface, device, conn };
   }
@@ -249,54 +319,9 @@ export function SimulatorWorkspace({
     setBottomExpanded((v) => !v);
   };
 
-  return (
+  const renderSimulatorContent = () => (
     <div className="flex flex-col h-full">
-      {/* Toolbar */}
-      <div className="flex items-center justify-between gap-4 px-5 py-3 border-b border-[--color-border-primary]/25 bg-[#0D1424]/50 backdrop-blur-md shrink-0">
-        {/* Left: Brand & Title */}
-        <div className="flex items-center gap-2.5"></div>
 
-        {/* Right: Validate + Connect + Example */}
-        <div className="flex items-center gap-3 shrink-0">
-          <button
-            onClick={createHomeNetworkExample}
-            className={clsx(
-              'flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-medium cursor-pointer transition-all duration-150',
-              'bg-[--color-accent-cyan]/12 text-[#06B6D4] ring-inset-cyan hover:bg-[--color-accent-cyan]/20',
-            )}
-            title="Carregar rede doméstica de exemplo"
-          >
-            <Home size={14} />
-            Exemplo
-          </button>
-          {onValidate && (
-            <button
-              onClick={handleValidate}
-              className={clsx(
-                'flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-medium cursor-pointer transition-all duration-150',
-                allPassed
-                  ? 'bg-[--color-accent-green]/12 text-[--color-accent-green] ring-inset-green'
-                  : 'bg-[--color-accent-blue]/12 text-[#818CF8] ring-inset-blue hover:bg-[--color-accent-blue]/20',
-              )}
-            >
-              <ShieldCheck size={14} />
-              Validar laboratório
-              {validationSummary && (
-                <span
-                  className={clsx(
-                    'text-[10px] px-2 py-0.5 rounded-full font-mono',
-                    allPassed
-                      ? 'bg-[--color-accent-green]/20 text-[--color-accent-green]'
-                      : 'bg-[--color-bg-tertiary] text-[--color-text-secondary]',
-                  )}
-                >
-                  {validationSummary.passed}/{validationSummary.total}
-                </span>
-              )}
-            </button>
-          )}
-        </div>
-      </div>
 
       {/* Instructions */}
       {!showHelp && (
@@ -427,6 +452,19 @@ export function SimulatorWorkspace({
                 )}
               </button>
 
+              {/* Example */}
+              <button
+                onClick={createHomeNetworkExample}
+                className={clsx(
+                  'flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] font-medium cursor-pointer transition-all duration-150',
+                  'text-[--color-accent-cyan] hover:text-[--color-text-primary] hover:bg-[--color-accent-cyan]/10',
+                )}
+                title="Carregar rede doméstica de exemplo (resetar e criar nova)"
+              >
+                <Home size={13} />
+                Exemplo
+              </button>
+
               {/* Evaluation */}
               {evaluationTab && (
                 <button
@@ -445,17 +483,52 @@ export function SimulatorWorkspace({
             </div>
 
             {/* Bottom panel toggle */}
-            <button
-              onClick={handleBottomToggle}
-              className="p-2 rounded-lg text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/[0.04] cursor-pointer"
-              title={bottomExpanded ? 'Recolher painel' : 'Expandir painel'}
-            >
-              {bottomExpanded ? (
-                <ChevronDown size={16} />
-              ) : (
-                <ChevronUp size={16} />
+            <div className="flex items-center gap-1.5">
+              {onValidate && (
+                <button
+                  onClick={handleValidate}
+                  className={clsx(
+                    'flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium cursor-pointer transition-all duration-150',
+                    allPassed
+                      ? 'bg-[--color-accent-green]/15 text-[--color-accent-green] ring-inset-green'
+                      : 'text-[--color-accent-blue] hover:text-[--color-text-primary] hover:bg-[--color-accent-blue]/10',
+                  )}
+                >
+                  <ShieldCheck size={13} />
+                  Validar
+                  {validationSummary && (
+                    <span
+                      className={clsx(
+                        'text-[9px] px-1.5 py-0.5 rounded-full font-mono',
+                        allPassed
+                          ? 'bg-[--color-accent-green]/20 text-[--color-accent-green]'
+                          : 'bg-[--color-bg-tertiary] text-[--color-text-secondary]',
+                      )}
+                    >
+                      {validationSummary.passed}/{validationSummary.total}
+                    </span>
+                  )}
+                </button>
               )}
-            </button>
+              <button
+                onClick={() => setIsFullscreen((v) => !v)}
+                className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium cursor-pointer transition-all duration-150 text-[--color-accent-yellow] hover:text-[--color-text-primary] hover:bg-[--color-accent-yellow]/10"
+                title={isFullscreen ? 'Sair da tela cheia' : 'Entrar em tela cheia'}
+              >
+                {isFullscreen ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+              </button>
+              <button
+                onClick={handleBottomToggle}
+                className="p-2 rounded-lg text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/[0.04] cursor-pointer"
+                title={bottomExpanded ? 'Recolher painel' : 'Expandir painel'}
+              >
+                {bottomExpanded ? (
+                  <ChevronDown size={16} />
+                ) : (
+                  <ChevronUp size={16} />
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Bottom content */}
@@ -493,4 +566,15 @@ export function SimulatorWorkspace({
       </div>
     </div>
   );
+
+  if (isFullscreen) {
+    return createPortal(
+      <div className="fixed inset-0 z-50 bg-[--color-bg-primary] flex flex-col">
+        {renderSimulatorContent()}
+      </div>,
+      document.body,
+    );
+  }
+
+  return renderSimulatorContent();
 }

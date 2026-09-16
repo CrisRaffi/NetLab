@@ -5,6 +5,7 @@ import {
   type ProgressState,
 } from '../stores/useProgressStore';
 import { CONCEPT_DEFINITIONS, CONCEPT_ORDER } from '../data/content/concepts';
+import { protocolTip } from '../data/protocolTips';
 import { PageHeader } from '../components/common/PageHeader';
 import {
   getWeakConcepts,
@@ -364,7 +365,7 @@ export function LearningMapPage() {
                     </span>
 
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-[--color-text-primary]">
+                      <p className="text-sm font-medium text-[--color-text-primary]" title={protocolTip(row.label)}>
                         {row.label}
                       </p>
 
@@ -373,6 +374,7 @@ export function LearningMapPage() {
                           <span
                             key={id}
                             className="text-[10px] text-[--color-text-muted]"
+                            title={protocolTip(CONCEPT_DEFINITIONS[id]?.name)}
                           >
                             {CONCEPT_DEFINITIONS[id]?.name}
                           </span>

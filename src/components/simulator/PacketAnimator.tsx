@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSimulatorStore } from '../../stores/useSimulatorStore';
 import type { ActiveAnimation } from '../../stores/useSimulatorStore';
+import { PROTOCOL_TIPS } from '../../data/protocolTips';
 
 const PACKET_COLORS: Record<string, string> = {
   icmp: '#10B981',
@@ -77,6 +78,7 @@ export function PacketAnimator() {
               fill={color}
             >
               {PACKET_LABELS[anim.packet.type] ?? anim.packet.type.toUpperCase()}
+              <title>{PROTOCOL_TIPS[PACKET_LABELS[anim.packet.type] ?? anim.packet.type.toUpperCase()]}</title>
             </text>
           </g>
         );

@@ -4,6 +4,7 @@ import type { Device, Connection, Topology, DeviceType, NetworkInterface, Simula
 import { generateMac } from '../utils/ip';
 import type { ArpEntry } from '../engine/protocols/arp';
 import type { Transmission } from '../engine/simulation/network';
+import { normalizeTopology } from '../engine/lab';
 
 export interface ActiveAnimation {
   id: string;
@@ -287,7 +288,7 @@ export const useSimulatorStore = create<SimulatorState>()(
 
   loadTopology: (topology) =>
     set({
-      topology,
+      topology: normalizeTopology(topology),
       selectedDeviceId: null,
       selectedConnectionId: null,
       connectingFromId: null,
@@ -589,6 +590,11 @@ export const useSimulatorStore = create<SimulatorState>()(
     {
       name: 'netlab-simulator',
       partialize: state => ({ topology: state.topology }),
+      merge: (persisted: unknown, current: ReturnType<typeof useSimulatorStore.getState>) => ({
+        ...current,
+        ...(persisted as Record<string, unknown>),
+        topology: normalizeTopology((persisted as { topology: ReturnType<typeof useSimulatorStore.getState>['topology'] })?.topology ?? current.topology),
+      }),
     }
   )
 );

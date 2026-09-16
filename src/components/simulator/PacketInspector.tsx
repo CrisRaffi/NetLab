@@ -1,6 +1,7 @@
 import { Trash2, Layers, ArrowRight } from 'lucide-react';
 import { useSimulatorStore } from '../../stores/useSimulatorStore';
 import { clsx } from 'clsx';
+import { PROTOCOL_TIPS } from '../../data/protocolTips';
 
 const TYPE_STYLES: Record<string, string> = {
   icmp: 'text-[--color-accent-green] border-[--color-accent-green]/30 bg-[--color-accent-green]/10',
@@ -9,6 +10,15 @@ const TYPE_STYLES: Record<string, string> = {
   udp: 'text-[--color-accent-cyan] border-[--color-accent-cyan]/30 bg-[--color-accent-cyan]/10',
   dns: 'text-[--color-accent-purple] border-[--color-accent-purple]/30 bg-[--color-accent-purple]/10',
   dhcp: 'text-[--color-accent-red] border-[--color-accent-red]/30 bg-[--color-accent-red]/10',
+};
+
+const PROTOCOL_TOOLTIPS: Record<string, string> = {
+  icmp: 'ICMP (Internet Control Message Protocol) — Protocolo de mensagens de controle (ex: ping, erro de destino inalcançável).',
+  arp: 'ARP (Address Resolution Protocol) — Resolve IP para endereço MAC na rede local.',
+  tcp: 'TCP (Transmission Control Protocol) — Transporte confiável, orientado a conexão, com controle de fluxo e retransmissão.',
+  udp: 'UDP (User Datagram Protocol) — Transporte não confiável, sem conexão, baixa latência (ex: DNS, streaming).',
+  dns: 'DNS (Domain Name System) — Resolve nomes de domínio para endereços IP.',
+  dhcp: 'DHCP (Dynamic Host Configuration Protocol) — Atribui IPs automaticamente aos hosts na rede.',
 };
 
 export function PacketInspector() {
@@ -56,12 +66,13 @@ export function PacketInspector() {
                 selected?.id === pkt.id ? 'bg-[--color-bg-hover]' : 'hover:bg-[--color-bg-tertiary]'
               )}
             >
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 relative group">
                 <span
                   className={clsx(
-                    'text-[9px] font-bold px-1.5 py-0.5 rounded border',
+                    'text-[9px] font-bold px-1.5 py-0.5 rounded border cursor-help',
                     TYPE_STYLES[pkt.type] ?? 'text-[--color-text-muted] border-[--color-border-secondary] bg-[--color-bg-tertiary]'
                   )}
+                  title={PROTOCOL_TIPS[pkt.type.toUpperCase()] ?? PROTOCOL_TOOLTIPS[pkt.type]}
                 >
                   {pkt.type.toUpperCase()}
                 </span>
@@ -81,9 +92,10 @@ export function PacketInspector() {
           <div className="flex items-center gap-2 mb-3">
             <span
               className={clsx(
-                'text-[10px] font-bold px-2 py-0.5 rounded border',
+                'text-[10px] font-bold px-2 py-0.5 rounded border cursor-help',
                 TYPE_STYLES[selected.type] ?? 'text-[--color-text-muted] border-[--color-border-secondary] bg-[--color-bg-tertiary]'
               )}
+              title={PROTOCOL_TIPS[selected.type.toUpperCase()] ?? PROTOCOL_TOOLTIPS[selected.type]}
             >
               {selected.type.toUpperCase()}
             </span>
@@ -104,7 +116,12 @@ export function PacketInspector() {
               >
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-xs font-semibold text-[--color-text-primary]">{layer.name}</span>
-                  <span className="text-[9px] text-[--color-text-muted]">{layer.protocol}</span>
+                  <span
+                    className="text-[9px] text-[--color-text-muted] cursor-help"
+                    title={PROTOCOL_TOOLTIPS[layer.protocol.toLowerCase()] ?? PROTOCOL_TIPS[layer.protocol] ?? layer.protocol}
+                  >
+                    {layer.protocol}
+                  </span>
                 </div>
                 <dl className="space-y-0.5">
                   {Object.entries(layer.fields).map(([key, value]) => (

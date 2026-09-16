@@ -24,6 +24,7 @@ import { DEVICE_LABELS } from '../../stores/useSimulatorStore';
 import { useTerminalStore } from '../../stores/useTerminalStore';
 import { DEVICE_ICONS, DEVICE_COLORS } from './deviceIcons';
 import { DEVICE_GUIDES } from '../../data/deviceGuides';
+import { protocolTip } from '../../data/protocolTips';
 import { isValidIp, isValidMask } from '../../utils/ip';
 import type {
   NetworkInterface,
@@ -55,6 +56,10 @@ function getTabs(type: DeviceType): PanelTab[] {
   }
 }
 
+function acronymTip(text: string): string | undefined {
+  return protocolTip(text);
+}
+
 function Field({
   label,
   value,
@@ -72,7 +77,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="text-[9px] uppercase tracking-wider text-[--color-text-muted]">
+      <span className="text-[9px] uppercase tracking-wider text-[--color-text-muted]" title={acronymTip(label)}>
         {label}
       </span>
       <input
@@ -104,7 +109,7 @@ function Section({
 }) {
   return (
     <div className="rounded-xl border border-[--color-border-primary]/50 bg-[#111A2C]/40 p-3">
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-2" title={acronymTip(title)}>
         <div className="flex items-center gap-1.5 text-[9px] uppercase tracking-wider text-[--color-text-muted] font-semibold">
           {icon}
           {title}
