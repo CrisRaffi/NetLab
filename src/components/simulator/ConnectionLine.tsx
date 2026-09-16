@@ -60,6 +60,7 @@ export function ConnectionLine({ connection, devices, selected, onSelect }: Conn
         strokeDasharray={connection.type === 'wireless' ? '4 6' : status === 'negotiating' ? '6 4' : undefined}
         strokeOpacity={connection.type === 'wireless' ? 0.9 : status === 'disconnected' ? 0.6 : 1}
         vectorEffect="non-scaling-stroke"
+        style={{ filter: `drop-shadow(0 0 2px ${color})` }}
       >
         {status === 'negotiating' && (
           <animate

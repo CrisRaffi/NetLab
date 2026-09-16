@@ -95,6 +95,7 @@ export function DeviceNode({
         strokeOpacity={selected ? 0.9 : 0.45}
         strokeWidth={selected ? 2 : 1.25}
         vectorEffect="non-scaling-stroke"
+        style={{ filter: `drop-shadow(0 0 3px ${selected ? '#6366F1' : colors.stroke})` }}
       />
 
       {/* Top highlight (glass sheen) */}
