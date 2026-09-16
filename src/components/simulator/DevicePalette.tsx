@@ -42,7 +42,7 @@ export function DevicePalette({ onAdd }: DevicePaletteProps) {
   const lastBoard = boards[0] ?? null;
 
   return (
-    <div className="w-44 shrink-0 border-r border-[--color-border-primary]/20 bg-[#020A14]/70 overflow-y-auto flex flex-col">
+    <div className="w-52 shrink-0 border-r border-[--color-border-primary]/20 bg-[#020A14]/70 overflow-y-auto flex flex-col">
       <div className="px-3 py-3 flex-1">
         <h3 className="text-[9px] font-semibold text-[--color-text-secondary] uppercase tracking-[0.14em]">
           Equipamentos

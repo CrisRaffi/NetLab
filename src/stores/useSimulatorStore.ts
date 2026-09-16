@@ -1,6 +1,14 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Device, Connection, Topology, DeviceType, NetworkInterface, SimulatedPacket, Route } from '../types';
+import type {
+  Device,
+  Connection,
+  Topology,
+  DeviceType,
+  NetworkInterface,
+  SimulatedPacket,
+  Route,
+} from '../types';
 import { generateMac } from '../utils/ip';
 import type { ArpEntry } from '../engine/protocols/arp';
 import type { Transmission } from '../engine/simulation/network';
@@ -25,8 +33,8 @@ export const DEVICE_LABELS: Record<DeviceType, string> = {
   printer: 'Impressora',
   ip_camera: 'Câmera IP',
   ip_phone: 'Telefone IP',
-  cloud: 'Internet',
-  core: 'Núcleo de Rede',
+  cloud: 'Internet (Provedor)',
+  core: 'Roteador Automático',
 };
 
 export const DEVICE_PREFIX: Record<DeviceType, string> = {
@@ -40,7 +48,7 @@ export const DEVICE_PREFIX: Record<DeviceType, string> = {
   ip_camera: 'CAM',
   ip_phone: 'IPF',
   cloud: 'NET',
-  core: 'CORE',
+  core: 'RA',
 };
 
 const INTERFACE_COUNT: Record<DeviceType, number> = {
@@ -57,7 +65,10 @@ const INTERFACE_COUNT: Record<DeviceType, number> = {
   core: 6,
 };
 
-function createInterfaces(type: DeviceType, deviceIndex: number): NetworkInterface[] {
+function createInterfaces(
+  type: DeviceType,
+  deviceIndex: number,
+): NetworkInterface[] {
   const count = INTERFACE_COUNT[type];
   const base: NetworkInterface[] = Array.from({ length: count }, (_, i) => ({
     id: `eth${i}`,
@@ -96,8 +107,8 @@ function createInterfaces(type: DeviceType, deviceIndex: number): NetworkInterfa
 function nextDeviceName(type: DeviceType, devices: Device[]): string {
   const prefix = DEVICE_PREFIX[type];
   const existing = devices
-    .filter(d => d.type === type)
-    .map(d => {
+    .filter((d) => d.type === type)
+    .map((d) => {
       const match = d.name.match(/(\d+)$/);
       return match ? Number(match[1]) : 0;
     });
@@ -150,7 +161,13 @@ interface SimulatorState {
   connectingFromId: string | null;
   connectType: 'ethernet' | 'wireless' | null;
   copiedDeviceId: string | null;
-  packetLog: { id: string; from: string; to: string; type: string; timestamp: number }[];
+  packetLog: {
+    id: string;
+    from: string;
+    to: string;
+    type: string;
+    timestamp: number;
+  }[];
   arpTables: Record<string, ArpEntry[]>;
   packets: SimulatedPacket[];
   selectedPacketId: string | null;
@@ -191,12 +208,28 @@ interface SimulatorState {
   addConnection: (deviceId1: string, deviceId2: string) => void;
   removeConnection: (connectionId: string) => void;
 
-  addBlock: (block: { name: string; x: number; y: number; width: number; height: number }) => void;
+  addBlock: (block: {
+    name: string;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }) => void;
   removeBlock: (blockId: string) => void;
   moveBlock: (blockId: string, x: number, y: number) => void;
-  resizeBlock: (blockId: string, x: number, y: number, width: number, height: number) => void;
+  resizeBlock: (
+    blockId: string,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+  ) => void;
 
-  updateInterface: (deviceId: string, interfaceId: string, updates: Partial<NetworkInterface>) => void;
+  updateInterface: (
+    deviceId: string,
+    interfaceId: string,
+    updates: Partial<NetworkInterface>,
+  ) => void;
   toggleInterfaceStatus: (deviceId: string, interfaceId: string) => void;
   updateRoutes: (deviceId: string, routes: Route[]) => void;
 
@@ -216,27 +249,35 @@ function pushUndo(topology: Topology, undoStack: Topology[]): Topology[] {
   return next.length > MAX_UNDO ? next.slice(next.length - MAX_UNDO) : next;
 }
 
-function makeConnection(topology: Topology, deviceId1: string, deviceId2: string): Connection | null {
+function makeConnection(
+  topology: Topology,
+  deviceId1: string,
+  deviceId2: string,
+): Connection | null {
   if (deviceId1 === deviceId2) return null;
 
   const alreadyConnected = topology.connections.some(
-    c =>
+    (c) =>
       (c.deviceId1 === deviceId1 && c.deviceId2 === deviceId2) ||
-      (c.deviceId1 === deviceId2 && c.deviceId2 === deviceId1)
+      (c.deviceId1 === deviceId2 && c.deviceId2 === deviceId1),
   );
   if (alreadyConnected) return null;
 
   const usedInterfaces = (deviceId: string) =>
     topology.connections
-      .filter(c => c.deviceId1 === deviceId || c.deviceId2 === deviceId)
-      .map(c => (c.deviceId1 === deviceId ? c.interfaceId1 : c.interfaceId2));
+      .filter((c) => c.deviceId1 === deviceId || c.deviceId2 === deviceId)
+      .map((c) => (c.deviceId1 === deviceId ? c.interfaceId1 : c.interfaceId2));
 
-  const dev1 = topology.devices.find(d => d.id === deviceId1);
-  const dev2 = topology.devices.find(d => d.id === deviceId2);
+  const dev1 = topology.devices.find((d) => d.id === deviceId1);
+  const dev2 = topology.devices.find((d) => d.id === deviceId2);
   if (!dev1 || !dev2) return null;
 
-  const iface1 = dev1.interfaces.find(i => i.type !== 'wireless' && !usedInterfaces(deviceId1).includes(i.id));
-  const iface2 = dev2.interfaces.find(i => i.type !== 'wireless' && !usedInterfaces(deviceId2).includes(i.id));
+  const iface1 = dev1.interfaces.find(
+    (i) => i.type !== 'wireless' && !usedInterfaces(deviceId1).includes(i.id),
+  );
+  const iface2 = dev2.interfaces.find(
+    (i) => i.type !== 'wireless' && !usedInterfaces(deviceId2).includes(i.id),
+  );
   if (!iface1 || !iface2) return null;
 
   return {
@@ -252,38 +293,45 @@ function makeConnection(topology: Topology, deviceId1: string, deviceId2: string
   };
 }
 
-function makeWifiConnection(topology: Topology, deviceId1: string, deviceId2: string): Connection | null {
+function makeWifiConnection(
+  topology: Topology,
+  deviceId1: string,
+  deviceId2: string,
+): Connection | null {
   if (deviceId1 === deviceId2) return null;
 
   const alreadyConnected = topology.connections.some(
-    c =>
+    (c) =>
       (c.deviceId1 === deviceId1 && c.deviceId2 === deviceId2) ||
-      (c.deviceId1 === deviceId2 && c.deviceId2 === deviceId1)
+      (c.deviceId1 === deviceId2 && c.deviceId2 === deviceId1),
   );
   if (alreadyConnected) return null;
 
   const usedInterfaces = (deviceId: string) =>
     topology.connections
-      .filter(c => c.deviceId1 === deviceId || c.deviceId2 === deviceId)
-      .map(c => (c.deviceId1 === deviceId ? c.interfaceId1 : c.interfaceId2));
+      .filter((c) => c.deviceId1 === deviceId || c.deviceId2 === deviceId)
+      .map((c) => (c.deviceId1 === deviceId ? c.interfaceId1 : c.interfaceId2));
 
-  const dev1 = topology.devices.find(d => d.id === deviceId1);
-  const dev2 = topology.devices.find(d => d.id === deviceId2);
+  const dev1 = topology.devices.find((d) => d.id === deviceId1);
+  const dev2 = topology.devices.find((d) => d.id === deviceId2);
   if (!dev1 || !dev2) return null;
 
-  const provider = dev1.type === 'router' || dev1.type === 'access_point'
-    ? dev1
-    : dev2.type === 'router' || dev2.type === 'access_point'
-      ? dev2
-      : null;
+  const provider =
+    dev1.type === 'router' || dev1.type === 'access_point'
+      ? dev1
+      : dev2.type === 'router' || dev2.type === 'access_point'
+        ? dev2
+        : null;
   if (!provider) return null;
   const isProviderFirst = provider.id === dev1.id;
   const client = isProviderFirst ? dev2 : dev1;
   if (client.type === 'router' || client.type === 'access_point') return null;
 
   // O rádio (wlan0) é compartilhado: comporta vários clientes sem fio ao mesmo tempo.
-  const wlan = provider.interfaces.find(i => i.type === 'wireless');
-  const otherIface = client.interfaces.find(i => i.type !== 'wireless' && !usedInterfaces(client.id).includes(i.id));
+  const wlan = provider.interfaces.find((i) => i.type === 'wireless');
+  const otherIface = client.interfaces.find(
+    (i) => i.type !== 'wireless' && !usedInterfaces(client.id).includes(i.id),
+  );
   if (!wlan || !otherIface) return null;
 
   return {
@@ -302,47 +350,13 @@ function makeWifiConnection(topology: Topology, deviceId1: string, deviceId2: st
 export const useSimulatorStore = create<SimulatorState>()(
   persist(
     (set, get) => ({
-  topology: createDefaultTopology(),
-  selectedDeviceIds: [],
-  selectedConnectionId: null,
-  selectedBlockIds: [],
-  connectingFromId: null,
-  connectType: null,
-  copiedDeviceId: null,
-  packetLog: [],
-  arpTables: {},
-  packets: [],
-  selectedPacketId: null,
-  animations: [],
-  undoStack: [],
-  redoStack: [],
-  deviceValidation: {},
-
-  loadTopology: (topology) =>
-    set({
-topology: normalizeTopology(topology),
+      topology: createDefaultTopology(),
       selectedDeviceIds: [],
       selectedConnectionId: null,
       selectedBlockIds: [],
       connectingFromId: null,
       connectType: null,
-      arpTables: {},
-      packets: [],
-      selectedPacketId: null,
-      animations: [],
-      undoStack: [],
-      redoStack: [],
-      deviceValidation: {},
-    }),
-
-  resetTopology: () =>
-    set({
-topology: createDefaultTopology(),
-      selectedDeviceIds: [],
-      selectedConnectionId: null,
-      selectedBlockIds: [],
-      connectingFromId: null,
-      connectType: null,
+      copiedDeviceId: null,
       packetLog: [],
       arpTables: {},
       packets: [],
@@ -351,536 +365,664 @@ topology: createDefaultTopology(),
       undoStack: [],
       redoStack: [],
       deviceValidation: {},
-    }),
 
-  addDevice: (type, position) => {
-    const { topology, undoStack } = get();
-    const index = topology.devices.length + 1;
-    const name = nextDeviceName(type, topology.devices);
-    const device: Device = {
-      id: `dev-${type}-${Date.now()}`,
-      type,
-      name,
-      position,
-      interfaces: createInterfaces(type, index),
-      config: { hostname: name, routes: [] },
-    };
-    set({
-      topology: { ...topology, devices: [...topology.devices, device] },
-      selectedDeviceIds: [device.id],
-      selectedBlockIds: [],
-      selectedConnectionId: null,
-      connectingFromId: null,
-      connectType: null,
-      undoStack: pushUndo(topology, undoStack),
-      redoStack: [],
-    });
-  },
+      loadTopology: (topology) =>
+        set({
+          topology: normalizeTopology(topology),
+          selectedDeviceIds: [],
+          selectedConnectionId: null,
+          selectedBlockIds: [],
+          connectingFromId: null,
+          connectType: null,
+          arpTables: {},
+          packets: [],
+          selectedPacketId: null,
+          animations: [],
+          undoStack: [],
+          redoStack: [],
+          deviceValidation: {},
+        }),
 
-  removeDevice: (deviceId) => {
-    const { topology, arpTables, undoStack } = get();
-    const nextArp = { ...arpTables };
-    delete nextArp[deviceId];
-    set({
-      topology: {
-        ...topology,
-        devices: topology.devices.filter(d => d.id !== deviceId),
-        connections: topology.connections.filter(
-          c => c.deviceId1 !== deviceId && c.deviceId2 !== deviceId
-        ),
+      resetTopology: () =>
+        set({
+          topology: createDefaultTopology(),
+          selectedDeviceIds: [],
+          selectedConnectionId: null,
+          selectedBlockIds: [],
+          connectingFromId: null,
+          connectType: null,
+          packetLog: [],
+          arpTables: {},
+          packets: [],
+          selectedPacketId: null,
+          animations: [],
+          undoStack: [],
+          redoStack: [],
+          deviceValidation: {},
+        }),
+
+      addDevice: (type, position) => {
+        const { topology, undoStack } = get();
+        const index = topology.devices.length + 1;
+        const name = nextDeviceName(type, topology.devices);
+        const device: Device = {
+          id: `dev-${type}-${Date.now()}`,
+          type,
+          name,
+          position,
+          interfaces: createInterfaces(type, index),
+          config: { hostname: name, routes: [] },
+        };
+        set({
+          topology: { ...topology, devices: [...topology.devices, device] },
+          selectedDeviceIds: [device.id],
+          selectedBlockIds: [],
+          selectedConnectionId: null,
+          connectingFromId: null,
+          connectType: null,
+          undoStack: pushUndo(topology, undoStack),
+          redoStack: [],
+        });
       },
-      arpTables: nextArp,
-      selectedDeviceIds: [],
-      selectedBlockIds: [],
-      connectingFromId: null,
-      undoStack: pushUndo(topology, undoStack),
-      redoStack: [],
-    });
-  },
 
-  moveDevice: (deviceId, x, y) => {
-    const { topology } = get();
-    set({
-      topology: {
-        ...topology,
-        devices: topology.devices.map(d => (d.id === deviceId ? { ...d, position: { x, y } } : d)),
-      },
-    });
-  },
-
-  commitMove: (previous) => {
-    const { undoStack } = get();
-    set({ undoStack: pushUndo(previous, undoStack), redoStack: [] });
-  },
-
-  removeSelection: (deviceIds, blockIds) => {
-    const { topology, arpTables, undoStack } = get();
-    const nextArp = { ...arpTables };
-    deviceIds.forEach(id => delete nextArp[id]);
-    set({
-      topology: {
-        ...topology,
-        devices: topology.devices.filter(d => !deviceIds.includes(d.id)),
-        blocks: (topology.blocks ?? []).filter(b => !blockIds.includes(b.id)),
-        connections: topology.connections.filter(
-          c => !deviceIds.includes(c.deviceId1) && !deviceIds.includes(c.deviceId2)
-        ),
-      },
-      arpTables: nextArp,
-      selectedDeviceIds: [],
-      selectedBlockIds: [],
-      connectingFromId: null,
-      undoStack: pushUndo(topology, undoStack),
-      redoStack: [],
-    });
-  },
-
-  renameDevice: (deviceId, name) => {
-    const { topology, undoStack } = get();
-    set({
-      topology: {
-        ...topology,
-        devices: topology.devices.map(d =>
-          d.id === deviceId ? { ...d, name, config: { ...d.config, hostname: name } } : d
-        ),
-      },
-      undoStack: pushUndo(topology, undoStack),
-      redoStack: [],
-    });
-  },
-
-  explodeTopology: () => {
-    const { topology } = get();
-    const devices = topology.devices;
-    if (devices.length === 0) return;
-
-    const spacingX = 200;
-    const spacingY = 180;
-    const cols = devices.length <= 1 ? 1 : Math.ceil(Math.sqrt(devices.length));
-    const rows = Math.ceil(devices.length / cols);
-
-    const centerX = devices.reduce((s, d) => s + d.position.x, 0) / devices.length;
-    const centerY = devices.reduce((s, d) => s + d.position.y, 0) / devices.length;
-
-    const startX = centerX - ((cols - 1) * spacingX) / 2;
-    const startY = centerY - ((rows - 1) * spacingY) / 2;
-
-    set({
-      topology: {
-        ...topology,
-        devices: devices.map((d, i) => ({
-          ...d,
-          position: {
-            x: startX + (i % cols) * spacingX,
-            y: startY + Math.floor(i / cols) * spacingY,
+      removeDevice: (deviceId) => {
+        const { topology, arpTables, undoStack } = get();
+        const nextArp = { ...arpTables };
+        delete nextArp[deviceId];
+        set({
+          topology: {
+            ...topology,
+            devices: topology.devices.filter((d) => d.id !== deviceId),
+            connections: topology.connections.filter(
+              (c) => c.deviceId1 !== deviceId && c.deviceId2 !== deviceId,
+            ),
           },
-        })),
+          arpTables: nextArp,
+          selectedDeviceIds: [],
+          selectedBlockIds: [],
+          connectingFromId: null,
+          undoStack: pushUndo(topology, undoStack),
+          redoStack: [],
+        });
       },
-    });
-  },
 
-  organizeLayout: (deviceIds) => {
-    const { topology, undoStack } = get();
-    const devs = topology.devices;
-    if (devs.length === 0) return;
+      moveDevice: (deviceId, x, y) => {
+        const { topology } = get();
+        set({
+          topology: {
+            ...topology,
+            devices: topology.devices.map((d) =>
+              d.id === deviceId ? { ...d, position: { x, y } } : d,
+            ),
+          },
+        });
+      },
 
-    const targetSet = deviceIds && deviceIds.length
-      ? new Set(deviceIds)
-      : new Set(devs.map(d => d.id));
-    const isTarget = (id: string) => targetSet.has(id);
+      commitMove: (previous) => {
+        const { undoStack } = get();
+        set({ undoStack: pushUndo(previous, undoStack), redoStack: [] });
+      },
 
-    const pos = new Map<string, { x: number; y: number }>();
-    devs.forEach(d => pos.set(d.id, { x: d.position.x, y: d.position.y }));
+      removeSelection: (deviceIds, blockIds) => {
+        const { topology, arpTables, undoStack } = get();
+        const nextArp = { ...arpTables };
+        deviceIds.forEach((id) => delete nextArp[id]);
+        set({
+          topology: {
+            ...topology,
+            devices: topology.devices.filter((d) => !deviceIds.includes(d.id)),
+            blocks: (topology.blocks ?? []).filter(
+              (b) => !blockIds.includes(b.id),
+            ),
+            connections: topology.connections.filter(
+              (c) =>
+                !deviceIds.includes(c.deviceId1) &&
+                !deviceIds.includes(c.deviceId2),
+            ),
+          },
+          arpTables: nextArp,
+          selectedDeviceIds: [],
+          selectedBlockIds: [],
+          connectingFromId: null,
+          undoStack: pushUndo(topology, undoStack),
+          redoStack: [],
+        });
+      },
 
-    const adj = new Map<string, string[]>();
-    devs.filter(d => isTarget(d.id)).forEach(d => adj.set(d.id, []));
-    topology.connections.forEach(c => {
-      if (isTarget(c.deviceId1) && isTarget(c.deviceId2)) {
-        adj.get(c.deviceId1)!.push(c.deviceId2);
-        adj.get(c.deviceId2)!.push(c.deviceId1);
-      }
-    });
+      renameDevice: (deviceId, name) => {
+        const { topology, undoStack } = get();
+        set({
+          topology: {
+            ...topology,
+            devices: topology.devices.map((d) =>
+              d.id === deviceId
+                ? { ...d, name, config: { ...d.config, hostname: name } }
+                : d,
+            ),
+          },
+          undoStack: pushUndo(topology, undoStack),
+          redoStack: [],
+        });
+      },
 
-    const visited = new Set<string>();
-    const components: string[][] = [];
-    adj.forEach((_, id) => {
-      if (visited.has(id)) return;
-      const comp: string[] = [];
-      const stack = [id];
-      visited.add(id);
-      while (stack.length) {
-        const n = stack.pop()!;
-        comp.push(n);
-        adj.get(n)!.forEach(m => {
-          if (!visited.has(m)) {
-            visited.add(m);
-            stack.push(m);
+      explodeTopology: () => {
+        const { topology } = get();
+        const devices = topology.devices;
+        if (devices.length === 0) return;
+
+        const spacingX = 200;
+        const spacingY = 180;
+        const cols =
+          devices.length <= 1 ? 1 : Math.ceil(Math.sqrt(devices.length));
+        const rows = Math.ceil(devices.length / cols);
+
+        const centerX =
+          devices.reduce((s, d) => s + d.position.x, 0) / devices.length;
+        const centerY =
+          devices.reduce((s, d) => s + d.position.y, 0) / devices.length;
+
+        const startX = centerX - ((cols - 1) * spacingX) / 2;
+        const startY = centerY - ((rows - 1) * spacingY) / 2;
+
+        set({
+          topology: {
+            ...topology,
+            devices: devices.map((d, i) => ({
+              ...d,
+              position: {
+                x: startX + (i % cols) * spacingX,
+                y: startY + Math.floor(i / cols) * spacingY,
+              },
+            })),
+          },
+        });
+      },
+
+      organizeLayout: (deviceIds) => {
+        const { topology, undoStack } = get();
+        const devs = topology.devices;
+        if (devs.length === 0) return;
+
+        const targetSet =
+          deviceIds && deviceIds.length
+            ? new Set(deviceIds)
+            : new Set(devs.map((d) => d.id));
+        const isTarget = (id: string) => targetSet.has(id);
+
+        const pos = new Map<string, { x: number; y: number }>();
+        devs.forEach((d) =>
+          pos.set(d.id, { x: d.position.x, y: d.position.y }),
+        );
+
+        const adj = new Map<string, string[]>();
+        devs.filter((d) => isTarget(d.id)).forEach((d) => adj.set(d.id, []));
+        topology.connections.forEach((c) => {
+          if (isTarget(c.deviceId1) && isTarget(c.deviceId2)) {
+            adj.get(c.deviceId1)!.push(c.deviceId2);
+            adj.get(c.deviceId2)!.push(c.deviceId1);
           }
         });
-      }
-      components.push(comp);
-    });
 
-    const SP_X = 200;
-    const SP_Y = 130;
-    let offsetX = 0;
-
-    components.forEach(comp => {
-      if (comp.length === 1) {
-        pos.set(comp[0], { x: offsetX, y: 0 });
-        offsetX += SP_X;
-        return;
-      }
-
-      let root = comp[0];
-      comp.forEach(n => {
-        if (adj.get(n)!.length > adj.get(root)!.length) root = n;
-      });
-
-      const layer = new Map<string, number>();
-      const queue = [root];
-      layer.set(root, 0);
-      while (queue.length) {
-        const u = queue.shift()!;
-        adj.get(u)!.forEach(v => {
-          if (!layer.has(v)) {
-            layer.set(v, layer.get(u)! + 1);
-            queue.push(v);
+        const visited = new Set<string>();
+        const components: string[][] = [];
+        adj.forEach((_, id) => {
+          if (visited.has(id)) return;
+          const comp: string[] = [];
+          const stack = [id];
+          visited.add(id);
+          while (stack.length) {
+            const n = stack.pop()!;
+            comp.push(n);
+            adj.get(n)!.forEach((m) => {
+              if (!visited.has(m)) {
+                visited.add(m);
+                stack.push(m);
+              }
+            });
           }
+          components.push(comp);
         });
-      }
 
-      let maxLayer = 0;
-      comp.forEach(n => (maxLayer = Math.max(maxLayer, layer.get(n)!)));
-      const layers: string[][] = Array.from({ length: maxLayer + 1 }, () => []);
-      comp.forEach(n => layers[layer.get(n)!].push(n));
+        const SP_X = 200;
+        const SP_Y = 130;
+        let offsetX = 0;
 
-      const orderY = new Map<string, number>();
-      comp.forEach(n => orderY.set(n, layers[layer.get(n)!].indexOf(n)));
-      for (let pass = 0; pass < 4; pass++) {
-        for (let l = 0; l <= maxLayer; l++) {
-          layers[l].sort((a, b) => orderY.get(a)! - orderY.get(b)!);
-          layers[l].forEach(n => {
-            const neigh = adj.get(n)!.filter(m => layer.get(m)! === l - 1 || layer.get(m)! === l + 1);
-            if (neigh.length) {
-              orderY.set(n, neigh.reduce((s, m) => s + orderY.get(m)!, 0) / neigh.length);
+        components.forEach((comp) => {
+          if (comp.length === 1) {
+            pos.set(comp[0], { x: offsetX, y: 0 });
+            offsetX += SP_X;
+            return;
+          }
+
+          let root = comp[0];
+          comp.forEach((n) => {
+            if (adj.get(n)!.length > adj.get(root)!.length) root = n;
+          });
+
+          const layer = new Map<string, number>();
+          const queue = [root];
+          layer.set(root, 0);
+          while (queue.length) {
+            const u = queue.shift()!;
+            adj.get(u)!.forEach((v) => {
+              if (!layer.has(v)) {
+                layer.set(v, layer.get(u)! + 1);
+                queue.push(v);
+              }
+            });
+          }
+
+          const hasCloud = comp.some(
+            (n) => devs.find((x) => x.id === n)?.type === 'cloud',
+          );
+          if (hasCloud) {
+            comp.forEach((n) => {
+              const d = devs.find((x) => x.id === n);
+              if (d?.type === 'cloud') layer.set(n, 0);
+              else layer.set(n, layer.get(n)! + 1);
+            });
+          }
+
+          let maxLayer = 0;
+          comp.forEach((n) => (maxLayer = Math.max(maxLayer, layer.get(n)!)));
+
+          const layers: string[][] = Array.from(
+            { length: maxLayer + 1 },
+            () => [],
+          );
+          comp.forEach((n) => layers[layer.get(n)!].push(n));
+
+          const orderY = new Map<string, number>();
+          comp.forEach((n) => orderY.set(n, layers[layer.get(n)!].indexOf(n)));
+          for (let pass = 0; pass < 4; pass++) {
+            for (let l = 0; l <= maxLayer; l++) {
+              layers[l].sort((a, b) => orderY.get(a)! - orderY.get(b)!);
+              layers[l].forEach((n) => {
+                const neigh = adj
+                  .get(n)!
+                  .filter(
+                    (m) => layer.get(m)! === l - 1 || layer.get(m)! === l + 1,
+                  );
+                if (neigh.length) {
+                  orderY.set(
+                    n,
+                    neigh.reduce((s, m) => s + orderY.get(m)!, 0) /
+                      neigh.length,
+                  );
+                }
+              });
             }
+          }
+          for (let l = 0; l <= maxLayer; l++) {
+            layers[l].sort((a, b) => orderY.get(a)! - orderY.get(b)!);
+          }
+
+          for (let l = 0; l <= maxLayer; l++) {
+            const col = layers[l];
+            col.forEach((n, idx) => {
+              pos.set(n, {
+                x: offsetX + l * SP_X,
+                y: (idx - (col.length - 1) / 2) * SP_Y,
+              });
+            });
+          }
+          offsetX += (maxLayer + 1) * SP_X;
+        });
+
+        set({
+          topology: {
+            ...topology,
+            devices: devs.map((d) => ({ ...d, position: pos.get(d.id)! })),
+          },
+          undoStack: pushUndo(topology, undoStack),
+          redoStack: [],
+        });
+      },
+
+      copyDevice: (deviceId) => set({ copiedDeviceId: deviceId }),
+
+      pasteDevice: (position) => {
+        const { topology, copiedDeviceId, undoStack } = get();
+        if (!copiedDeviceId) return;
+        const source = topology.devices.find((d) => d.id === copiedDeviceId);
+        if (!source) return;
+
+        const index = topology.devices.length + 1;
+        const name = nextDeviceName(source.type, topology.devices);
+        const device: Device = {
+          id: `dev-${source.type}-${Date.now()}`,
+          type: source.type,
+          name,
+          position: position ?? {
+            x: source.position.x + 60,
+            y: source.position.y + 60,
+          },
+          interfaces: source.interfaces.map((iface) => ({
+            ...iface,
+            id: `${iface.id}-copy-${Date.now()}`,
+            mac: `AA:BB:CC:${index.toString(16).padStart(2, '0').toUpperCase()}:${(iface.id === 'wlan0' ? 5 : 1).toString(16).padStart(2, '0').toUpperCase()}:00`,
+          })),
+          config: {
+            hostname: name,
+            routes: source.config.routes.map((route) => ({ ...route })),
+          },
+        };
+        set({
+          topology: { ...topology, devices: [...topology.devices, device] },
+          selectedDeviceIds: [device.id],
+          selectedBlockIds: [],
+          selectedConnectionId: null,
+          connectingFromId: null,
+          connectType: null,
+          undoStack: pushUndo(topology, undoStack),
+          redoStack: [],
+        });
+      },
+
+      clearCopiedDevice: () => set({ copiedDeviceId: null }),
+
+      selectDevice: (deviceId) =>
+        set({
+          selectedDeviceIds: deviceId ? [deviceId] : [],
+          selectedBlockIds: [],
+          selectedConnectionId: null,
+        }),
+
+      selectConnection: (connectionId) =>
+        set({
+          selectedConnectionId: connectionId,
+          selectedDeviceIds: [],
+          selectedBlockIds: [],
+        }),
+
+      selectBlock: (blockId) =>
+        set({
+          selectedBlockIds: blockId ? [blockId] : [],
+          selectedDeviceIds: [],
+          selectedConnectionId: null,
+        }),
+
+      setSelection: (deviceIds, blockIds) =>
+        set({
+          selectedDeviceIds: deviceIds,
+          selectedBlockIds: blockIds,
+          selectedConnectionId: null,
+        }),
+
+      startConnection: (deviceId, type = 'ethernet') =>
+        set({
+          connectingFromId: deviceId,
+          connectType: type,
+          selectedDeviceIds: [],
+          selectedConnectionId: null,
+        }),
+
+      completeConnection: (deviceId) => {
+        const { topology, connectingFromId, connectType, undoStack } = get();
+        if (!connectingFromId) return;
+        const conn =
+          connectType === 'wireless'
+            ? makeWifiConnection(topology, connectingFromId, deviceId)
+            : makeConnection(topology, connectingFromId, deviceId);
+        if (conn) {
+          set({
+            topology: {
+              ...topology,
+              connections: [...topology.connections, conn],
+            },
+            undoStack: pushUndo(topology, undoStack),
+            redoStack: [],
           });
         }
-      }
-      for (let l = 0; l <= maxLayer; l++) {
-        layers[l].sort((a, b) => orderY.get(a)! - orderY.get(b)!);
-      }
+        set({ connectingFromId: null, connectType: null });
+      },
 
-      for (let l = 0; l <= maxLayer; l++) {
-        const col = layers[l];
-        col.forEach((n, idx) => {
-          pos.set(n, { x: offsetX + l * SP_X, y: (idx - (col.length - 1) / 2) * SP_Y });
+      cancelConnection: () =>
+        set({ connectingFromId: null, connectType: null }),
+
+      addConnection: (deviceId1, deviceId2) => {
+        const { topology } = get();
+        const conn = makeConnection(topology, deviceId1, deviceId2);
+        if (conn) {
+          set({
+            topology: {
+              ...topology,
+              connections: [...topology.connections, conn],
+            },
+          });
+        }
+      },
+
+      removeConnection: (connectionId) => {
+        const { topology, undoStack } = get();
+        set({
+          topology: {
+            ...topology,
+            connections: topology.connections.filter(
+              (c) => c.id !== connectionId,
+            ),
+          },
+          selectedConnectionId: null,
+          undoStack: pushUndo(topology, undoStack),
+          redoStack: [],
         });
-      }
-      offsetX += (maxLayer + 1) * SP_X;
-    });
-
-    set({
-      topology: {
-        ...topology,
-        devices: devs.map(d => ({ ...d, position: pos.get(d.id)! })),
       },
-      undoStack: pushUndo(topology, undoStack),
-      redoStack: [],
-    });
-  },
 
-  copyDevice: (deviceId) => set({ copiedDeviceId: deviceId }),
-
-  pasteDevice: (position) => {
-    const { topology, copiedDeviceId, undoStack } = get();
-    if (!copiedDeviceId) return;
-    const source = topology.devices.find(d => d.id === copiedDeviceId);
-    if (!source) return;
-
-    const index = topology.devices.length + 1;
-    const name = nextDeviceName(source.type, topology.devices);
-    const device: Device = {
-      id: `dev-${source.type}-${Date.now()}`,
-      type: source.type,
-      name,
-      position: position ?? { x: source.position.x + 60, y: source.position.y + 60 },
-      interfaces: source.interfaces.map(iface => ({
-        ...iface,
-        id: `${iface.id}-copy-${Date.now()}`,
-        mac: `AA:BB:CC:${index.toString(16).padStart(2, '0').toUpperCase()}:${(iface.id === 'wlan0' ? 5 : 1).toString(16).padStart(2, '0').toUpperCase()}:00`,
-      })),
-      config: {
-        hostname: name,
-        routes: source.config.routes.map(route => ({ ...route })),
+      addBlock: (block) => {
+        const { topology, undoStack } = get();
+        const id = `block-${Date.now()}`;
+        set({
+          topology: {
+            ...topology,
+            blocks: [...(topology.blocks ?? []), { id, ...block }],
+          },
+          undoStack: pushUndo(topology, undoStack),
+          redoStack: [],
+        });
       },
-    };
-    set({
-      topology: { ...topology, devices: [...topology.devices, device] },
-      selectedDeviceIds: [device.id],
-      selectedBlockIds: [],
-      selectedConnectionId: null,
-      connectingFromId: null,
-      connectType: null,
-      undoStack: pushUndo(topology, undoStack),
-      redoStack: [],
-    });
-  },
 
-  clearCopiedDevice: () => set({ copiedDeviceId: null }),
-
-  selectDevice: (deviceId) => set({ selectedDeviceIds: deviceId ? [deviceId] : [], selectedBlockIds: [], selectedConnectionId: null }),
-
-  selectConnection: (connectionId) =>
-    set({ selectedConnectionId: connectionId, selectedDeviceIds: [], selectedBlockIds: [] }),
-
-  selectBlock: (blockId) =>
-    set({ selectedBlockIds: blockId ? [blockId] : [], selectedDeviceIds: [], selectedConnectionId: null }),
-
-  setSelection: (deviceIds, blockIds) =>
-    set({ selectedDeviceIds: deviceIds, selectedBlockIds: blockIds, selectedConnectionId: null }),
-
-  startConnection: (deviceId, type = 'ethernet') =>
-    set({ connectingFromId: deviceId, connectType: type, selectedDeviceIds: [], selectedConnectionId: null }),
-
-  completeConnection: (deviceId) => {
-    const { topology, connectingFromId, connectType, undoStack } = get();
-    if (!connectingFromId) return;
-    const conn = connectType === 'wireless'
-      ? makeWifiConnection(topology, connectingFromId, deviceId)
-      : makeConnection(topology, connectingFromId, deviceId);
-    if (conn) {
-      set({ topology: { ...topology, connections: [...topology.connections, conn] }, undoStack: pushUndo(topology, undoStack), redoStack: [] });
-    }
-    set({ connectingFromId: null, connectType: null });
-  },
-
-  cancelConnection: () => set({ connectingFromId: null, connectType: null }),
-
-  addConnection: (deviceId1, deviceId2) => {
-    const { topology } = get();
-    const conn = makeConnection(topology, deviceId1, deviceId2);
-    if (conn) {
-      set({ topology: { ...topology, connections: [...topology.connections, conn] } });
-    }
-  },
-
-  removeConnection: (connectionId) => {
-    const { topology, undoStack } = get();
-    set({
-      topology: {
-        ...topology,
-        connections: topology.connections.filter(c => c.id !== connectionId),
+      removeBlock: (blockId) => {
+        const { topology, undoStack } = get();
+        set({
+          topology: {
+            ...topology,
+            blocks: (topology.blocks ?? []).filter((b) => b.id !== blockId),
+          },
+          selectedBlockIds: [],
+          undoStack: pushUndo(topology, undoStack),
+          redoStack: [],
+        });
       },
-      selectedConnectionId: null,
-      undoStack: pushUndo(topology, undoStack),
-      redoStack: [],
-    });
-  },
 
-  addBlock: (block) => {
-    const { topology, undoStack } = get();
-    const id = `block-${Date.now()}`;
-    set({
-      topology: {
-        ...topology,
-        blocks: [...(topology.blocks ?? []), { id, ...block }],
+      moveBlock: (blockId, x, y) => {
+        const { topology } = get();
+        set({
+          topology: {
+            ...topology,
+            blocks: (topology.blocks ?? []).map((b) =>
+              b.id === blockId ? { ...b, x, y } : b,
+            ),
+          },
+        });
       },
-      undoStack: pushUndo(topology, undoStack),
-      redoStack: [],
-    });
-  },
 
-  removeBlock: (blockId) => {
-    const { topology, undoStack } = get();
-    set({
-      topology: {
-        ...topology,
-        blocks: (topology.blocks ?? []).filter(b => b.id !== blockId),
+      resizeBlock: (blockId, x, y, width, height) => {
+        const { topology } = get();
+        set({
+          topology: {
+            ...topology,
+            blocks: (topology.blocks ?? []).map((b) =>
+              b.id === blockId ? { ...b, x, y, width, height } : b,
+            ),
+          },
+        });
       },
-      selectedBlockIds: [],
-      undoStack: pushUndo(topology, undoStack),
-      redoStack: [],
-    });
-  },
 
-  moveBlock: (blockId, x, y) => {
-    const { topology } = get();
-    set({
-      topology: {
-        ...topology,
-        blocks: (topology.blocks ?? []).map(b =>
-          b.id === blockId ? { ...b, x, y } : b
-        ),
+      updateInterface: (deviceId, interfaceId, updates) => {
+        const { topology, undoStack } = get();
+        set({
+          topology: {
+            ...topology,
+            devices: topology.devices.map((d) =>
+              d.id === deviceId
+                ? {
+                    ...d,
+                    interfaces: d.interfaces.map((i) =>
+                      i.id === interfaceId ? { ...i, ...updates } : i,
+                    ),
+                  }
+                : d,
+            ),
+          },
+          undoStack: pushUndo(topology, undoStack),
+          redoStack: [],
+        });
       },
-    });
-  },
 
-  resizeBlock: (blockId, x, y, width, height) => {
-    const { topology } = get();
-    set({
-      topology: {
-        ...topology,
-        blocks: (topology.blocks ?? []).map(b =>
-          b.id === blockId ? { ...b, x, y, width, height } : b
-        ),
+      toggleInterfaceStatus: (deviceId, interfaceId) => {
+        const { topology, undoStack } = get();
+        set({
+          topology: {
+            ...topology,
+            devices: topology.devices.map((d) =>
+              d.id === deviceId
+                ? {
+                    ...d,
+                    interfaces: d.interfaces.map((i) =>
+                      i.id === interfaceId
+                        ? { ...i, status: i.status === 'up' ? 'down' : 'up' }
+                        : i,
+                    ),
+                  }
+                : d,
+            ),
+          },
+          undoStack: pushUndo(topology, undoStack),
+          redoStack: [],
+        });
       },
-    });
-  },
 
-  updateInterface: (deviceId, interfaceId, updates) => {
-    const { topology, undoStack } = get();
-    set({
-      topology: {
-        ...topology,
-        devices: topology.devices.map(d =>
-          d.id === deviceId
-            ? {
-                ...d,
-                interfaces: d.interfaces.map(i =>
-                  i.id === interfaceId ? { ...i, ...updates } : i
-                ),
-              }
-            : d
-        ),
+      updateRoutes: (deviceId, routes) => {
+        const { topology, undoStack } = get();
+        set({
+          topology: {
+            ...topology,
+            devices: topology.devices.map((d) =>
+              d.id === deviceId ? { ...d, config: { ...d.config, routes } } : d,
+            ),
+          },
+          undoStack: pushUndo(topology, undoStack),
+          redoStack: [],
+        });
       },
-      undoStack: pushUndo(topology, undoStack),
-      redoStack: [],
-    });
-  },
 
-  toggleInterfaceStatus: (deviceId, interfaceId) => {
-    const { topology, undoStack } = get();
-    set({
-      topology: {
-        ...topology,
-        devices: topology.devices.map(d =>
-          d.id === deviceId
-            ? {
-                ...d,
-                interfaces: d.interfaces.map(i =>
-                  i.id === interfaceId
-                    ? { ...i, status: i.status === 'up' ? 'down' : 'up' }
-                    : i
-                ),
-              }
-            : d
-        ),
+      logPacket: (from, to, type) =>
+        set((state) => ({
+          packetLog: [
+            {
+              id: `pkt-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`,
+              from,
+              to,
+              type,
+              timestamp: Date.now(),
+            },
+            ...state.packetLog,
+          ].slice(0, 50),
+        })),
+
+      clearPacketLog: () => set({ packetLog: [] }),
+
+      runTransmissions: (transmissions) => {
+        if (transmissions.length === 0) return;
+        const newPackets = transmissions.map((t) => t.packet);
+        const animations: ActiveAnimation[] = transmissions.map((t, i) => ({
+          id: `anim-${t.packet.id}`,
+          packet: t.packet,
+          points: t.points,
+          duration: 900 + Math.max(0, t.points.length - 2) * 160,
+          delay: i * 450,
+          startedAt: performance.now(),
+        }));
+        set((state) => ({
+          packets: [...newPackets, ...state.packets].slice(0, 50),
+          selectedPacketId:
+            state.selectedPacketId ??
+            newPackets[newPackets.length - 1]?.id ??
+            null,
+          animations: [...state.animations, ...animations],
+        }));
+
+        const total =
+          Math.max(...animations.map((a) => a.delay + a.duration)) + 300;
+        setTimeout(() => {
+          set((state) => ({
+            animations: state.animations.filter(
+              (a) => !animations.some((na) => na.id === a.id),
+            ),
+          }));
+        }, total);
       },
-      undoStack: pushUndo(topology, undoStack),
-      redoStack: [],
-    });
-  },
 
-  updateRoutes: (deviceId, routes) => {
-    const { topology, undoStack } = get();
-    set({
-      topology: {
-        ...topology,
-        devices: topology.devices.map(d =>
-          d.id === deviceId
-            ? { ...d, config: { ...d.config, routes } }
-            : d
-        ),
+      addArpEntries: (learned) => {
+        if (learned.length === 0) return;
+        set((state) => {
+          const arpTables = { ...state.arpTables };
+          for (const { deviceId, entry } of learned) {
+            const existing = arpTables[deviceId] ?? [];
+            const filtered = existing.filter((e) => e.ip !== entry.ip);
+            arpTables[deviceId] = [...filtered, entry];
+          }
+          return { arpTables };
+        });
       },
-      undoStack: pushUndo(topology, undoStack),
-      redoStack: [],
-    });
-  },
 
-  logPacket: (from, to, type) =>
-    set(state => ({
-      packetLog: [
-        { id: `pkt-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`, from, to, type, timestamp: Date.now() },
-        ...state.packetLog,
-      ].slice(0, 50),
-    })),
+      undo: () => {
+        const { undoStack, topology, redoStack } = get();
+        if (undoStack.length === 0) return;
+        const prev = undoStack[undoStack.length - 1];
+        set({
+          undoStack: undoStack.slice(0, -1),
+          redoStack: [...redoStack, topology],
+          topology: prev,
+          selectedDeviceIds: [],
+          selectedBlockIds: [],
+          selectedConnectionId: null,
+          deviceValidation: {},
+        });
+      },
 
-  clearPacketLog: () => set({ packetLog: [] }),
+      redo: () => {
+        const { redoStack, topology, undoStack } = get();
+        if (redoStack.length === 0) return;
+        const next = redoStack[redoStack.length - 1];
+        set({
+          redoStack: redoStack.slice(0, -1),
+          undoStack: [...undoStack, topology],
+          topology: next,
+          selectedDeviceIds: [],
+          selectedBlockIds: [],
+          selectedConnectionId: null,
+          deviceValidation: {},
+        });
+      },
 
-  runTransmissions: (transmissions) => {
-    if (transmissions.length === 0) return;
-    const newPackets = transmissions.map(t => t.packet);
-    const animations: ActiveAnimation[] = transmissions.map((t, i) => ({
-      id: `anim-${t.packet.id}`,
-      packet: t.packet,
-      points: t.points,
-      duration: 900 + Math.max(0, t.points.length - 2) * 160,
-      delay: i * 450,
-      startedAt: performance.now(),
-    }));
-    set(state => ({
-      packets: [...newPackets, ...state.packets].slice(0, 50),
-      selectedPacketId: state.selectedPacketId ?? newPackets[newPackets.length - 1]?.id ?? null,
-      animations: [...state.animations, ...animations],
-    }));
+      setDeviceValidation: (results) => set({ deviceValidation: results }),
 
-    const total = Math.max(...animations.map(a => a.delay + a.duration)) + 300;
-    setTimeout(() => {
-      set(state => ({
-        animations: state.animations.filter(a => !animations.some(na => na.id === a.id)),
-      }));
-    }, total);
-  },
+      selectPacket: (packetId) => set({ selectedPacketId: packetId }),
 
-  addArpEntries: (learned) => {
-    if (learned.length === 0) return;
-    set(state => {
-      const arpTables = { ...state.arpTables };
-      for (const { deviceId, entry } of learned) {
-        const existing = arpTables[deviceId] ?? [];
-        const filtered = existing.filter(e => e.ip !== entry.ip);
-        arpTables[deviceId] = [...filtered, entry];
-      }
-      return { arpTables };
-    });
-  },
-
-  undo: () => {
-    const { undoStack, topology, redoStack } = get();
-    if (undoStack.length === 0) return;
-    const prev = undoStack[undoStack.length - 1];
-    set({
-      undoStack: undoStack.slice(0, -1),
-      redoStack: [...redoStack, topology],
-      topology: prev,
-      selectedDeviceIds: [],
-      selectedBlockIds: [],
-      selectedConnectionId: null,
-      deviceValidation: {},
-    });
-  },
-
-  redo: () => {
-    const { redoStack, topology, undoStack } = get();
-    if (redoStack.length === 0) return;
-    const next = redoStack[redoStack.length - 1];
-    set({
-      redoStack: redoStack.slice(0, -1),
-      undoStack: [...undoStack, topology],
-      topology: next,
-      selectedDeviceIds: [],
-      selectedBlockIds: [],
-      selectedConnectionId: null,
-      deviceValidation: {},
-    });
-  },
-
-  setDeviceValidation: (results) => set({ deviceValidation: results }),
-
-  selectPacket: (packetId) => set({ selectedPacketId: packetId }),
-
-  clearPackets: () => set({ packets: [], animations: [], selectedPacketId: null }),
+      clearPackets: () =>
+        set({ packets: [], animations: [], selectedPacketId: null }),
     }),
     {
       name: 'netlab-simulator',
-      partialize: state => ({ topology: state.topology }),
+      partialize: (state) => ({ topology: state.topology }),
       merge: (persisted: unknown, current: SimulatorState): SimulatorState => ({
         ...current,
         ...(persisted as Record<string, unknown>),
-        topology: normalizeTopology((persisted as { topology?: Topology })?.topology ?? current.topology),
+        topology: normalizeTopology(
+          (persisted as { topology?: Topology })?.topology ?? current.topology,
+        ),
       }),
-    }
-  )
+    },
+  ),
 );

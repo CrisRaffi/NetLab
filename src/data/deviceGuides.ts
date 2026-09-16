@@ -77,18 +77,18 @@ export const DEVICE_GUIDES: Record<DeviceType, DeviceGuide> = {
     config: ['Defina IP fixo na rede', 'Teste conectividade com ping'],
   },
   cloud: {
-    role: 'Internet / núcleo externo.',
-    how: 'Representa a rede externa; servidores na nuvem respondem por IP próprio.',
+    role: 'Rede externa (Internet/nuvem).',
+    how: 'Representa a Internet: o ponto de saída da sua rede para o mundo exterior. Servidores na nuvem respondem por IP próprio.',
     config: ['Representa a Internet — não precisa configurar'],
   },
   core: {
-    role: 'Núcleo de rede: interliga múltiplas sub-redes sem configuração complexa.',
-    how: 'Cada interface eth conecta a uma rede diferente (LAN, DMZ, WiFi, WAN). Funciona como gateway automático — IPs nas interfaces viram gateways das respectivas sub-redes. Ideal para conectar redes distintas rapidamente.',
+    role: 'Roteador que interliga várias sub-redes automaticamente.',
+    how: 'Cada interface eth conecta a uma rede diferente (LAN, DMZ, WiFi, WAN). O IP colocado numa interface vira o gateway daquela sub-rede e o roteamento entre elas é feito sozinho — sem precisar cadastrar rotas.',
     config: [
       'Conecte cada interface a uma rede diferente',
       'Configure IP em cada interface (ex: 192.168.1.1/24, 192.168.2.1/24)',
       'Os dispositivos das redes usarão esses IPs como gateway',
-      'Não precisa configurar rotas — o core encaminha automaticamente',
+      'Não precisa configurar rotas — o roteamento é automático',
     ],
   },
 };
