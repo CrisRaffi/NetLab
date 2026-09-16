@@ -91,7 +91,7 @@ function css(s: string): React.CSSProperties {
 
 function NetworkMock() {
   const node = (x: number, y: number, label: string, icon: React.ReactNode) => (
-    <div className="absolute flex flex-col items-center gap-1" style={{ left: x, top: y, transform: 'translate(-50%, -50%)' }}>
+    <div className="absolute flex flex-col items-center gap-1" style={{ left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)' }}>
       <span className="flex items-center justify-center w-12 h-12 rounded-xl border border-[--color-border-primary]/60 bg-[--color-bg-secondary] text-[--color-accent-cyan]">
         {icon}
       </span>
@@ -107,13 +107,13 @@ function NetworkMock() {
         <line x1="50%" y1="42%" x2="54%" y2="72%" stroke="rgba(129,140,248,.3)" strokeWidth="2" strokeDasharray="6 6" />
         <line x1="66%" y1="42%" x2="74%" y2="72%" stroke="rgba(129,140,248,.3)" strokeWidth="2" strokeDasharray="6 6" />
       </svg>
-      {node('18%', '42%', 'ROUTER', <Router size={22} />)}
-      {node('34%', '42%', 'SWITCH', <Network size={22} />)}
-      {node('50%', '42%', 'AP', <Wifi size={22} />)}
-      {node('66%', '42%', 'SERVER', <Server size={22} />)}
-      {node('26%', '72%', 'PC-01', <Monitor size={20} />)}
-      {node('54%', '72%', 'PC-02', <Cpu size={20} />)}
-      {node('74%', '72%', 'NAS', <Server size={20} />)}
+      {node(18, 42, 'ROUTER', <Router size={22} />)}
+      {node(34, 42, 'SWITCH', <Network size={22} />)}
+      {node(50, 42, 'AP', <Wifi size={22} />)}
+      {node(66, 42, 'SERVER', <Server size={22} />)}
+      {node(26, 72, 'PC-01', <Monitor size={20} />)}
+      {node(54, 72, 'PC-02', <Cpu size={20} />)}
+      {node(74, 72, 'NAS', <Server size={20} />)}
       <span className="absolute bottom-2 left-3 text-[9px] font-mono text-[--color-text-muted]">Rede doméstica · 192.168.1.0/24</span>
       <span className="absolute bottom-2 right-3 text-[9px] font-mono text-[--color-status-connected]">● operacional</span>
     </div>

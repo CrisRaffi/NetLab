@@ -11,9 +11,9 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
 
 const PADDING_CLASSES = {
   none: '',
-  sm: 'p-2.5',
-  md: 'p-4',
-  lg: 'p-6',
+  sm: 'p-3',
+  md: 'p-5',
+  lg: 'p-7',
 };
 
 export function Card({ title, subtitle, icon, actions, padding = 'md', className, children, ...props }: CardProps) {

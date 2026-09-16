@@ -92,7 +92,7 @@ export function DashboardPage() {
   const nextId = nextExercise?.id ?? lastCompletedId;
 
   return (
-    <div className="space-y-4 page-container">
+    <div className="space-y-6 page-container">
       <PageHeader
         title="Olá!"
         subtitle="Seu laboratório está pronto. Escolha um desafio e comece a experimentar."

@@ -24,11 +24,11 @@ const ACCENT_CHIP: Record<Accent, string> = {
 export function PageHeader({ title, subtitle, icon, accent = 'blue', badge, actions }: PageHeaderProps) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <div className="flex items-center gap-3.5 min-w-0">
+      <div className="flex items-center gap-4 min-w-0">
         {icon && (
           <span
             className={clsx(
-              'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
+              'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl',
               ACCENT_CHIP[accent],
               'icon-glow-purple'
             )}
@@ -42,7 +42,7 @@ export function PageHeader({ title, subtitle, icon, accent = 'blue', badge, acti
             {badge}
           </div>
           {subtitle && (
-            <p className="text-xs text-[--color-text-muted] mt-0.5">{subtitle}</p>
+            <p className="text-xs text-[--color-text-muted] mt-1">{subtitle}</p>
           )}
         </div>
       </div>

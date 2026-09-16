@@ -18,7 +18,7 @@ export function ConfigPage() {
   };
 
   return (
-    <div className="page-container space-y-3 max-w-2xl">
+    <div className="page-container space-y-6 max-w-2xl">
       <PageHeader
         title="Configurações"
         subtitle="Preferências e dados da sua conta."

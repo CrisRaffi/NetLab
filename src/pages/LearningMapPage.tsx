@@ -119,7 +119,7 @@ export function LearningMapPage() {
   const nextLocked = getNextLocked();
 
   return (
-    <div className="space-y-3" style={{ paddingInline: 20, paddingBlock: 16 }}>
+    <div className="space-y-6" style={{ paddingInline: 28, paddingBlock: 24 }}>
       <PageHeader
         title="Mapa de Aprendizado"
         subtitle="Fundamentos liberam conceitos mais avançados. Domine cada nível para avançar."

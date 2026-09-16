@@ -4,7 +4,7 @@ import { Badge } from '../components/common/Badge';
 
 export function ProvaPage() {
   return (
-    <div className="page-container space-y-3">
+    <div className="page-container space-y-6">
       <PageHeader
         title="Modo Prova"
         subtitle="Avaliações cronometradas sem dicas."

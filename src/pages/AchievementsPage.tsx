@@ -60,7 +60,7 @@ export function AchievementsPage() {
   const progress = useProgressStore((s) => s.progress);
 
   return (
-    <div className="page-container space-y-3">
+    <div className="page-container space-y-6">
       <PageHeader
         title="Conquistas"
         subtitle="Complete laboratórios e desafios para desbloquear conquistas e ganhar XP."

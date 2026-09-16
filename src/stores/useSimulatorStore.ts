@@ -876,10 +876,10 @@ topology: createDefaultTopology(),
     {
       name: 'netlab-simulator',
       partialize: state => ({ topology: state.topology }),
-      merge: (persisted: unknown, current: ReturnType<typeof useSimulatorStore.getState>) => ({
+      merge: (persisted: unknown, current: SimulatorState): SimulatorState => ({
         ...current,
         ...(persisted as Record<string, unknown>),
-        topology: normalizeTopology((persisted as { topology: ReturnType<typeof useSimulatorStore.getState>['topology'] })?.topology ?? current.topology),
+        topology: normalizeTopology((persisted as { topology?: Topology })?.topology ?? current.topology),
       }),
     }
   )

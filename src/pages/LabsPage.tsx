@@ -35,7 +35,7 @@ export function LabsPage() {
   const completedIds = progress.completedExercises;
 
   return (
-    <div className="page-container space-y-3">
+    <div className="page-container space-y-6">
       <PageHeader
         title="Laboratórios"
         subtitle="Complete na ordem para liberar desafios mais complexos."

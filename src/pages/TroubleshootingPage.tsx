@@ -112,7 +112,7 @@ function Intro({ onStart }: { onStart: () => void }) {
   ).length;
 
   return (
-    <div className="page-container space-y-3">
+    <div className="page-container space-y-6">
       <div className="flex flex-col items-start rounded-lg border border-[--color-border-primary] bg-[--color-bg-card] p-5">
         <div className="flex items-center gap-2 mb-1">
           <Bug size={20} className="text-[--color-accent-red]" />

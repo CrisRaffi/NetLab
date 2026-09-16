@@ -774,10 +774,10 @@ h1,h2,h3,h4,h5,h6 { font-size: inherit; font-weight: inherit; letter-spacing: in
 
 .page-container {
   width: 100%;
-  padding: 20px 24px 28px;
+  padding: 28px 32px 36px;
 }
 @media (max-width: 768px) {
-  .page-container { padding: 16px 14px 22px; }
+  .page-container { padding: 20px 18px 26px; }
 }
 
 .list-row {

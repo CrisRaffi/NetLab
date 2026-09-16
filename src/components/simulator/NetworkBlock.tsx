@@ -22,11 +22,11 @@ export function NetworkBlock({ block, selected, onSelect, onRemove, onMove, onRe
     onSelect(block.id);
     dragRef.current = { mode, startX: e.clientX, startY: e.clientY, orig: { ...block } };
 
-    const onMove = (ev: PointerEvent) => {
+const handlePointerMove = (ev: PointerEvent) => {
       const drag = dragRef.current;
       if (!drag) return;
-      const dx = (ev.clientX - drag.startX) / 1;
-      const dy = (ev.clientY - drag.startY) / 1;
+      const dx = ev.clientX - drag.startX;
+      const dy = ev.clientY - drag.startY;
       if (drag.mode === 'move') {
         onMove(drag.orig.id, drag.orig.x + dx, drag.orig.y + dy);
       } else {
@@ -37,10 +37,10 @@ export function NetworkBlock({ block, selected, onSelect, onRemove, onMove, onRe
     };
     const onUp = () => {
       dragRef.current = null;
-      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointermove', handlePointerMove);
       window.removeEventListener('pointerup', onUp);
     };
-    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointermove', handlePointerMove);
     window.addEventListener('pointerup', onUp);
   };
 
