@@ -15,7 +15,6 @@ import {
   Minimize2,
   Undo2,
   Redo2,
-  BoxSelect,
 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { DevicePalette } from './DevicePalette';
@@ -132,7 +131,6 @@ export function SimulatorWorkspace({
   const [connectMode, setConnectMode] = useState<
     'ethernet' | 'wireless' | null
   >(null);
-  const [selectMode, setSelectMode] = useState(false);
   const [showHelp] = useState(true);
   const [propertyPanelOpen, setPropertyPanelOpen] = useState(true);
   const [bottomTab, setBottomTab] = useState<
@@ -442,7 +440,6 @@ export function SimulatorWorkspace({
             <TopologyCanvas
               ref={canvasRef}
               connectMode={!!connectMode}
-              selectMode={selectMode}
               onDeviceClick={handleDeviceClick}
               onBackgroundClick={handleBackgroundClick}
               onConnectionSelect={() => setPropertyPanelOpen(true)}
@@ -463,7 +460,6 @@ export function SimulatorWorkspace({
                     key={mode}
                     onClick={() => {
                       setConnectMode(active ? null : mode);
-                      setSelectMode(false);
                       cancelConnection();
                     }}
                     className={clsx(
@@ -490,23 +486,6 @@ export function SimulatorWorkspace({
                   </button>
                 );
               })}
-              <button
-                onClick={() => {
-                  setSelectMode(s => !s);
-                  setConnectMode(null);
-                  cancelConnection();
-                }}
-                title="Seleção múltipla: arraste no fundo para selecionar vários equipamentos"
-                className={clsx(
-                  'flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium cursor-pointer transition-all duration-150',
-                  selectMode
-                    ? 'bg-[--color-accent-blue]/15 text-[--color-accent-blue] ring-inset-blue'
-                    : 'text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/[0.04]',
-                )}
-              >
-                <BoxSelect size={14} />
-                {selectMode ? 'Cancelar seleção' : 'Selecionar'}
-              </button>
               {(selectedDeviceIds.length > 1 || selectedBlockIds.length > 1) && (
                 <button
                   onClick={() => {
