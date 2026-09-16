@@ -18,6 +18,7 @@
   ChevronDown,
   Copy,
   CopyPlus,
+  Wand2,
 } from 'lucide-react';
 import { useSimulatorStore } from '../../stores/useSimulatorStore';
 import { DEVICE_LABELS } from '../../stores/useSimulatorStore';
@@ -25,7 +26,7 @@ import { useTerminalStore } from '../../stores/useTerminalStore';
 import { DEVICE_ICONS, DEVICE_COLORS } from './deviceIcons';
 import { DEVICE_GUIDES } from '../../data/deviceGuides';
 import { protocolTip } from '../../data/protocolTips';
-import { isValidIp, isValidMask } from '../../utils/ip';
+import { isValidIp, isValidMask, getNetworkAddress, getBroadcastAddress, ipToNumber, numberToIp } from '../../utils/ip';
 import type {
   NetworkInterface,
   Device,
@@ -35,6 +36,7 @@ import type {
 import type { ArpEntry } from '../../engine/protocols/arp';
 import { clsx } from 'clsx';
 import { useState } from 'react';
+import { IpCalculator } from './IpCalculator';
 
 type PanelTab = 'config' | 'interfaces' | 'ports' | 'rotas';
 
@@ -60,38 +62,80 @@ function acronymTip(text: string): string | undefined {
   return protocolTip(text);
 }
 
-function Field({
+function IpInput({
   label,
   value,
   placeholder,
-  onChange,
-  invalid,
-  mono = true,
+  onCommit,
+  validate,
+  resetKey,
 }: {
   label: string;
   value: string;
   placeholder: string;
-  onChange: (v: string) => void;
-  invalid?: boolean;
-  mono?: boolean;
+  onCommit: (v: string) => void;
+  validate: (v: string) => string | undefined;
+  resetKey: string;
 }) {
+  const [draft, setDraft] = useState(value);
+  const [error, setError] = useState<string | undefined>(undefined);
+  const [prevKey, setPrevKey] = useState(resetKey);
+  if (resetKey !== prevKey) {
+    setPrevKey(resetKey);
+    setDraft(value);
+    setError(undefined);
+  }
+
+  const onBlur = () => {
+    const v = draft.trim();
+    if (!v) {
+      onCommit('');
+      setError(undefined);
+      setDraft('');
+      return;
+    }
+    const msg = validate(v);
+    if (msg) {
+      setError(msg);
+      setDraft(value);
+      return;
+    }
+    setError(undefined);
+    onCommit(v);
+  };
+
   return (
     <label className="block">
       <span className="text-[9px] uppercase tracking-wider text-[--color-text-muted]" title={acronymTip(label)}>
         {label}
       </span>
       <input
-        value={value}
+        value={draft}
         placeholder={placeholder}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => {
+          setDraft(e.target.value);
+          setError(undefined);
+        }}
+        onBlur={onBlur}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            (e.target as HTMLInputElement).blur();
+          }
+        }}
+        spellCheck={false}
         className={clsx(
-          'mt-1 w-full bg-[#0D1424] border rounded-lg px-2.5 py-1.5 text-xs text-[--color-text-primary] placeholder:text-[--color-text-muted]/60 focus:outline-none focus:ring-1 transition-colors',
-          mono && 'font-mono',
-          invalid
-            ? 'border-[--color-accent-red]/60 focus:border-[--color-accent-red] focus:ring-[--color-accent-red]/20'
+          'mt-1 w-full bg-[#0D1424] border rounded-lg px-2.5 py-1.5 text-xs font-mono text-[--color-text-primary] placeholder:text-[--color-text-muted]/60 focus:outline-none focus:ring-1 transition-colors',
+          error
+            ? 'border-[--color-accent-red]/70 focus:border-[--color-accent-red] focus:ring-[--color-accent-red]/20'
             : 'border-[--color-border-primary]/70 focus:border-[--color-accent-blue] focus:ring-[--color-accent-blue]/20',
         )}
       />
+      {error && (
+        <span className="mt-1 block text-[10px] text-[--color-accent-red]">
+          {error}
+        </span>
+      )}
     </label>
   );
 }
@@ -150,15 +194,91 @@ function InterfaceConfig({
   device: Device;
   iface: NetworkInterface;
 }) {
+  const topology = useSimulatorStore((s) => s.topology);
   const updateInterface = useSimulatorStore((s) => s.updateInterface);
   const toggleInterfaceStatus = useSimulatorStore(
     (s) => s.toggleInterfaceStatus,
   );
 
-  const ipInvalid = !!iface.ip && !isValidIp(iface.ip);
-  const maskInvalid = !!iface.subnetMask && !isValidMask(iface.subnetMask);
-  const gwInvalid = !!iface.gateway && !isValidIp(iface.gateway);
-  const dnsInvalid = !!iface.dns && !isValidIp(iface.dns);
+  const ipInUse = (v: string) =>
+    topology.devices.some(
+      (d) =>
+        d.id !== device.id &&
+        d.interfaces.some((i) => i.ip === v && i.status === 'up'),
+    );
+
+  const autoConfigure = () => {
+    const findRef = () => {
+      const visited = new Set<string>();
+      const queue: { deviceId: string; ifaceId: string }[] = [
+        { deviceId: device.id, ifaceId: iface.id },
+      ];
+      while (queue.length > 0) {
+        const cur = queue.shift()!;
+        const key = `${cur.deviceId}:${cur.ifaceId}`;
+        if (visited.has(key)) continue;
+        visited.add(key);
+        const curIface = topology.devices
+          .find((d) => d.id === cur.deviceId)
+          ?.interfaces.find((i) => i.id === cur.ifaceId);
+        if (
+          curIface?.status === 'up' &&
+          curIface.ip &&
+          isValidIp(curIface.ip) &&
+          curIface.subnetMask &&
+          isValidMask(curIface.subnetMask)
+        ) {
+          return cur;
+        }
+        topology.connections.forEach((c) => {
+          if (c.deviceId1 === cur.deviceId && c.interfaceId1 === cur.ifaceId)
+            queue.push({ deviceId: c.deviceId2, ifaceId: c.interfaceId2 });
+          else if (c.deviceId2 === cur.deviceId && c.interfaceId2 === cur.ifaceId)
+            queue.push({ deviceId: c.deviceId1, ifaceId: c.interfaceId1 });
+        });
+      }
+      return null;
+    };
+
+    const ref = findRef();
+    if (!ref) return;
+
+    const peer = topology.devices.find((d) => d.id === ref.deviceId);
+    const peerIface = peer?.interfaces.find((i) => i.id === ref.ifaceId);
+    if (!peer || !peerIface?.ip || !peerIface.subnetMask) return;
+
+    const refIp = peerIface.ip;
+    const refMask = peerIface.subnetMask;
+    const network = getNetworkAddress(refIp, refMask);
+    const broadcast = getBroadcastAddress(refIp, refMask);
+    const start = ipToNumber(network) + 1;
+    const end = ipToNumber(broadcast) - 1;
+
+    const used = new Set<string>();
+    topology.devices.forEach((d) =>
+      d.interfaces.forEach((i) => {
+        if (i.ip && i.status === 'up') used.add(i.ip);
+      }),
+    );
+
+    let freeIp: string | null = null;
+    for (let n = start; n <= end; n++) {
+      const candidate = numberToIp(n);
+      if (!used.has(candidate)) {
+        freeIp = candidate;
+        break;
+      }
+    }
+    if (!freeIp) return;
+
+    const isL3 = peer?.type === 'router' || peer?.type === 'firewall' || peer?.type === 'core' || peer?.type === 'access_point';
+    updateInterface(device.id, iface.id, {
+      ip: freeIp,
+      subnetMask: refMask,
+      gateway: isL3 ? refIp : undefined,
+      dns: isL3 ? '8.8.8.8' : undefined,
+    });
+  };
 
   return (
     <div
@@ -179,61 +299,84 @@ function InterfaceConfig({
             {iface.mac}
           </span>
         </div>
-        <button
-          onClick={() => toggleInterfaceStatus(device.id, iface.id)}
-          className={clsx(
-            'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border cursor-pointer transition-colors shrink-0',
-            iface.status === 'up'
-              ? 'border-[--color-status-connected]/30 bg-[--color-status-connected]/10 text-[--color-status-connected]'
-              : 'border-[--color-border-secondary] bg-[#1C2538] text-[--color-text-muted]',
-          )}
-        >
-          <Power size={11} />
-          {iface.status === 'up' ? 'UP' : 'DOWN'}
-        </button>
+        <div className="flex shrink-0">
+          <button
+            onClick={() => toggleInterfaceStatus(device.id, iface.id)}
+            className={clsx(
+              'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border cursor-pointer transition-colors shrink-0',
+              iface.status === 'up'
+                ? 'border-[--color-status-connected]/30 bg-[--color-status-connected]/10 text-[--color-status-connected]'
+                : 'border-[--color-border-secondary] bg-[#1C2538] text-[--color-text-muted]',
+            )}
+          >
+            <Power size={11} />
+            {iface.status === 'up' ? 'UP' : 'DOWN'}
+          </button>
+        </div>
       </div>
 
       <div className="space-y-2.5">
-        <Field
+        <IpInput
           label="Endereço IP"
           value={iface.ip ?? ''}
           placeholder="192.168.1.10"
-          onChange={(v) =>
+          resetKey={`${device.id}-${iface.id}-ip`}
+          onCommit={(v) =>
             updateInterface(device.id, iface.id, { ip: v || undefined })
           }
-          invalid={ipInvalid}
+          validate={(v) => {
+            if (v && !isValidIp(v)) return 'IP fora do range (0–255)';
+            if (v && ipInUse(v)) return 'IP já em uso por outro dispositivo';
+          }}
         />
         <div className="grid grid-cols-2 gap-2">
-          <Field
+          <IpInput
             label="Máscara"
             value={iface.subnetMask ?? ''}
             placeholder="255.255.255.0"
-            onChange={(v) =>
+            resetKey={`${device.id}-${iface.id}-mask`}
+            onCommit={(v) =>
               updateInterface(device.id, iface.id, {
                 subnetMask: v || undefined,
               })
             }
-            invalid={maskInvalid}
+            validate={(v) => {
+              if (v && !isValidMask(v)) return 'Máscara inválida';
+            }}
           />
-          <Field
+          <IpInput
             label="Gateway"
             value={iface.gateway ?? ''}
             placeholder="192.168.1.1"
-            onChange={(v) =>
+            resetKey={`${device.id}-${iface.id}-gw`}
+            onCommit={(v) =>
               updateInterface(device.id, iface.id, { gateway: v || undefined })
             }
-            invalid={gwInvalid}
+            validate={(v) => {
+              if (v && !isValidIp(v)) return 'IP fora do range (0–255)';
+            }}
           />
         </div>
-        <Field
+        <IpInput
           label="DNS"
           value={iface.dns ?? ''}
           placeholder="8.8.8.8"
-          onChange={(v) =>
+          resetKey={`${device.id}-${iface.id}-dns`}
+          onCommit={(v) =>
             updateInterface(device.id, iface.id, { dns: v || undefined })
           }
-          invalid={dnsInvalid}
+          validate={(v) => {
+            if (v && !isValidIp(v)) return 'IP fora do range (0–255)';
+          }}
         />
+        <button
+          onClick={autoConfigure}
+          title="Auto configurar IP/Máscara/Gateway conforme a rede conectada"
+          className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-[--color-accent-purple]/30 bg-[--color-accent-purple]/10 text-[--color-accent-purple] hover:bg-[--color-accent-purple]/20 text-[10px] font-bold px-2.5 py-1.5 cursor-pointer transition-colors"
+        >
+          <Wand2 size={11} /> Auto configurar interface
+        </button>
+        <IpCalculator iface={iface} />
       </div>
     </div>
   );

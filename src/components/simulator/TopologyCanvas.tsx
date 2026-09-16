@@ -4,6 +4,7 @@ import { useSimulatorStore } from '../../stores/useSimulatorStore';
 import { DeviceNode } from './DeviceNode';
 import { ConnectionLine } from './ConnectionLine';
 import { PacketAnimator } from './PacketAnimator';
+import { ContextMenu } from './ContextMenu';
 
 interface Viewport {
   x: number;
@@ -33,6 +34,7 @@ export interface TopologyCanvasHandle {
   zoomOut: () => void;
   fitToContent: () => void;
   getZoom: () => number;
+  getVisibleCenter: () => { x: number; y: number };
 }
 
 interface TopologyCanvasProps {
@@ -41,13 +43,14 @@ interface TopologyCanvasProps {
   onBackgroundClick: () => void;
   onConnectionSelect?: (connectionId: string) => void;
   onZoomChange?: (zoom: number) => void;
+  onDeviceContextAction?: (action: string, deviceId: string) => void;
 }
 
 const MIN_ZOOM = 0.3;
 const MAX_ZOOM = 2.5;
 
 export const TopologyCanvas = forwardRef<TopologyCanvasHandle, TopologyCanvasProps>(
-  function TopologyCanvas({ connectMode, onDeviceClick, onBackgroundClick, onConnectionSelect, onZoomChange }, ref) {
+  function TopologyCanvas({ connectMode, onDeviceClick, onBackgroundClick, onConnectionSelect, onZoomChange, onDeviceContextAction }, ref) {
     const svgRef = useRef<SVGSVGElement>(null);
     const viewportRef = useRef<Viewport>({ x: 0, y: 0, zoom: 1 });
 
@@ -57,10 +60,12 @@ export const TopologyCanvas = forwardRef<TopologyCanvasHandle, TopologyCanvasPro
     const connectingFromId = useSimulatorStore(s => s.connectingFromId);
     const moveDevice = useSimulatorStore(s => s.moveDevice);
     const selectConnection = useSimulatorStore(s => s.selectConnection);
+    const deviceValidation = useSimulatorStore(s => s.deviceValidation);
 
     const [viewport, setViewport] = useState<Viewport>({ x: 0, y: 0, zoom: 1 });
     const [cursorWorld, setCursorWorld] = useState<{ x: number; y: number } | null>(null);
     const [panning, setPanning] = useState(false);
+    const [contextMenu, setContextMenu] = useState<{ x: number; y: number; deviceId: string | null } | null>(null);
 
     useEffect(() => {
       viewportRef.current = viewport;
@@ -108,7 +113,13 @@ export const TopologyCanvas = forwardRef<TopologyCanvasHandle, TopologyCanvasPro
       zoomOut: () => zoomBy(1 / 1.25),
       fitToContent,
       getZoom: () => viewportRef.current.zoom,
-    }), [zoomBy, fitToContent]);
+      getVisibleCenter: () => {
+        const rect = svgRef.current?.getBoundingClientRect();
+        return rect
+          ? getWorldPoint(rect.left + rect.width / 2, rect.top + rect.height / 2)
+          : { x: 200, y: 150 };
+      },
+    }), [zoomBy, fitToContent, getWorldPoint]);
 
     const handleDevicePointerDown = useCallback(
       (e: React.PointerEvent, deviceId: string) => {
@@ -203,6 +214,12 @@ export const TopologyCanvas = forwardRef<TopologyCanvasHandle, TopologyCanvasPro
       ? topology.devices.find(d => d.id === connectingFromId)
       : undefined;
 
+    const handleContextMenu = useCallback((e: React.MouseEvent, deviceId: string | null) => {
+      e.preventDefault();
+      setContextMenu({ x: e.clientX, y: e.clientY, deviceId });
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     return (
       <div className="relative flex-1 bg-[#0A0E1A] overflow-hidden">
         <svg
@@ -295,8 +312,13 @@ export const TopologyCanvas = forwardRef<TopologyCanvasHandle, TopologyCanvasPro
                 selected={selectedDeviceId === device.id}
                 connecting={connectMode || !!connectingFromId}
                 isConnectionSource={connectingFromId === device.id}
+                connected={topology.connections.some(
+                  (c) => c.deviceId1 === device.id || c.deviceId2 === device.id
+                )}
+                validate={deviceValidation[device.id] ?? null}
                 onPointerDown={handleDevicePointerDown}
                 onDoubleClick={() => {}}
+                onContextMenu={handleContextMenu}
               />
             ))}
 
@@ -319,6 +341,16 @@ export const TopologyCanvas = forwardRef<TopologyCanvasHandle, TopologyCanvasPro
         <div className="absolute bottom-3 left-3 px-3 py-1.5 rounded-lg bg-[#111A2C]/80 border border-[--color-border-primary]/60 text-[10px] font-mono text-[--color-text-muted] glass">
           {Math.round(viewport.zoom * 100)}% · {topology.devices.length} disp. · {topology.connections.length} conexões
         </div>
+
+        {/* Context menu */}
+        <ContextMenu
+          menu={contextMenu}
+          onClose={() => setContextMenu(null)}
+          onAction={(action, deviceId) => {
+            if (!deviceId) return;
+            onDeviceContextAction?.(action, deviceId);
+          }}
+        />
       </div>
     );
   }

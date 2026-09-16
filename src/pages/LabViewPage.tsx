@@ -102,6 +102,7 @@ function LabWorkspace({ exercise }: { exercise: Exercise }) {
 
   const loadTopology = useSimulatorStore((s) => s.loadTopology);
   const arpTables = useSimulatorStore((s) => s.arpTables);
+  const setDeviceValidation = useSimulatorStore((s) => s.setDeviceValidation);
   const progress = useProgressStore((s) => s.progress);
   const completeExercise = useProgressStore((s) => s.completeExercise);
   const unlockAchievement = useProgressStore((s) => s.unlockAchievement);
@@ -127,6 +128,41 @@ function LabWorkspace({ exercise }: { exercise: Exercise }) {
   const handleValidate = (topology: Topology) => {
     const result = runValidation(topology, exercise.validation, { arpTables });
     setValidation(result);
+
+    const refsUsed = new Set<string>();
+    const failedRefs = new Set<string>();
+    exercise.validation.forEach((check, i) => {
+      const r = result.results[i];
+      if (!r) return;
+      let refs: string[] = [];
+      const t = check.target ?? '';
+      if (t.startsWith('connection:')) {
+        const [, a, b] = t.split(':');
+        refs = a && b ? [a, b] : [];
+      } else if (t.includes('->')) {
+        refs = [t.split('->')[0].trim()];
+      } else if (t.startsWith('device:')) {
+        refs = [t.slice(7)];
+      } else if (t.startsWith('device-type:')) {
+        refs = [];
+      } else if (t.includes('|') && !t.startsWith('connection:')) {
+        refs = [t.split('|')[0].trim()];
+      } else if (t) {
+        refs = [t.split('/')[0]];
+      }
+      refs.forEach((ref) => refsUsed.add(ref));
+      if (!r.passed) refs.forEach((ref) => failedRefs.add(ref));
+    });
+
+    const dv: Record<string, 'pass' | 'fail'> = {};
+    topology.devices.forEach((dev) => {
+      const matches = (ref: string) =>
+        ref === dev.id || ref === dev.name || ref === dev.config.hostname;
+      const used = [...refsUsed].some(matches);
+      if (!used) return;
+      dv[dev.id] = [...failedRefs].some(matches) ? 'fail' : 'pass';
+    });
+    setDeviceValidation(dv);
 
     if (result.passed && !alreadyComplete) {
       completeExercise(exercise.id, exercise.concepts, exercise.xpReward);

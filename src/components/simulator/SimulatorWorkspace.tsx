@@ -13,13 +13,16 @@ import {
   Home,
   Maximize2,
   Minimize2,
+  Undo2,
+  Redo2,
 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { DevicePalette } from './DevicePalette';
-import { TopologyCanvas } from './TopologyCanvas';
+import { TopologyCanvas, type TopologyCanvasHandle } from './TopologyCanvas';
 import { PropertyPanel } from './PropertyPanel';
 import { Terminal } from './Terminal';
 import { PacketInspector } from './PacketInspector';
+import { ContextualHintOverlay } from './ContextualHint';
 import { useSimulatorStore } from '../../stores/useSimulatorStore';
 import { useTerminalStore } from '../../stores/useTerminalStore';
 import { clsx } from 'clsx';
@@ -49,12 +52,18 @@ export function SimulatorWorkspace({
   const selectedDeviceId = useSimulatorStore((s) => s.selectedDeviceId);
   const addDevice = useSimulatorStore((s) => s.addDevice);
   const packets = useSimulatorStore(useShallow((s) => s.packets));
+  const topology = useSimulatorStore((s) => s.topology);
   const copyDevice = useSimulatorStore((s) => s.copyDevice);
   const pasteDevice = useSimulatorStore((s) => s.pasteDevice);
   const removeDevice = useSimulatorStore((s) => s.removeDevice);
   const removeConnection = useSimulatorStore((s) => s.removeConnection);
   const selectedConnectionId = useSimulatorStore((s) => s.selectedConnectionId);
   const copiedDeviceId = useSimulatorStore((s) => s.copiedDeviceId);
+  const undo = useSimulatorStore((s) => s.undo);
+  const redo = useSimulatorStore((s) => s.redo);
+  const undoStack = useSimulatorStore((s) => s.undoStack);
+  const redoStack = useSimulatorStore((s) => s.redoStack);
+  const renameDevice = useSimulatorStore((s) => s.renameDevice);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -68,6 +77,16 @@ export function SimulatorWorkspace({
 
       const mod = e.ctrlKey || e.metaKey;
 
+      if (mod && e.key.toLowerCase() === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+        return;
+      }
+      if (mod && (e.key.toLowerCase() === 'y' || (e.key.toLowerCase() === 'z' && e.shiftKey))) {
+        e.preventDefault();
+        redo();
+        return;
+      }
       if (mod && e.key.toLowerCase() === 'c') {
         if (selectedDeviceId) copyDevice(selectedDeviceId);
         return;
@@ -99,6 +118,8 @@ export function SimulatorWorkspace({
     pasteDevice,
     removeDevice,
     removeConnection,
+    undo,
+    redo,
   ]);
 
   const [connectMode, setConnectMode] = useState<
@@ -125,6 +146,7 @@ export function SimulatorWorkspace({
   );
 
   const prevTerminalOpenRef = useRef(terminalOpen);
+  const canvasRef = useRef<TopologyCanvasHandle>(null);
   useEffect(() => {
     if (terminalOpen && !prevTerminalOpenRef.current) {
       setBottomTab('console');
@@ -287,6 +309,39 @@ export function SimulatorWorkspace({
     selectDevice(null);
   };
 
+  const handleContextAction = (action: string, deviceId: string) => {
+    switch (action) {
+      case 'rename': {
+        const device = useSimulatorStore.getState().topology.devices.find((d) => d.id === deviceId);
+        const name = window.prompt('Novo nome do equipamento', device?.name ?? '');
+        if (name) renameDevice(deviceId, name.trim());
+        break;
+      }
+      case 'duplicate':
+        copyDevice(deviceId);
+        requestAnimationFrame(() => pasteDevice());
+        break;
+      case 'connect':
+        selectDevice(deviceId);
+        setConnectMode('ethernet');
+        startConnection(deviceId, 'ethernet');
+        break;
+      case 'console':
+        selectDevice(deviceId);
+        useTerminalStore.getState().openTerminal(deviceId);
+        setBottomTab('console');
+        setBottomExpanded(true);
+        break;
+      case 'info':
+        selectDevice(deviceId);
+        setPropertyPanelOpen(true);
+        break;
+      case 'delete':
+        removeDevice(deviceId);
+        break;
+    }
+  };
+
   const handleValidate = () => {
     onValidate?.(useSimulatorStore.getState().topology);
   };
@@ -356,14 +411,29 @@ export function SimulatorWorkspace({
       {/* Main workspace */}
       <div className="flex flex-1 min-h-0 flex-col">
         <div className="flex min-h-0 flex-1">
-          <DevicePalette onAdd={addDevice} />
+          <DevicePalette
+            onAdd={(type, position) => {
+              const center = canvasRef.current?.getVisibleCenter();
+              addDevice(
+                type,
+                center ?? position,
+              );
+            }}
+          />
 
           <div className="relative flex flex-1 min-w-0 min-h-0">
             <TopologyCanvas
+              ref={canvasRef}
               connectMode={!!connectMode}
               onDeviceClick={handleDeviceClick}
               onBackgroundClick={handleBackgroundClick}
               onConnectionSelect={() => setPropertyPanelOpen(true)}
+              onDeviceContextAction={handleContextAction}
+            />
+
+            <ContextualHintOverlay
+              device={topology.devices.find((d) => d.id === selectedDeviceId) ?? null}
+              topology={topology}
             />
 
             {/* Floating connect mode buttons over the canvas */}
@@ -484,6 +554,22 @@ export function SimulatorWorkspace({
 
             {/* Bottom panel toggle */}
             <div className="flex items-center gap-1.5">
+              <button
+                onClick={undo}
+                disabled={undoStack.length === 0}
+                title="Desfazer (Ctrl+Z)"
+                className="p-2 rounded-lg text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/[0.04] cursor-pointer disabled:opacity-30 disabled:cursor-default"
+              >
+                <Undo2 size={15} />
+              </button>
+              <button
+                onClick={redo}
+                disabled={redoStack.length === 0}
+                title="Refazer (Ctrl+Y)"
+                className="p-2 rounded-lg text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/[0.04] cursor-pointer disabled:opacity-30 disabled:cursor-default"
+              >
+                <Redo2 size={15} />
+              </button>
               {onValidate && (
                 <button
                   onClick={handleValidate}

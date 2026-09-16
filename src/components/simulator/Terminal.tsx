@@ -5,6 +5,7 @@ import { useSimulatorStore } from '../../stores/useSimulatorStore';
 import { useTerminalStore } from '../../stores/useTerminalStore';
 
 import { executeCommand, getAutocomplete } from '../../engine/commands';
+import { CommandSuggestBox } from './CommandSuggestBox';
 
 /*
  * IMPORTANTE:
@@ -306,7 +307,8 @@ export function Terminal() {
       </div>
 
       {/* Linha de comando */}
-      <div className="flex items-center gap-1 px-3 py-2 border-t border-[--color-border-primary] bg-[--color-bg-secondary] shrink-0">
+      <div className="relative flex items-center gap-1 px-3 py-2 border-t border-[--color-border-primary] bg-[--color-bg-secondary] shrink-0">
+        <CommandSuggestBox input={input} onRun={(cmd) => { run(cmd); setInput(''); }} />
         <span className="font-mono text-xs text-[--color-accent-green]">{prompt}</span>
 
         <input

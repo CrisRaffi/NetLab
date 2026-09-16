@@ -154,6 +154,16 @@ interface SimulatorState {
   selectedPacketId: string | null;
   animations: ActiveAnimation[];
 
+  // Undo/Redo
+  undoStack: Topology[];
+  redoStack: Topology[];
+  undo: () => void;
+  redo: () => void;
+
+  // Validation results per device
+  deviceValidation: Record<string, 'pass' | 'fail'>;
+  setDeviceValidation: (results: Record<string, 'pass' | 'fail'>) => void;
+
   loadTopology: (topology: Topology) => void;
   resetTopology: () => void;
   addDevice: (type: DeviceType, position: { x: number; y: number }) => void;
@@ -185,6 +195,13 @@ interface SimulatorState {
   addArpEntries: (learned: { deviceId: string; entry: ArpEntry }[]) => void;
   selectPacket: (packetId: string | null) => void;
   clearPackets: () => void;
+}
+
+const MAX_UNDO = 30;
+
+function pushUndo(topology: Topology, undoStack: Topology[]): Topology[] {
+  const next = [...undoStack, topology];
+  return next.length > MAX_UNDO ? next.slice(next.length - MAX_UNDO) : next;
 }
 
 function makeConnection(topology: Topology, deviceId1: string, deviceId2: string): Connection | null {
@@ -257,7 +274,6 @@ function makeWifiConnection(topology: Topology, deviceId1: string, deviceId2: st
   const otherIface = client.interfaces.find(i => i.type !== 'wireless' && !usedInterfaces(client.id).includes(i.id));
   if (!wlan || !otherIface) return null;
 
-  const providerId = provider.id;
   return {
     id: `conn-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     deviceId1,
@@ -285,6 +301,9 @@ export const useSimulatorStore = create<SimulatorState>()(
   packets: [],
   selectedPacketId: null,
   animations: [],
+  undoStack: [],
+  redoStack: [],
+  deviceValidation: {},
 
   loadTopology: (topology) =>
     set({
@@ -297,6 +316,9 @@ export const useSimulatorStore = create<SimulatorState>()(
       packets: [],
       selectedPacketId: null,
       animations: [],
+      undoStack: [],
+      redoStack: [],
+      deviceValidation: {},
     }),
 
   resetTopology: () =>
@@ -311,10 +333,13 @@ export const useSimulatorStore = create<SimulatorState>()(
       packets: [],
       selectedPacketId: null,
       animations: [],
+      undoStack: [],
+      redoStack: [],
+      deviceValidation: {},
     }),
 
   addDevice: (type, position) => {
-    const { topology } = get();
+    const { topology, undoStack } = get();
     const index = topology.devices.length + 1;
     const name = nextDeviceName(type, topology.devices);
     const device: Device = {
@@ -331,11 +356,13 @@ export const useSimulatorStore = create<SimulatorState>()(
       selectedConnectionId: null,
       connectingFromId: null,
       connectType: null,
+      undoStack: pushUndo(topology, undoStack),
+      redoStack: [],
     });
   },
 
   removeDevice: (deviceId) => {
-    const { topology, arpTables } = get();
+    const { topology, arpTables, undoStack } = get();
     const nextArp = { ...arpTables };
     delete nextArp[deviceId];
     set({
@@ -349,6 +376,8 @@ export const useSimulatorStore = create<SimulatorState>()(
       arpTables: nextArp,
       selectedDeviceId: null,
       connectingFromId: null,
+      undoStack: pushUndo(topology, undoStack),
+      redoStack: [],
     });
   },
 
@@ -363,7 +392,7 @@ export const useSimulatorStore = create<SimulatorState>()(
   },
 
   renameDevice: (deviceId, name) => {
-    const { topology } = get();
+    const { topology, undoStack } = get();
     set({
       topology: {
         ...topology,
@@ -371,6 +400,8 @@ export const useSimulatorStore = create<SimulatorState>()(
           d.id === deviceId ? { ...d, name, config: { ...d.config, hostname: name } } : d
         ),
       },
+      undoStack: pushUndo(topology, undoStack),
+      redoStack: [],
     });
   },
 
@@ -407,7 +438,7 @@ export const useSimulatorStore = create<SimulatorState>()(
   copyDevice: (deviceId) => set({ copiedDeviceId: deviceId }),
 
   pasteDevice: (position) => {
-    const { topology, copiedDeviceId } = get();
+    const { topology, copiedDeviceId, undoStack } = get();
     if (!copiedDeviceId) return;
     const source = topology.devices.find(d => d.id === copiedDeviceId);
     if (!source) return;
@@ -435,6 +466,8 @@ export const useSimulatorStore = create<SimulatorState>()(
       selectedConnectionId: null,
       connectingFromId: null,
       connectType: null,
+      undoStack: pushUndo(topology, undoStack),
+      redoStack: [],
     });
   },
 
@@ -449,13 +482,13 @@ export const useSimulatorStore = create<SimulatorState>()(
     set({ connectingFromId: deviceId, connectType: type, selectedDeviceId: null, selectedConnectionId: null }),
 
   completeConnection: (deviceId) => {
-    const { topology, connectingFromId, connectType } = get();
+    const { topology, connectingFromId, connectType, undoStack } = get();
     if (!connectingFromId) return;
     const conn = connectType === 'wireless'
       ? makeWifiConnection(topology, connectingFromId, deviceId)
       : makeConnection(topology, connectingFromId, deviceId);
     if (conn) {
-      set({ topology: { ...topology, connections: [...topology.connections, conn] } });
+      set({ topology: { ...topology, connections: [...topology.connections, conn] }, undoStack: pushUndo(topology, undoStack), redoStack: [] });
     }
     set({ connectingFromId: null, connectType: null });
   },
@@ -471,18 +504,20 @@ export const useSimulatorStore = create<SimulatorState>()(
   },
 
   removeConnection: (connectionId) => {
-    const { topology } = get();
+    const { topology, undoStack } = get();
     set({
       topology: {
         ...topology,
         connections: topology.connections.filter(c => c.id !== connectionId),
       },
       selectedConnectionId: null,
+      undoStack: pushUndo(topology, undoStack),
+      redoStack: [],
     });
   },
 
   updateInterface: (deviceId, interfaceId, updates) => {
-    const { topology } = get();
+    const { topology, undoStack } = get();
     set({
       topology: {
         ...topology,
@@ -497,11 +532,13 @@ export const useSimulatorStore = create<SimulatorState>()(
             : d
         ),
       },
+      undoStack: pushUndo(topology, undoStack),
+      redoStack: [],
     });
   },
 
   toggleInterfaceStatus: (deviceId, interfaceId) => {
-    const { topology } = get();
+    const { topology, undoStack } = get();
     set({
       topology: {
         ...topology,
@@ -518,11 +555,13 @@ export const useSimulatorStore = create<SimulatorState>()(
             : d
         ),
       },
+      undoStack: pushUndo(topology, undoStack),
+      redoStack: [],
     });
   },
 
   updateRoutes: (deviceId, routes) => {
-    const { topology } = get();
+    const { topology, undoStack } = get();
     set({
       topology: {
         ...topology,
@@ -532,6 +571,8 @@ export const useSimulatorStore = create<SimulatorState>()(
             : d
         ),
       },
+      undoStack: pushUndo(topology, undoStack),
+      redoStack: [],
     });
   },
 
@@ -582,6 +623,36 @@ export const useSimulatorStore = create<SimulatorState>()(
       return { arpTables };
     });
   },
+
+  undo: () => {
+    const { undoStack, topology, redoStack } = get();
+    if (undoStack.length === 0) return;
+    const prev = undoStack[undoStack.length - 1];
+    set({
+      undoStack: undoStack.slice(0, -1),
+      redoStack: [...redoStack, topology],
+      topology: prev,
+      selectedDeviceId: null,
+      selectedConnectionId: null,
+      deviceValidation: {},
+    });
+  },
+
+  redo: () => {
+    const { redoStack, topology, undoStack } = get();
+    if (redoStack.length === 0) return;
+    const next = redoStack[redoStack.length - 1];
+    set({
+      redoStack: redoStack.slice(0, -1),
+      undoStack: [...undoStack, topology],
+      topology: next,
+      selectedDeviceId: null,
+      selectedConnectionId: null,
+      deviceValidation: {},
+    });
+  },
+
+  setDeviceValidation: (results) => set({ deviceValidation: results }),
 
   selectPacket: (packetId) => set({ selectedPacketId: packetId }),
 
