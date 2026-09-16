@@ -20,7 +20,15 @@ export function ConnectionLine({ connection, devices, selected, onSelect }: Conn
   const dev2 = devices.find(d => d.id === connection.deviceId2);
   if (!dev1 || !dev2) return null;
 
-  const color = connection.type === 'wireless' ? WIRELESS_COLOR : STATUS_COLORS[connection.status];
+  const iface1 = dev1.interfaces.find(i => i.id === connection.interfaceId1);
+  const iface2 = dev2.interfaces.find(i => i.id === connection.interfaceId2);
+  const linkUp =
+    (iface1?.status ?? 'up') === 'up' && (iface2?.status ?? 'up') === 'up';
+  const status: Connection['status'] = linkUp
+    ? connection.status
+    : 'disconnected';
+
+  const color = connection.type === 'wireless' ? WIRELESS_COLOR : STATUS_COLORS[status];
   const midX = (dev1.position.x + dev2.position.x) / 2;
   const midY = (dev1.position.y + dev2.position.y) / 2;
 
@@ -49,11 +57,11 @@ export function ConnectionLine({ connection, devices, selected, onSelect }: Conn
         stroke={selected ? '#6366F1' : color}
         strokeWidth={selected ? 2.5 : 1.5}
         strokeLinecap="round"
-        strokeDasharray={connection.type === 'wireless' ? '4 6' : connection.status === 'negotiating' ? '6 4' : undefined}
-        strokeOpacity={connection.type === 'wireless' ? 0.9 : connection.status === 'disconnected' ? 0.6 : 1}
+        strokeDasharray={connection.type === 'wireless' ? '4 6' : status === 'negotiating' ? '6 4' : undefined}
+        strokeOpacity={connection.type === 'wireless' ? 0.9 : status === 'disconnected' ? 0.6 : 1}
         vectorEffect="non-scaling-stroke"
       >
-        {connection.status === 'negotiating' && (
+        {status === 'negotiating' && (
           <animate
             attributeName="stroke-dashoffset"
             values="0;-16"

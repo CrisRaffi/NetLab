@@ -15,6 +15,7 @@ import {
   Minimize2,
   Undo2,
   Redo2,
+  LayoutGrid,
 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { DevicePalette } from './DevicePalette';
@@ -61,6 +62,7 @@ export function SimulatorWorkspace({
   const selectedBlockIds = useSimulatorStore((s) => s.selectedBlockIds);
   const setSelection = useSimulatorStore((s) => s.setSelection);
   const removeSelection = useSimulatorStore((s) => s.removeSelection);
+  const organizeLayout = useSimulatorStore((s) => s.organizeLayout);
   const copiedDeviceId = useSimulatorStore((s) => s.copiedDeviceId);
   const undo = useSimulatorStore((s) => s.undo);
   const redo = useSimulatorStore((s) => s.redo);
@@ -486,6 +488,18 @@ export function SimulatorWorkspace({
                   </button>
                 );
               })}
+              <button
+                onClick={() => organizeLayout(selectedDeviceIds.length ? selectedDeviceIds : undefined)}
+                title={
+                  selectedDeviceIds.length
+                    ? 'Organizar apenas os equipamentos selecionados'
+                    : 'Organizar todos os equipamentos automaticamente'
+                }
+                className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium cursor-pointer transition-all duration-150 text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/[0.04]"
+              >
+                <LayoutGrid size={14} />
+                Organizar
+              </button>
               {(selectedDeviceIds.length > 1 || selectedBlockIds.length > 1) && (
                 <button
                   onClick={() => {

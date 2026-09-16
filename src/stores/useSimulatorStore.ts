@@ -175,6 +175,7 @@ interface SimulatorState {
   commitMove: (previous: Topology) => void;
   renameDevice: (deviceId: string, name: string) => void;
   explodeTopology: () => void;
+  organizeLayout: (deviceIds?: string[]) => void;
   copyDevice: (deviceId: string) => void;
   pasteDevice: (position?: { x: number; y: number }) => void;
   clearCopiedDevice: () => void;
@@ -475,6 +476,118 @@ topology: createDefaultTopology(),
           },
         })),
       },
+    });
+  },
+
+  organizeLayout: (deviceIds) => {
+    const { topology, undoStack } = get();
+    const devs = topology.devices;
+    if (devs.length === 0) return;
+
+    const targetSet = deviceIds && deviceIds.length
+      ? new Set(deviceIds)
+      : new Set(devs.map(d => d.id));
+    const isTarget = (id: string) => targetSet.has(id);
+
+    const pos = new Map<string, { x: number; y: number }>();
+    devs.forEach(d => pos.set(d.id, { x: d.position.x, y: d.position.y }));
+
+    const adj = new Map<string, string[]>();
+    devs.filter(d => isTarget(d.id)).forEach(d => adj.set(d.id, []));
+    topology.connections.forEach(c => {
+      if (isTarget(c.deviceId1) && isTarget(c.deviceId2)) {
+        adj.get(c.deviceId1)!.push(c.deviceId2);
+        adj.get(c.deviceId2)!.push(c.deviceId1);
+      }
+    });
+
+    const visited = new Set<string>();
+    const components: string[][] = [];
+    adj.forEach((_, id) => {
+      if (visited.has(id)) return;
+      const comp: string[] = [];
+      const stack = [id];
+      visited.add(id);
+      while (stack.length) {
+        const n = stack.pop()!;
+        comp.push(n);
+        adj.get(n)!.forEach(m => {
+          if (!visited.has(m)) {
+            visited.add(m);
+            stack.push(m);
+          }
+        });
+      }
+      components.push(comp);
+    });
+
+    const SP_X = 200;
+    const SP_Y = 130;
+    let offsetX = 0;
+
+    components.forEach(comp => {
+      if (comp.length === 1) {
+        pos.set(comp[0], { x: offsetX, y: 0 });
+        offsetX += SP_X;
+        return;
+      }
+
+      let root = comp[0];
+      comp.forEach(n => {
+        if (adj.get(n)!.length > adj.get(root)!.length) root = n;
+      });
+
+      const layer = new Map<string, number>();
+      const queue = [root];
+      layer.set(root, 0);
+      while (queue.length) {
+        const u = queue.shift()!;
+        adj.get(u)!.forEach(v => {
+          if (!layer.has(v)) {
+            layer.set(v, layer.get(u)! + 1);
+            queue.push(v);
+          }
+        });
+      }
+
+      let maxLayer = 0;
+      comp.forEach(n => (maxLayer = Math.max(maxLayer, layer.get(n)!)));
+      const layers: string[][] = Array.from({ length: maxLayer + 1 }, () => []);
+      comp.forEach(n => layers[layer.get(n)!].push(n));
+
+      const orderY = new Map<string, number>();
+      comp.forEach(n => orderY.set(n, layers[layer.get(n)!].indexOf(n)));
+      for (let pass = 0; pass < 4; pass++) {
+        for (let l = 0; l <= maxLayer; l++) {
+          layers[l].sort((a, b) => orderY.get(a)! - orderY.get(b)!);
+          layers[l].forEach(n => {
+            const neigh = adj.get(n)!.filter(m => layer.get(m)! === l - 1 || layer.get(m)! === l + 1);
+            if (neigh.length) {
+              orderY.set(n, neigh.reduce((s, m) => s + orderY.get(m)!, 0) / neigh.length);
+            }
+          });
+        }
+      }
+      for (let l = 0; l <= maxLayer; l++) {
+        layers[l].sort((a, b) => orderY.get(a)! - orderY.get(b)!);
+      }
+
+      for (let l = 0; l <= maxLayer; l++) {
+        const col = layers[l];
+        col.forEach((n, idx) => {
+          pos.set(n, { x: offsetX + l * SP_X, y: (idx - (col.length - 1) / 2) * SP_Y });
+        });
+      }
+      offsetX += (maxLayer + 1) * SP_X;
+    });
+
+    set({
+      topology: {
+        ...topology,
+        devices: devs.map(d => ({ ...d, position: pos.get(d.id)! })),
+      },
+      undoStack: pushUndo(topology, undoStack),
+      redoStack: [],
     });
   },
 
