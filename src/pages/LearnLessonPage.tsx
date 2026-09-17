@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   BookOpen,
@@ -25,6 +26,50 @@ const DIAGRAMS = {
   handshake: HandshakeDiagram,
   dns: DnsDiagram,
 } as const;
+
+const DIAGRAM_PLAY_MS = {
+  layers: 5500,
+  encapsulation: 5200,
+  handshake: 5300,
+  dns: 3700,
+} as const;
+
+function DiagramFigure({ block }: { block: Extract<LessonBlock, { kind: 'diagram' }> }) {
+  const [playing, setPlaying] = useState(false);
+  const total = DIAGRAM_PLAY_MS[block.type];
+
+  useEffect(() => {
+    if (!playing) return;
+    const t = setTimeout(() => setPlaying(false), total);
+    return () => clearTimeout(t);
+  }, [playing, total]);
+
+  const Diagram = DIAGRAMS[block.type];
+
+  return (
+    <figure className="rounded-lg border border-[--color-border-primary]/70 bg-[--color-bg-card] p-3 max-w-5xl mx-auto w-full">
+      <div className="relative">
+        <Diagram playing={playing} />
+        {!playing && (
+          <button
+            type="button"
+            onClick={() => setPlaying(true)}
+            aria-label="Reproduzir animação do diagrama"
+            title="Reproduzir animação"
+            className="absolute top-2 right-2 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-[--color-accent-cyan]/40 bg-[#1C2538]/90 text-[--color-accent-cyan] shadow-lg transition-colors hover:bg-[#273651] hover:border-[--color-accent-cyan]/50"
+          >
+            <Play size={14} />
+          </button>
+        )}
+      </div>
+      {block.caption && (
+        <figcaption className="mt-2 text-[11px] text-[--color-text-muted] text-center leading-relaxed">
+          {block.caption}
+        </figcaption>
+      )}
+    </figure>
+  );
+}
 
 function BlockView({ block }: { block: LessonBlock }) {
   if (block.kind === 'paragraph') {
@@ -108,17 +153,7 @@ function BlockView({ block }: { block: LessonBlock }) {
   }
 
   if (block.kind === 'diagram') {
-    const Diagram = DIAGRAMS[block.type];
-    return (
-      <figure className="rounded-lg border border-[--color-border-primary]/70 bg-[--color-bg-card] p-3 max-w-5xl mx-auto w-full">
-        <Diagram />
-        {block.caption && (
-          <figcaption className="mt-2 text-[11px] text-[--color-text-muted] text-center leading-relaxed">
-            {block.caption}
-          </figcaption>
-        )}
-      </figure>
-    );
+    return <DiagramFigure block={block} />;
   }
 
   // table
@@ -193,7 +228,7 @@ export function LearnLessonPage() {
       <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-4">
         {/* TOC sidebar */}
         <aside className="space-y-4">
-          <div className="rounded-xl border border-[--color-border-primary]/70 bg-[--color-bg-card] p-4">
+          <div className="rounded-xl border border-[--color-border-primary]/70 bg-[--color-bg-card] p-4 sticky top-4">
             <p className="section-label mb-2 flex items-center gap-1.5">
               <List size={11} /> Nesta lição
             </p>

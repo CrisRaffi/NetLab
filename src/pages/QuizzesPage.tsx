@@ -7,11 +7,12 @@ import { QuizCard } from '../components/quiz/QuizCard';
 import { QuizPlayer } from '../components/quiz/QuizPlayer';
 import { QUIZZES, getQuizById } from '../data/quizzes';
 import { useQuizStore } from '../stores/useQuizStore';
+import { useAuth } from '../features/auth/AuthContext';
 
 export function QuizzesPage() {
   const [activeQuizId, setActiveQuizId] = useState<string | null>(null);
   const results = useQuizStore((s) => s.results);
-  const recordResult = useQuizStore((s) => s.recordResult);
+  const { saveQuiz } = useAuth();
 
   const activeQuiz = activeQuizId ? getQuizById(activeQuizId) : undefined;
 
@@ -21,7 +22,7 @@ export function QuizzesPage() {
         <QuizPlayer
           quiz={activeQuiz}
           onExit={() => setActiveQuizId(null)}
-          onFinish={(score, total) => recordResult(activeQuiz.id, score, total)}
+          onFinish={(score, total) => saveQuiz(activeQuiz.id, score, total)}
         />
       </div>
     );

@@ -101,12 +101,17 @@ h1,h2,h3,h4,h5,h6 { font-size: inherit; font-weight: inherit; letter-spacing: in
 @keyframes slideInRight { from { opacity:0; transform:translateX(8px) } to { opacity:1; transform:translateX(0) } }
 @keyframes nodeAppear { from { opacity:0; transform:scale(.85) } to { opacity:1; transform:scale(1) } }
 @keyframes dashScroll { to { stroke-dashoffset: -16 } }
+@keyframes diagramReveal {
+  from { opacity: 0 }
+  to { opacity: 1 }
+}
 
 .animate-fade-in { animation: fadeIn .2s ease-out; }
 .animate-fade-in-up { animation: fadeInUp .3s ease-out; }
 .animate-pulse-soft { animation: pulseSoft 2s ease-in-out infinite; }
 .animate-slide-in-right { animation: slideInRight .25s ease-out; }
 .animate-node-appear { animation: nodeAppear .25s cubic-bezier(.34,1.56,.64,1); }
+.animate-diagram-reveal { animation: diagramReveal .45s ease-out both; }
 
 /* ================================================================
    UTILITY CLASSES
@@ -122,11 +127,13 @@ h1,h2,h3,h4,h5,h6 { font-size: inherit; font-weight: inherit; letter-spacing: in
 .absolute { position: absolute }
 .relative { position: relative }
 .fixed { position: fixed }
+.sticky { position: sticky }
 .inset-0 { inset: 0 }
 .inset-x-6 { left: 24px; right: 24px }
 .top-0 { top: 0 }
 .top-2 { top: 8px }
 .top-3 { top: 12px }
+.top-4 { top: 16px }
 .top-1\/2 { top: 50% }
 .top-full { top: 100% }
 .-top-24 { top: -96px }
@@ -154,6 +161,7 @@ h1,h2,h3,h4,h5,h6 { font-size: inherit; font-weight: inherit; letter-spacing: in
 .inline-flex { display: inline-flex }
 .flex-col { flex-direction: column }
 .flex-1 { flex: 1 1 0% }
+.shrink-0 { flex-shrink: 0 }
 .flex-shrink-0, .shrink-0 { flex-shrink: 0 }
 .flex-wrap { flex-wrap: wrap }
 .items-center { align-items: center }
@@ -182,6 +190,8 @@ h1,h2,h3,h4,h5,h6 { font-size: inherit; font-weight: inherit; letter-spacing: in
 .gap-4 { gap: 16px }
 .gap-5 { gap: 20px }
 .gap-6 { gap: 24px }
+.gap-10 { gap: 40px }
+.gap-12 { gap: 48px }
 .gap-x-4 { column-gap: 16px }
 .gap-x-6 { column-gap: 24px }
 .gap-y-3 { row-gap: 12px }
@@ -255,11 +265,14 @@ h1,h2,h3,h4,h5,h6 { font-size: inherit; font-weight: inherit; letter-spacing: in
 .h-\[64px\] { height: 64px }
 .h-\[72px\] { height: 72px }
 .min-h-0 { min-height: 0 }
+.min-h-full { min-height: 100% }
 .min-h-6 { min-height: 24px }
 .min-w-0 { min-width: 0 }
 .max-w-sm { max-width: 384px }
+.max-w-md { max-width: 448px }
 .max-w-xl { max-width: 576px }
 .max-w-2xl { max-width: 672px }
+.max-w-3xl { max-width: 768px }
 .max-w-4xl { max-width: 896px }
 .max-w-5xl { max-width: 1024px }
 .max-w-7xl { max-width: 1280px }
@@ -304,6 +317,7 @@ h1,h2,h3,h4,h5,h6 { font-size: inherit; font-weight: inherit; letter-spacing: in
 .pt-2 { padding-top: 8px }
 .pt-3 { padding-top: 12px }
 .pt-4 { padding-top: 16px }
+.pt-7 { padding-top: 28px }
 .pb-0\.5 { padding-bottom: 2px }
 .pb-2 { padding-bottom: 8px }
 .pb-3 { padding-bottom: 12px }
@@ -311,10 +325,15 @@ h1,h2,h3,h4,h5,h6 { font-size: inherit; font-weight: inherit; letter-spacing: in
 .pb-4 { padding-bottom: 16px }
 .pb-5 { padding-bottom: 20px }
 .pb-6 { padding-bottom: 24px }
+.pb-8 { padding-bottom: 32px }
+.pb-10 { padding-bottom: 40px }
 .pl-1 { padding-left: 4px }
 .pl-3 { padding-left: 12px }
 .pl-4 { padding-left: 16px }
+.pl-9 { padding-left: 36px }
 .pl-10 { padding-left: 40px }
+.pr-9 { padding-right: 36px }
+.pr-10 { padding-right: 40px }
 .pr-16 { padding-right: 64px }
 
 /* ─── Spacing: Margin ─── */
@@ -663,6 +682,8 @@ h1,h2,h3,h4,h5,h6 { font-size: inherit; font-weight: inherit; letter-spacing: in
 .hover\:bg-\[--color-bg-hover\]:hover { background-color: var(--color-bg-hover) }
 .hover\:bg-\[--color-bg-hover\]\/60:hover { background-color: color-mix(in srgb, var(--color-bg-hover) 60%, transparent) }
 .hover\:bg-\[--color-bg-hover\]\/70:hover { background-color: color-mix(in srgb, var(--color-bg-hover) 70%, transparent) }
+.hover\:bg-\[--color-accent-blue\]\/10:hover { background-color: color-mix(in srgb, var(--color-accent-blue) 10%, transparent) }
+.hover\:bg-\[--color-accent-blue\]\/20:hover { background-color: color-mix(in srgb, var(--color-accent-blue) 20%, transparent) }
 .hover\:bg-\[--color-accent-green\]\/15:hover { background-color: color-mix(in srgb, var(--color-accent-green) 15%, transparent) }
 .hover\:bg-\[--color-accent-green\]\/20:hover { background-color: color-mix(in srgb, var(--color-accent-green) 20%, transparent) }
 .hover\:bg-\[--color-accent-red\]\/10:hover { background-color: color-mix(in srgb, var(--color-accent-red) 10%, transparent) }
@@ -673,6 +694,7 @@ h1,h2,h3,h4,h5,h6 { font-size: inherit; font-weight: inherit; letter-spacing: in
 .hover\:bg-\[--color-status-connected\]\/20:hover { background-color: color-mix(in srgb, var(--color-status-connected) 20%, transparent) }
 .hover\:text-\[--color-text-primary\]:hover { color: var(--color-text-primary) }
 .hover\:text-\[--color-text-secondary\]:hover { color: var(--color-text-secondary) }
+.hover\:text-\[--color-accent-cyan\]:hover { color: var(--color-accent-cyan) }
 .hover\:text-\[--color-accent-red\]:hover { color: var(--color-accent-red) }
 .hover\:text-\[--color-accent-yellow\]:hover { color: var(--color-accent-yellow) }
 .hover\:border-\[--color-accent-blue\]\/40:hover { border-color: color-mix(in srgb, var(--color-accent-blue) 40%, transparent) }
@@ -723,6 +745,7 @@ h1,h2,h3,h4,h5,h6 { font-size: inherit; font-weight: inherit; letter-spacing: in
 @media (min-width: 1024px) {
   .lg\:block { display: block }
   .lg\:flex { display: flex }
+  .lg\:hidden { display: none }
   .lg\:grid-cols-2 { grid-template-columns: repeat(2, 1fr) }
   .lg\:grid-cols-3 { grid-template-columns: repeat(3, 1fr) }
   .lg\:grid-cols-\[340px_1fr\] { grid-template-columns: 340px 1fr }

@@ -1,12 +1,12 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../features/auth/AuthContext';
 import {
   Network,
   TerminalSquare,
   Package,
   FlaskConical,
   Bug,
-  FileQuestion,
   ArrowRight,
   Star,
   Check,
@@ -17,6 +17,9 @@ import {
   Router,
   Zap,
   Sparkles,
+  ClipboardList,
+  BookOpenText,
+  CircleUserRound,
 } from 'lucide-react';
 
 const NAV = [
@@ -53,22 +56,34 @@ const FEATURES = [
     text: 'Veja o encapsulamento e desencapsulamento do dado camada por camada, do bit ao texto original.',
   },
   {
-    icon: FlaskConical,
+    icon: BookOpenText,
+    tile: 'background:#8b5cf624;color:#a78bfa;border-color:#8b5cf64d',
+    title: 'Lições com Diagramas',
+    text: 'Lição da Camada de Transporte e PDUs com diagramas animados de handshake TCP, encapsulamento e DNS.',
+  },
+  {
+    icon: ClipboardList,
     tile: 'background:#f59e0b24;color:#fbbf24;border-color:#f59e0b4d',
+    title: 'Questionários Inteligentes',
+    text: 'Cada questão errada vira uma explicação na hora — e há glossário de termos e revisão do gabarito.',
+  },
+  {
+    icon: FlaskConical,
+    tile: 'background:#22c55e24;color:#4ade80;border-color:#22c55e4d',
     title: 'Laboratórios Guiados',
     text: 'Exercícios passo a passo com validação automática, dicas progressivas e feedback imediato.',
   },
   {
     icon: Bug,
-    tile: 'background:#22c55e24;color:#4ade80;border-color:#22c55e4d',
+    tile: 'background:#f43f5e24;color:#fb7185;border-color:#f43f5e4d',
     title: 'Troubleshooting',
     text: 'Cace falhas injetadas na rede, diagnostique e corrija problemas reais como um profissional.',
   },
   {
-    icon: FileQuestion,
-    tile: 'background:#f43f5e24;color:#fb7185;border-color:#f43f5e4d',
-    title: 'Modo Prova',
-    text: 'Teste seus conhecimentos sob avaliação, acumule XP e acompanhe seu desempenho em cada conceito.',
+    icon: CircleUserRound,
+    tile: 'background:#14b8a624;color:#2dd4bf;border-color:#14b8a64d',
+    title: 'Conta e Sincronização',
+    text: 'Crie sua conta para sincronizar progresso e pontuações na nuvem, com recuperação de senha e proteção contra força bruta.',
   },
 ];
 
@@ -154,6 +169,9 @@ function LearnMock() {
 }
 
 export function LandingPage() {
+  const { user } = useAuth();
+  const enterTo = user ? '/dashboard' : '/entrar';
+
   useEffect(() => {
     const els = document.querySelectorAll('.landing-reveal');
     const io = new IntersectionObserver(
@@ -191,7 +209,7 @@ export function LandingPage() {
               </a>
             ))}
           </nav>
-          <Link to="/dashboard" className="landing-menu-cta">
+          <Link to={enterTo} className="landing-menu-cta">
             Acessar o sistema
           </Link>
         </div>
@@ -216,12 +234,13 @@ export function LandingPage() {
               em um só lugar.
             </h1>
             <p className="text-base leading-relaxed text-[--color-text-secondary]" style={{ marginBottom: 32 }}>
-              Monte topologias, conecte equipamentos, configure IPs e veja o pacote
-              atravessar a rede camada por camada — com terminal realista,
-              laboratórios guiados e gamificação para aprender fazendo.
+              Monte topologias, configure IPs e veja o pacote atravessar a rede
+              camada por camada — com terminal realista, laboratórios guiados,
+              questionários com explicações e gamificação. Crie sua conta e leve
+              seu progresso para qualquer dispositivo.
             </p>
             <div className="flex items-center justify-center gap-3 flex-wrap">
-              <Link to="/dashboard" className="landing-btn landing-btn-primary">
+              <Link to={enterTo} className="landing-btn landing-btn-primary">
                 Acessar o sistema <ArrowRight size={16} />
               </Link>
               <a href="#recursos" className="landing-btn landing-btn-ghost">
@@ -333,7 +352,10 @@ export function LandingPage() {
                 'Configure IPs, máscaras, gateways e rotas',
                 'Teste com comandos reais (ping, tracert, arp)',
                 'Veja o pacote viajando pelas camadas OSI',
+                'Aprenda com diagramas animados (handshake, PDU, DNS)',
                 'Resolva falhas e ganhe XP, níveis e conquistas',
+                'Reveja o que errou nos questionários com explicações',
+                'Entre com sua conta e sincronize tudo na nuvem',
               ].map((t) => (
                 <li key={t} className="flex items-center gap-3 text-sm text-[--color-text-secondary]">
                   <span className="flex items-center justify-center w-4 h-4 rounded-full bg-[--color-accent-green]/15 text-[--color-accent-green] shrink-0">
@@ -368,7 +390,7 @@ export function LandingPage() {
                 acessível no navegador, sem instalar nada.
               </p>
               <div className="space-y-2.5">
-                {['Funciona direto no navegador', 'Progresso salvo automaticamente', 'Do básico ao troubleshooting avançado'].map((t) => (
+                {['Funciona direto no navegador', 'Progresso salvo automaticamente', 'Conta opcional para sincronizar em qualquer dispositivo', 'Do básico ao troubleshooting avançado'].map((t) => (
                   <div key={t} className="flex items-center gap-3 text-sm text-[--color-text-secondary]">
                     <Check size={14} className="text-[--color-accent-green]" /> {t}
                   </div>
@@ -378,8 +400,9 @@ export function LandingPage() {
             <div className="landing-about-card">
               <h3 className="text-lg font-bold mb-2">Suporte ao aprendizado</h3>
               <p className="text-sm leading-relaxed text-[--color-text-secondary]">
-                Mapa de aprendizado, laboratórios guiados, troubleshooting e modo
-                prova trabalham juntos para você evoluir com consistência.
+                Mapa de aprendizado, lições com diagramas animados, questionários
+                que ensinam, laboratórios guiados, troubleshooting e modo prova
+                trabalham juntos para você evoluir com consistência.
               </p>
               <div className="grid grid-cols-2 gap-3" style={{ marginTop: 24 }}>
                 <div className="rounded-xl bg-[--color-bg-card]/60 border border-[--color-border-primary]/40 p-3.5">
@@ -447,7 +470,7 @@ export function LandingPage() {
             <div className="relative">
               <h2 className="font-bold tracking-tight mb-3" style={{ fontSize: 'clamp(26px, 3.5vw, 32px)' }}>Pronto para dominar redes?</h2>
               <p className="text-[15px] text-[--color-text-secondary]" style={{ marginBottom: 28 }}>Entre no sistema e comece a montar sua primeira rede agora.</p>
-              <Link to="/dashboard" className="landing-btn landing-btn-primary landing-btn-lg">
+              <Link to={enterTo} className="landing-btn landing-btn-primary landing-btn-lg">
                 Acessar o sistema <ArrowRight size={17} />
               </Link>
             </div>

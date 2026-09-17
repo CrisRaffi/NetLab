@@ -59,7 +59,7 @@ export function GlossaryDialog({ open, onClose }: GlossaryDialogProps) {
   const total = GLOSSARY.reduce((n, c) => n + c.terms.length, 0);
 
   return (
-    <Modal open={open} onClose={onClose} title="Glossário de Redes" size="lg">
+    <Modal open={open} onClose={onClose} title="Glossário de Redes" size="xl">
       <div className="space-y-4">
         <p className="text-[11px] text-[--color-text-muted] leading-relaxed">
           Termos em linguagem simples para acompanhar o laboratório — do cabo ao

@@ -10,6 +10,9 @@ import { TroubleshootingPage } from './pages/TroubleshootingPage';
 import { ProvaPage } from './pages/ProvaPage';
 import { QuizzesPage } from './pages/QuizzesPage';
 import { LearnLessonPage } from './pages/LearnLessonPage';
+import { LoginPage } from './pages/LoginPage';
+import { RegisterPage } from './pages/RegisterPage';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { AchievementsPage } from './pages/AchievementsPage';
 import { ConfigPage } from './pages/ConfigPage';
 import { PacketJourneyPage } from './features/packet-journey/pages/PacketJourneyPage';
@@ -19,6 +22,9 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/entrar" element={<LoginPage />} />
+        <Route path="/cadastro" element={<RegisterPage />} />
+        <Route path="/recuperar-senha" element={<ForgotPasswordPage />} />
         <Route element={<Layout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/mapa" element={<LearningMapPage />} />

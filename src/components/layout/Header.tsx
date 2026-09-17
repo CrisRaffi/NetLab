@@ -1,11 +1,31 @@
 import { useState } from 'react';
-import { Bell, Search, Activity, Sparkles, ChevronDown } from 'lucide-react';
-import { useProgressStore } from '../../stores/useProgressStore';
-import { getLevelFromXp } from '../../stores/useProgressStore';
+import { Link, useNavigate } from 'react-router-dom';
+import {
+  Bell,
+  Search,
+  Activity,
+  Sparkles,
+  ChevronDown,
+  LogIn,
+  LogOut,
+  CircleUserRound,
+} from 'lucide-react';
+import { useAuth } from '../../features/auth/AuthContext';
+import { logAuthEvent } from '../../features/auth/authLog';
 import { clsx } from 'clsx';
 
 export function Header() {
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  async function handleSignOut() {
+    setShowUserMenu(false);
+    await signOut();
+    logAuthEvent('logout', { email: user?.email ?? undefined });
+    navigate('/');
+  }
 
   return (
     <header className="relative flex items-center justify-between gap-4 h-16 px-4 lg:px-6 bg-[--color-bg-secondary]/55 backdrop-blur-md shrink-0 z-30">
@@ -79,23 +99,67 @@ export function Header() {
         </div>
 
         {/* Profile */}
-        <div className="flex items-center gap-2.5 pl-3 ml-1.5 border-l border-[--color-border-primary]/25">
-          <div className="flex h-9 w-9 rounded-full bg-gradient-to-br from-[--color-border-secondary] to-[#1C2538] border border-[--color-accent-blue]/25 items-center justify-center text-[--color-text-primary] text-xs font-bold">
-            AL
+        {user ? (
+          <div className="relative">
+            <button
+              onClick={() => setShowUserMenu((v) => !v)}
+              className="flex items-center gap-2.5 pl-3 ml-1.5 border-l border-[--color-border-primary]/25 cursor-pointer"
+              aria-label="Menu da conta"
+            >
+              <div className="flex h-9 w-9 rounded-full bg-gradient-to-br from-[--color-border-secondary] to-[#1C2538] border border-[--color-accent-blue]/25 items-center justify-center text-[--color-text-primary] text-xs font-bold">
+                {(user.displayName ?? user.email ?? '?')
+                  .slice(0, 2)
+                  .toUpperCase()}
+              </div>
+              <div className="hidden lg:block leading-tight text-left">
+                <p className="text-xs font-semibold text-[--color-text-primary] max-w-[180px] truncate">
+                  {user.displayName ?? 'Aluno'}
+                </p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="flex items-center gap-1 text-[9px] text-[--color-status-connected] font-medium">
+                    <span className="w-1 h-1 rounded-full bg-[--color-status-connected]" /> Online
+                  </span>
+                  <span className="text-[9px] text-[--color-text-muted] max-w-[160px] truncate">
+                    {user.email}
+                  </span>
+                </div>
+              </div>
+              <ChevronDown size={12} className="hidden lg:block text-[--color-text-muted]/60" />
+            </button>
+            {showUserMenu && (
+              <div className="absolute right-0 top-full mt-2.5 w-64 rounded-2xl bg-[--color-bg-card] border border-[--color-border-primary] shadow-2xl shadow-black/50 overflow-hidden z-40 glass-strong animate-fade-in-up">
+                <div className="px-4 py-3 border-b border-[--color-border-primary]/50">
+                  <p className="text-xs font-semibold text-[--color-text-primary]">
+                    {user.displayName ?? 'Aluno'}
+                  </p>
+                  <p className="text-[10px] text-[--color-text-muted] break-all">
+                    {user.email}
+                  </p>
+                </div>
+                <button
+                  onClick={handleSignOut}
+                  className="w-full flex items-center gap-2 px-4 py-2.5 text-xs text-[--color-text-secondary] hover:bg-white/5 hover:text-[--color-text-primary] transition-colors cursor-pointer"
+                >
+                  <LogOut size={13} className="text-[--color-accent-red]" />
+                  Sair da conta
+                </button>
+              </div>
+            )}
           </div>
-          <div className="hidden lg:block leading-tight">
-            <p className="text-xs font-semibold text-[--color-text-primary]">Aluno</p>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="flex items-center gap-1 text-[9px] text-[--color-status-connected] font-medium">
-                <span className="w-1 h-1 rounded-full bg-[--color-status-connected]" /> Online
-              </span>
-              <span className="text-[9px] text-[--color-text-muted]">
-                · Nv {getLevelFromXp(useProgressStore.getState().progress.xp)}
-              </span>
+        ) : (
+          <div className="flex items-center gap-2 pl-3 ml-1.5 border-l border-[--color-border-primary]/25">
+            <div className="hidden md:flex items-center gap-2 text-[11px] text-[--color-text-muted] px-1">
+              <CircleUserRound size={15} className="text-[--color-text-muted]/70" />
+              Visitante
             </div>
+            <Link
+              to="/entrar"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[--color-accent-blue]/10 text-[--color-accent-cyan] border border-[--color-accent-blue]/30 px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-[--color-accent-blue]/20 shrink-0"
+            >
+              <LogIn size={12} /> Entrar
+            </Link>
           </div>
-          <ChevronDown size={12} className="hidden lg:block text-[--color-text-muted]/60" />
-        </div>
+        )}
       </div>
     </header>
   );

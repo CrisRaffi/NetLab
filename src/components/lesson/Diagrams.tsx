@@ -17,7 +17,17 @@ const BORDER2 = '#273651';
 const CYAN = '#818CF8';
 const GREEN = '#10B981';
 
-export function HandshakeDiagram() {
+const REVEAL_DUR = 450;
+const REVEAL = (ms: number) => ({
+  animation: `diagramReveal ${REVEAL_DUR}ms ease-out both`,
+  animationDelay: `${ms}ms`,
+});
+
+export type DiagramPlayProps = { playing?: boolean };
+
+export function HandshakeDiagram({ playing }: DiagramPlayProps) {
+  const reveal = (ms: number) => (playing ? REVEAL(ms) : undefined);
+
   return (
     <svg
       viewBox="0 0 640 230"
@@ -111,66 +121,75 @@ export function HandshakeDiagram() {
       </g>
 
       {/* 1 SYN */}
-      <line
-        x1="166"
-        y1="52"
-        x2="468"
-        y2="52"
-        stroke={CYAN}
-        strokeWidth="1.5"
-        markerEnd="url(#dgm-hs-cy)"
-      />
-      <text x="320" y="46" textAnchor="middle" fontSize="10" fill={SEC}>
-        1. SYN — “posso conversar?”
-      </text>
+      <g style={reveal(0)}>
+        <line
+          x1="166"
+          y1="52"
+          x2="468"
+          y2="52"
+          stroke={CYAN}
+          strokeWidth="1.5"
+          markerEnd="url(#dgm-hs-cy)"
+        />
+        <text x="320" y="46" textAnchor="middle" fontSize="10" fill={SEC}>
+          1. SYN — “posso conversar?”
+        </text>
+      </g>
 
       {/* 2 SYN-ACK */}
-      <line
-        x1="468"
-        y1="98"
-        x2="166"
-        y2="98"
-        stroke={CYAN}
-        strokeWidth="1.5"
-        markerEnd="url(#dgm-hs-cy)"
-      />
-      <text x="320" y="92" textAnchor="middle" fontSize="10" fill={SEC}>
-        2. SYN-ACK — “pode sim, e você?”
-      </text>
+      <g style={reveal(1500)}>
+        <line
+          x1="468"
+          y1="98"
+          x2="166"
+          y2="98"
+          stroke={CYAN}
+          strokeWidth="1.5"
+          markerEnd="url(#dgm-hs-cy)"
+        />
+        <text x="320" y="92" textAnchor="middle" fontSize="10" fill={SEC}>
+          2. SYN-ACK — “pode sim, e você?”
+        </text>
+      </g>
 
       {/* 3 ACK */}
-      <line
-        x1="166"
-        y1="144"
-        x2="468"
-        y2="144"
-        stroke={CYAN}
-        strokeWidth="1.5"
-        markerEnd="url(#dgm-hs-cy)"
-      />
-      <text x="320" y="138" textAnchor="middle" fontSize="10" fill={SEC}>
-        3. ACK — “combinado!”
-      </text>
+      <g style={reveal(3000)}>
+        <line
+          x1="166"
+          y1="144"
+          x2="468"
+          y2="144"
+          stroke={CYAN}
+          strokeWidth="1.5"
+          markerEnd="url(#dgm-hs-cy)"
+        />
+        <text x="320" y="138" textAnchor="middle" fontSize="10" fill={SEC}>
+          3. ACK — “combinado!”
+        </text>
+      </g>
 
       {/* dados */}
-      <line
-        x1="166"
-        y1="190"
-        x2="468"
-        y2="190"
-        stroke={GREEN}
-        strokeWidth="1.5"
-        strokeDasharray="6 4"
-        markerEnd="url(#dgm-hs-gr)"
-      />
-      <text x="320" y="184" textAnchor="middle" fontSize="10" fill={GREEN}>
-        4. a partir daqui, os dados (segmentos) fluem com confirmações
-      </text>
+      <g style={reveal(4500)}>
+        <line
+          x1="166"
+          y1="190"
+          x2="468"
+          y2="190"
+          stroke={GREEN}
+          strokeWidth="1.5"
+          strokeDasharray="6 4"
+          markerEnd="url(#dgm-hs-gr)"
+        />
+        <text x="320" y="184" textAnchor="middle" fontSize="10" fill={GREEN}>
+          4. a partir daqui, os dados (segmentos) fluem com confirmações
+        </text>
+      </g>
     </svg>
   );
 }
 
-export function EncapsulationDiagram() {
+export function EncapsulationDiagram({ playing }: DiagramPlayProps) {
+  const reveal = (ms: number) => (playing ? REVEAL(ms) : undefined);
   const boxes = [
     {
       x: 12,
@@ -224,10 +243,35 @@ export function EncapsulationDiagram() {
         </marker>
       </defs>
 
-      {boxes.map((b) => {
+      <text x="76" y="22" textAnchor="middle" fontSize="10" fill={MUT}>
+        Aplicação
+      </text>
+      <text x="246" y="22" textAnchor="middle" fontSize="10" fill={MUT}>
+        Transporte
+      </text>
+      <text x="406" y="22" textAnchor="middle" fontSize="10" fill={MUT}>
+        Rede
+      </text>
+      <text x="559" y="22" textAnchor="middle" fontSize="10" fill={MUT}>
+        Enlace
+      </text>
+
+      {boxes.map((b, i) => {
         const center = b.x + 80;
+        const prevRight = i > 0 ? boxes[i - 1].x + 140 : 0;
         return (
-          <g key={b.label}>
+          <g key={b.label} style={reveal(i * 1500)}>
+            {i > 0 && (
+              <line
+                x1={prevRight + 2}
+                y1="73"
+                x2={b.x - 4}
+                y2="73"
+                stroke={MUT}
+                strokeWidth="1.5"
+                markerEnd="url(#dgm-enc-mut)"
+              />
+            )}
             <rect
               x={b.x}
               y="50"
@@ -283,52 +327,11 @@ export function EncapsulationDiagram() {
           </g>
         );
       })}
-
-      <line
-        x1="154"
-        y1="73"
-        x2="172"
-        y2="73"
-        stroke={MUT}
-        strokeWidth="1.5"
-        markerEnd="url(#dgm-enc-mut)"
-      />
-      <line
-        x1="318"
-        y1="73"
-        x2="332"
-        y2="73"
-        stroke={MUT}
-        strokeWidth="1.5"
-        markerEnd="url(#dgm-enc-mut)"
-      />
-      <line
-        x1="478"
-        y1="73"
-        x2="486"
-        y2="73"
-        stroke={MUT}
-        strokeWidth="1.5"
-        markerEnd="url(#dgm-enc-mut)"
-      />
-
-      <text x="76" y="22" textAnchor="middle" fontSize="10" fill={MUT}>
-        Aplicação
-      </text>
-      <text x="246" y="22" textAnchor="middle" fontSize="10" fill={MUT}>
-        Transporte
-      </text>
-      <text x="406" y="22" textAnchor="middle" fontSize="10" fill={MUT}>
-        Rede
-      </text>
-      <text x="559" y="22" textAnchor="middle" fontSize="10" fill={MUT}>
-        Enlace
-      </text>
     </svg>
   );
 }
 
-export function LayersDiagram() {
+export function LayersDiagram({ playing }: DiagramPlayProps) {
   const layers = [
     { name: 'Aplicação', pdu: 'Mensagem', y: 26 },
     { name: 'Transporte', pdu: 'Segmento', y: 64 },
@@ -336,6 +339,8 @@ export function LayersDiagram() {
     { name: 'Enlace', pdu: 'Quadro', y: 140 },
     { name: 'Física', pdu: 'Bits', y: 178 },
   ];
+
+  const reveal = (ms: number) => (playing ? REVEAL(ms) : undefined);
 
   return (
     <svg
@@ -380,8 +385,8 @@ export function LayersDiagram() {
         Computador B
       </text>
 
-      {layers.map((l) => (
-        <g key={l.name}>
+      {layers.map((l, i) => (
+        <g key={l.name} style={reveal(i * 1200)}>
           {/* A */}
           <rect
             x="16"
@@ -441,6 +446,16 @@ export function LayersDiagram() {
           >
             {l.pdu}
           </text>
+          {/* pacote viajando pelo enlace (só durante a animação) */}
+          {playing && (
+            <circle cx="166" cy={l.y + 15} r="2.5" fill={GREEN}>
+              <animateMotion
+                dur="1.1s"
+                repeatCount="indefinite"
+                path="M0 0 L304 0"
+              />
+            </circle>
+          )}
         </g>
       ))}
 
@@ -452,7 +467,9 @@ export function LayersDiagram() {
   );
 }
 
-export function DnsDiagram() {
+export function DnsDiagram({ playing }: DiagramPlayProps) {
+  const reveal = (ms: number) => (playing ? REVEAL(ms) : undefined);
+
   return (
     <svg
       viewBox="0 0 640 200"
@@ -552,54 +569,60 @@ export function DnsDiagram() {
       </g>
 
       {/* pergunta */}
-      <line
-        x1="174"
-        y1="78"
-        x2="462"
-        y2="78"
-        stroke={CYAN}
-        strokeWidth="1.5"
-        markerEnd="url(#dgm-dns-cy)"
-      />
-      <text x="318" y="70" textAnchor="middle" fontSize="10" fill={SEC}>
-        1. “qual o IP de www.example.com?”
-      </text>
+      <g style={reveal(0)}>
+        <line
+          x1="174"
+          y1="78"
+          x2="462"
+          y2="78"
+          stroke={CYAN}
+          strokeWidth="1.5"
+          markerEnd="url(#dgm-dns-cy)"
+        />
+        <text x="318" y="70" textAnchor="middle" fontSize="10" fill={SEC}>
+          1. "qual o IP de www.example.com?"
+        </text>
+      </g>
 
       {/* resposta */}
-      <line
-        x1="462"
-        y1="118"
-        x2="174"
-        y2="118"
-        stroke={GREEN}
-        strokeWidth="1.5"
-        markerEnd="url(#dgm-dns-gr)"
-      />
-      <text
-        x="318"
-        y="112"
-        textAnchor="middle"
-        fontSize="10"
-        fontWeight="600"
-        fill={GREEN}
-        style={MONO_FONT}
-      >
-        2. “é o 192.0.2.44”
-      </text>
+      <g style={reveal(1500)}>
+        <line
+          x1="462"
+          y1="118"
+          x2="174"
+          y2="118"
+          stroke={GREEN}
+          strokeWidth="1.5"
+          markerEnd="url(#dgm-dns-gr)"
+        />
+        <text
+          x="318"
+          y="112"
+          textAnchor="middle"
+          fontSize="10"
+          fontWeight="600"
+          fill={GREEN}
+          style={MONO_FONT}
+        >
+          2. "é o 192.0.2.44"
+        </text>
+      </g>
 
       {/* resultado */}
-      <rect
-        x="180"
-        y="156"
-        width="280"
-        height="28"
-        rx="7"
-        fill={BOX_ALT}
-        stroke={BORDER2}
-      />
-      <text x="320" y="174" textAnchor="middle" fontSize="10" fill={SEC}>
-        3. com o IP em mãos, o navegador já fala direto com o site
-      </text>
+      <g style={reveal(3000)}>
+        <rect
+          x="180"
+          y="156"
+          width="280"
+          height="28"
+          rx="7"
+          fill={BOX_ALT}
+          stroke={BORDER2}
+        />
+        <text x="320" y="174" textAnchor="middle" fontSize="10" fill={SEC}>
+          3. com o IP em mãos, o navegador já fala direto com o site
+        </text>
+      </g>
     </svg>
   );
 }

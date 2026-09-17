@@ -8,13 +8,14 @@ interface ModalProps {
   title?: string;
   children: ReactNode;
   className?: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
 const SIZE_CLASSES = {
   sm: 'max-w-md',
   md: 'max-w-2xl',
   lg: 'max-w-4xl',
+  xl: 'max-w-5xl',
 };
 
 export function Modal({ open, onClose, title, children, className, size = 'md' }: ModalProps) {
@@ -34,13 +35,14 @@ export function Modal({ open, onClose, title, children, className, size = 'md' }
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
       <div
         className={clsx(
-          'relative w-full rounded-xl glass-strong border border-[--color-border-secondary]/70 shadow-2xl shadow-black/60 animate-fade-in-up',
+          'relative w-full rounded-xl glass-strong border border-[--color-border-secondary]/70 shadow-2xl shadow-black/60 animate-fade-in-up flex flex-col overflow-hidden',
           SIZE_CLASSES[size],
           className
         )}
+        style={{ maxHeight: 'calc(100vh - 2rem)' }}
       >
         {title && (
-          <div className="flex items-center justify-between px-5 py-4 border-b border-[--color-border-primary]/60">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-[--color-border-primary]/60 shrink-0">
             <h3 className="text-sm font-semibold text-[--color-text-primary]">{title}</h3>
             <button
               onClick={onClose}
@@ -50,7 +52,7 @@ export function Modal({ open, onClose, title, children, className, size = 'md' }
             </button>
           </div>
         )}
-        <div className="p-5 text-[--color-text-secondary]">{children}</div>
+        <div className="p-5 text-[--color-text-secondary] overflow-y-auto min-h-0">{children}</div>
       </div>
     </div>
   );

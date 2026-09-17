@@ -18,7 +18,19 @@ interface QuizPlayerProps {
 
 type AnswerState = 'idle' | 'answered';
 
+function shuffleList<T>(list: T[]): T[] {
+  const arr = [...list];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 export function QuizPlayer({ quiz, onExit, onFinish }: QuizPlayerProps) {
+  const [questions, setQuestions] = useState<QuizQuestion[]>(() =>
+    shuffleList(quiz.questions),
+  );
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [answerState, setAnswerState] = useState<AnswerState>('idle');
@@ -26,9 +38,9 @@ export function QuizPlayer({ quiz, onExit, onFinish }: QuizPlayerProps) {
   const [wrongQuestions, setWrongQuestions] = useState<QuizQuestion[]>([]);
   const [showResult, setShowResult] = useState(false);
 
-  const question = quiz.questions[currentIndex];
+  const question = questions[currentIndex];
   const isCorrect = selectedIndex === question.correctIndex;
-  const total = quiz.questions.length;
+  const total = questions.length;
 
   function handleSelect(index: number) {
     if (answerState === 'answered') return;
@@ -55,6 +67,7 @@ export function QuizPlayer({ quiz, onExit, onFinish }: QuizPlayerProps) {
   }
 
   function handleRestart() {
+    setQuestions(shuffleList(quiz.questions));
     setCurrentIndex(0);
     setSelectedIndex(null);
     setAnswerState('idle');
