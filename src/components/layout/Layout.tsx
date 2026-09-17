@@ -1,19 +1,34 @@
+import { useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 
 export function Layout() {
   const { pathname } = useLocation();
+  const [menuOpen, setMenuOpen] = useState(false);
   const fullBleed =
     pathname.startsWith('/simulador') ||
     pathname.startsWith('/troubleshooting') ||
     pathname.startsWith('/labs/');
 
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   return (
     <div className="flex h-full w-full bg-[--color-bg-primary]">
-      <Sidebar />
+      <Sidebar open={menuOpen} />
+      {menuOpen && <div className="nav-backdrop show" onClick={() => setMenuOpen(false)} />}
       <div className="flex flex-col flex-1 min-w-0 min-h-0">
-        <Header />
+        <Header onOpenMenu={() => setMenuOpen(true)} />
         <main className="relative flex-1 min-h-0 overflow-hidden">
           <div aria-hidden className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className="glow-orb -top-40 -left-24 h-96 w-[38rem] bg-[--color-accent-blue]/7" />

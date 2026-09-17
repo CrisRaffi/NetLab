@@ -16,6 +16,7 @@ import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { AchievementsPage } from './pages/AchievementsPage';
 import { ConfigPage } from './pages/ConfigPage';
 import { PacketJourneyPage } from './features/packet-journey/pages/PacketJourneyPage';
+import { DesktopOnlyGate } from './components/common/DesktopOnlyGate';
 
 export default function App() {
   return (
@@ -28,10 +29,38 @@ export default function App() {
         <Route element={<Layout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/mapa" element={<LearningMapPage />} />
-          <Route path="/simulador" element={<SimulatorPage />} />
-          <Route path="/labs" element={<LabsPage />} />
-          <Route path="/labs/:id" element={<LabViewPage />} />
-          <Route path="/troubleshooting" element={<TroubleshootingPage />} />
+          <Route
+            path="/simulador"
+            element={
+              <DesktopOnlyGate>
+                <SimulatorPage />
+              </DesktopOnlyGate>
+            }
+          />
+          <Route
+            path="/labs"
+            element={
+              <DesktopOnlyGate>
+                <LabsPage />
+              </DesktopOnlyGate>
+            }
+          />
+          <Route
+            path="/labs/:id"
+            element={
+              <DesktopOnlyGate>
+                <LabViewPage />
+              </DesktopOnlyGate>
+            }
+          />
+          <Route
+            path="/troubleshooting"
+            element={
+              <DesktopOnlyGate>
+                <TroubleshootingPage />
+              </DesktopOnlyGate>
+            }
+          />
           <Route path="/prova" element={<ProvaPage />} />
           <Route path="/questionarios" element={<QuizzesPage />} />
           <Route path="/aprender/:lessonId" element={<LearnLessonPage />} />

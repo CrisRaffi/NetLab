@@ -46,7 +46,7 @@ export function QuizzesPage() {
         }
       />
 
-      <div className="rounded-lg border border-[--color-accent-blue]/20 bg-[--color-accent-blue]/5 p-4 flex items-start gap-3">
+      <div className="rounded-lg border border-[--color-accent-blue]/20 bg-[--color-accent-blue]/5 p-4 flex flex-wrap items-start gap-3">
         <Lightbulb size={15} className="text-[--color-accent-cyan] shrink-0 mt-0.5" />
         <p className="text-xs text-[--color-text-secondary] leading-relaxed">
           Cada questionário tem um nome e um tema. Ao responder errado, o sistema

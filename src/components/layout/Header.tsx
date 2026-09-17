@@ -9,12 +9,13 @@ import {
   LogIn,
   LogOut,
   CircleUserRound,
+  Menu,
 } from 'lucide-react';
 import { useAuth } from '../../features/auth/AuthContext';
 import { logAuthEvent } from '../../features/auth/authLog';
 import { clsx } from 'clsx';
 
-export function Header() {
+export function Header({ onOpenMenu }: { onOpenMenu?: () => void }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const { user, signOut } = useAuth();
@@ -33,6 +34,16 @@ export function Header() {
         aria-hidden
         className="absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-[--color-accent-blue]/45 to-transparent"
       />
+      {/* Menu (mobile) */}
+      {onOpenMenu && (
+        <button
+          onClick={onOpenMenu}
+          className="lg:hidden p-2.5 -ml-1.5 rounded-xl text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/5 transition-colors cursor-pointer"
+          aria-label="Abrir menu"
+        >
+          <Menu size={19} />
+        </button>
+      )}
       {/* Search */}
       <div className="flex flex-1 max-w-xl mx-auto">
         <div className="relative w-full group">
@@ -41,7 +52,7 @@ export function Header() {
             type="text"
             placeholder="Buscar conceito, laboratório, comando..."
             className={clsx(
-              'w-full bg-[#0D1424]/80 border border-[--color-border-primary]/45 rounded-xl pl-10 pr-16 py-2 text-sm',
+              'w-full bg-[#0D1424]/80 border border-[--color-border-primary]/45 rounded-xl pl-10 pr-3 sm:pr-16 py-2 text-sm',
               'text-[--color-text-primary] placeholder:text-[--color-text-muted]/60',
               'focus:outline-none focus:border-[--color-accent-blue] focus:ring-2 focus:ring-[--color-accent-blue]/15 focus:bg-[#0D1424]',
               'transition-all duration-200',

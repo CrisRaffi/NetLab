@@ -119,9 +119,9 @@ export function EncapsulationPlayback({ enabled, onSent }: PlaybackProps) {
                 inspect?.id === step.id ? 'ring-1 ring-[--color-accent-cyan]' : ''
               )}
             >
-              <Search size={11} className="opacity-60" />
-              <span className="text-[10px] font-mono font-bold" title={PROTOCOL_TIPS[step.title]}>{step.title}</span>
-              <span className="ml-auto text-[9px] text-[--color-text-muted] truncate">{step.detail}</span>
+              <Search size={11} className="opacity-60 shrink-0" />
+              <span className="text-[10px] font-mono font-bold truncate min-w-0" title={PROTOCOL_TIPS[step.title]}>{step.title}</span>
+              <span className="ml-auto text-[9px] text-[--color-text-muted] truncate min-w-0">{step.detail}</span>
             </button>
           ))}
           {layers.length === 0 && (

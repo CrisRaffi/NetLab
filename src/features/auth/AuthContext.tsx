@@ -14,9 +14,14 @@ import {
   updateProfile,
   type User,
 } from 'firebase/auth';
-import { auth, firebaseConfigured } from '../../lib/firebase';
+import { auth, db, firebaseConfigured } from '../../lib/firebase';
 import { loadQuizScores, saveQuizScore } from './firestoreQuiz';
+import { loadBoards, saveBoardsToCloud } from './firestoreBoard';
 import { useQuizStore, type QuizResult } from '../../stores/useQuizStore';
+import {
+  useSavedBoardsStore,
+  type SavedBoard,
+} from '../../stores/useSavedBoardsStore';
 
 export interface AuthUser {
   uid: string;
@@ -66,6 +71,20 @@ function mergeQuizResults(
   return merged;
 }
 
+function mergeBoards(
+  local: SavedBoard[],
+  cloud: SavedBoard[],
+): SavedBoard[] {
+  const byId = new Map<string, SavedBoard>();
+  for (const b of [...cloud, ...local]) {
+    const prev = byId.get(b.id);
+    byId.set(b.id, !prev || b.savedAt >= prev.savedAt ? b : prev);
+  }
+  return [...byId.values()]
+    .sort((a, b) => b.savedAt - a.savedAt)
+    .slice(0, 20);
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [initializing, setInitializing] = useState(true);
@@ -78,9 +97,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const unsub = onAuthStateChanged(auth, async (fbUser) => {
       if (fbUser) {
-        const cloud = await loadQuizScores(fbUser.uid);
+        const [cloud, cloudBoards] = await Promise.all([
+          loadQuizScores(fbUser.uid),
+          loadBoards(fbUser.uid),
+        ]);
         const store = useQuizStore.getState();
         useQuizStore.setState({ results: mergeQuizResults(store.results, cloud) });
+        const boardsStore = useSavedBoardsStore.getState();
+        useSavedBoardsStore.setState({
+          boards: mergeBoards(boardsStore.boards, cloudBoards),
+        });
         setUser(toAuthUser(fbUser));
       } else {
         setUser(null);
@@ -90,6 +116,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => unsub();
   }, []);
+
+  useEffect(() => {
+    if (!user?.uid || !db) return;
+    const unsub = useSavedBoardsStore.subscribe((state, prev) => {
+      if (state.boards === prev.boards) return;
+      void saveBoardsToCloud(user.uid, state.boards);
+    });
+    return unsub;
+  }, [user?.uid]);
 
   async function signIn(email: string, password: string) {
     if (!auth) throw new Error('auth/unavailable');

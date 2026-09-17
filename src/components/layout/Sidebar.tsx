@@ -30,6 +30,7 @@ interface NavItem {
   label: string;
   icon: LucideIcon;
   highlight?: boolean;
+  mobileHidden?: boolean;
 }
 
 interface NavGroup {
@@ -77,9 +78,15 @@ const NAV_GROUPS: NavGroup[] = [
         label: 'Laboratório Livre',
         icon: Network,
         highlight: true,
+        mobileHidden: true,
       },
-      { to: '/labs', label: 'Laboratórios', icon: FlaskConical },
-      { to: '/troubleshooting', label: 'Troubleshooting', icon: Bug },
+      { to: '/labs', label: 'Laboratórios', icon: FlaskConical, mobileHidden: true },
+      {
+        to: '/troubleshooting',
+        label: 'Troubleshooting',
+        icon: Bug,
+        mobileHidden: true,
+      },
       { to: '/questionarios', label: 'Questionários', icon: ClipboardList },
       { to: '/prova', label: 'Modo Prova', icon: FileQuestion },
     ],
@@ -104,7 +111,11 @@ function NavItemLink({ item }: { item: NavItem }) {
     <NavLink
       to={item.to}
       className={({ isActive }) =>
-        clsx(navItemClass({ isActive }), item.highlight && 'nav-highlight')
+        clsx(
+          navItemClass({ isActive }),
+          item.highlight && 'nav-highlight',
+          item.mobileHidden && 'hidden lg:flex',
+        )
       }
     >
       {({ isActive }) => (
@@ -120,15 +131,15 @@ function NavItemLink({ item }: { item: NavItem }) {
                   : 'text-[--color-text-muted]',
             )}
           />
-          <span className="hidden lg:block truncate">{item.label}</span>
+          <span className="block truncate">{item.label}</span>
           {item.highlight && (
-            <span className="hidden lg:flex ml-auto items-center gap-1 text-[8px] font-bold uppercase tracking-wider text-[--color-accent-cyan]">
+            <span className="flex ml-auto items-center gap-1 text-[8px] font-bold uppercase tracking-wider text-[--color-accent-cyan]">
               <Sparkles size={9} />
               Começar
             </span>
           )}
           {isActive && !item.highlight && (
-            <span className="hidden lg:block ml-auto h-1.5 w-1.5 rounded-full bg-[--color-accent-blue] glow-dot" />
+            <span className="block ml-auto h-1.5 w-1.5 rounded-full bg-[--color-accent-blue] glow-dot" />
           )}
         </>
       )}
@@ -142,7 +153,7 @@ function NavGroupBlock({ group }: { group: NavGroup }) {
     <div>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="hidden lg:flex w-full items-center justify-between section-label mb-1 pl-1 pr-2 py-1 rounded hover:bg-white/[0.04] cursor-pointer"
+        className="flex w-full items-center justify-between section-label mb-1 pl-1 pr-2 py-1 rounded hover:bg-white/[0.04] cursor-pointer"
       >
         <span className="flex items-center gap-1.5">
           <group.icon size={11} className="text-[--color-text-muted]" />
@@ -153,7 +164,7 @@ function NavGroupBlock({ group }: { group: NavGroup }) {
           className={clsx('transition-transform', open ? '' : '-rotate-90')}
         />
       </button>
-      <div className="hidden lg:block h-px mb-1 bg-[--color-border-primary]/10" />
+      <div className="block h-px mb-1 bg-[--color-border-primary]/10" />
       <div className={clsx('space-y-1', !open && 'hidden lg:hidden')}>
         {group.items.map((item) => (
           <NavItemLink key={item.to} item={item} />
@@ -163,7 +174,7 @@ function NavGroupBlock({ group }: { group: NavGroup }) {
   );
 }
 
-export function Sidebar() {
+export function Sidebar({ open = false }: { open?: boolean }) {
   const progress = useProgressStore((s) => s.progress);
   const level = getLevelFromXp(progress.xp);
   const xpInLevel = progress.xp % 100;
@@ -184,7 +195,12 @@ export function Sidebar() {
   }, [query]);
 
   return (
-    <aside className="relative flex flex-col w-16 lg:w-64 h-full bg-[#020A14]/70 backdrop-blur-md border-r border-[--color-border-primary]/20 shrink-0 transition-[width] duration-200 z-20">
+    <aside
+      className={clsx(
+        'sidebar-drawer relative flex flex-col w-16 lg:w-64 h-full bg-[#020A14]/70 backdrop-blur-md border-r border-[--color-border-primary]/20 shrink-0 transition-[width] duration-200 z-20',
+        open && 'open',
+      )}
+    >
       {/* Brand */}
       <div className="flex items-center justify-center lg:justify-start gap-3 px-2 lg:px-4 py-6 shrink-0">
         <div className="relative shrink-0">
@@ -193,7 +209,7 @@ export function Sidebar() {
             <Network size={18} strokeWidth={2.2} />
           </div>
         </div>
-        <div className="hidden lg:block min-w-0 leading-none">
+        <div className="block min-w-0 leading-none">
           <span className="block text-[15px] font-bold tracking-tight">
             Net<span className="text-gradient">Lab</span>
           </span>
@@ -204,7 +220,7 @@ export function Sidebar() {
       </div>
 
       {/* Search */}
-      <div className="hidden lg:block px-3 pb-3">
+      <div className="block px-3 pb-3">
         <div className="relative">
           <Search
             size={12}
@@ -222,7 +238,7 @@ export function Sidebar() {
       {/* Nav groups */}
       <nav className="flex-1 overflow-y-auto px-2.5 lg:px-3 pt-1 pb-3 space-y-3">
         {groups.length === 0 && (
-          <p className="hidden lg:block text-[10px] text-[--color-text-muted] px-1">
+          <p className="block text-[10px] text-[--color-text-muted] px-1">
             Nenhuma página encontrada.
           </p>
         )}
@@ -233,7 +249,7 @@ export function Sidebar() {
 
       {/* Bottom: progress + conquistas + config */}
       <div className="px-2.5 lg:px-3 pb-3 shrink-0">
-        <div className="hidden lg:block mb-3">
+        <div className="block mb-3">
           <div className="rounded-xl bg-[#0D1424]/80 px-2.5 py-2.5">
             <div className="flex items-center justify-between text-xs mb-2">
               <span className="text-[--color-text-secondary] font-semibold">
