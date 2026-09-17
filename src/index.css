@@ -207,7 +207,10 @@ h1,h2,h3,h4,h5,h6 { font-size: inherit; font-weight: inherit; letter-spacing: in
 .w-1 { width: 4px }
 .w-1\.5 { width: 6px }
 .w-2 { width: 8px }
+.w-2\.5 { width: 10px }
 .w-4 { width: 16px }
+.w-5 { width: 20px }
+.w-6 { width: 24px }
 .w-7 { width: 28px }
 .w-8 { width: 32px }
 .w-9 { width: 36px }
@@ -230,7 +233,10 @@ h1,h2,h3,h4,h5,h6 { font-size: inherit; font-weight: inherit; letter-spacing: in
 .h-1 { height: 4px }
 .h-1\.5 { height: 6px }
 .h-2 { height: 8px }
+.h-2\.5 { height: 10px }
 .h-4 { height: 16px }
+.h-5 { height: 20px }
+.h-6 { height: 24px }
 .h-7 { height: 28px }
 .h-8 { height: 32px }
 .h-9 { height: 36px }
@@ -254,6 +260,7 @@ h1,h2,h3,h4,h5,h6 { font-size: inherit; font-weight: inherit; letter-spacing: in
 .max-w-sm { max-width: 384px }
 .max-w-xl { max-width: 576px }
 .max-w-2xl { max-width: 672px }
+.max-w-4xl { max-width: 896px }
 .max-w-5xl { max-width: 1024px }
 .max-w-7xl { max-width: 1280px }
 .basis-9 { flex-basis: 36px }
@@ -388,6 +395,7 @@ h1,h2,h3,h4,h5,h6 { font-size: inherit; font-weight: inherit; letter-spacing: in
 /* ─── Typography: Whitespace / Overflow ─── */
 .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
 .whitespace-nowrap { white-space: nowrap }
+.whitespace-pre-line { white-space: pre-line }
 .break-all { word-break: break-all }
 .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden }
 
@@ -641,6 +649,7 @@ h1,h2,h3,h4,h5,h6 { font-size: inherit; font-weight: inherit; letter-spacing: in
 /* ─── Focus ─── */
 .focus\:outline-none:focus { outline: none }
 .focus\:border-\[--color-accent-blue\]:focus { border-color: var(--color-accent-blue) }
+.focus\:border-\[--color-accent-blue\]\/50:focus { border-color: color-mix(in srgb, var(--color-accent-blue) 50%, transparent) }
 .focus\:ring-2:focus { box-shadow: 0 0 0 2px rgba(99,102,241,.2) }
 .focus\:ring-\[--color-accent-blue\]\/15:focus { box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent-blue) 15%, transparent) }
 .focus\:bg-\[\#0D1424\]:focus { background-color: #0D1424 }

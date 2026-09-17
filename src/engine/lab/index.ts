@@ -1,4 +1,4 @@
-import type { Topology, Device, NetworkInterface, Connection, Route } from '../../types';
+import type { Topology, Device, NetworkInterface, Connection, Route, DeviceType } from '../../types';
 import { ping, buildIpIndex } from '../simulation/network';
 import { executeCommand } from '../commands';
 import type { ArpEntry } from '../protocols/arp';
@@ -23,6 +23,7 @@ export interface ValidationContext {
 const ETH_IFACE_COUNT: Record<string, number> = {
   pc: 1,
   server: 1,
+  hub: 8,
   switch: 8,
   router: 2,
   access_point: 1,
@@ -47,8 +48,29 @@ function makeIface(id: string, deviceIndex: number, portIndex: number, isSwitch:
   };
 }
 
+const VALID_DEVICE_TYPES = new Set<DeviceType>([
+  'pc',
+  'server',
+  'hub',
+  'switch',
+  'router',
+  'access_point',
+  'firewall',
+  'printer',
+  'ip_camera',
+  'ip_phone',
+  'cloud',
+  'core',
+]);
+
+const FALLBACK_DEVICE_TYPE: DeviceType = 'switch';
+
 export function normalizeTopology(topo: Topology): Topology {
   const devices = topo.devices.map((device, deviceIndex) => {
+    const type: DeviceType = VALID_DEVICE_TYPES.has(device.type)
+      ? device.type
+      : FALLBACK_DEVICE_TYPE;
+
     const usedInterfaceIds = topo.connections.flatMap(c => [
       { deviceId: c.deviceId1, ifaceId: c.interfaceId1 },
       { deviceId: c.deviceId2, ifaceId: c.interfaceId2 },
@@ -62,7 +84,7 @@ export function normalizeTopology(topo: Topology): Topology {
     }));
     const have = new Set(existing.map(i => i.id));
 
-    const isSwitch = device.type === 'switch';
+    const isSwitch = type === 'switch';
     let portIndex = existing.length;
     for (const id of usedInterfaceIds) {
       if (!have.has(id)) {
@@ -72,14 +94,14 @@ export function normalizeTopology(topo: Topology): Topology {
       }
     }
 
-    const needed = Math.max(ETH_IFACE_COUNT[device.type] ?? 1, usedInterfaceIds.length);
+    const needed = Math.max(ETH_IFACE_COUNT[type] ?? 1, usedInterfaceIds.length);
     for (let n = existing.length; n < needed; n++) {
       const id = n === 0 ? 'eth0' : `eth${n}`;
       existing.push(makeIface(id, deviceIndex, n, isSwitch));
       have.add(id);
     }
 
-    return { ...device, interfaces: existing };
+    return { ...device, type, interfaces: existing };
   });
 
   const connections = topo.connections.map(c => ({

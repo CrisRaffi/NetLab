@@ -49,6 +49,7 @@ const EMPTY_ARP: ArpEntry[] = [];
 function getTabs(type: DeviceType): PanelTab[] {
   switch (type) {
     case 'switch':
+    case 'hub':
       return ['config', 'ports'];
     case 'router':
     case 'firewall':
@@ -1002,7 +1003,7 @@ export function PropertyPanel({ open, onToggle }: PropertyPanelProps) {
   </button>
 </div>
 
-{device.type !== 'switch' && <ArpTable deviceId={device.id} />}
+{device.type !== 'switch' && device.type !== 'hub' && <ArpTable deviceId={device.id} />}
 
 <button
   onClick={() => removeDevice(device.id)}

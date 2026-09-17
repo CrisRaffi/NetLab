@@ -8,6 +8,8 @@ import { LabsPage } from './pages/LabsPage';
 import { LabViewPage } from './pages/LabViewPage';
 import { TroubleshootingPage } from './pages/TroubleshootingPage';
 import { ProvaPage } from './pages/ProvaPage';
+import { QuizzesPage } from './pages/QuizzesPage';
+import { LearnLessonPage } from './pages/LearnLessonPage';
 import { AchievementsPage } from './pages/AchievementsPage';
 import { ConfigPage } from './pages/ConfigPage';
 import { PacketJourneyPage } from './features/packet-journey/pages/PacketJourneyPage';
@@ -25,6 +27,8 @@ export default function App() {
           <Route path="/labs/:id" element={<LabViewPage />} />
           <Route path="/troubleshooting" element={<TroubleshootingPage />} />
           <Route path="/prova" element={<ProvaPage />} />
+          <Route path="/questionarios" element={<QuizzesPage />} />
+          <Route path="/aprender/:lessonId" element={<LearnLessonPage />} />
           <Route path="/conquistas" element={<AchievementsPage />} />
           <Route path="/config" element={<ConfigPage />} />
           <Route path="/viagem" element={<PacketJourneyPage />} />

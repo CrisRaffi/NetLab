@@ -25,6 +25,15 @@ export const DEVICE_GUIDES: Record<DeviceType, DeviceGuide> = {
       'Verifique o acesso com ping',
     ],
   },
+  hub: {
+    role: 'Repetidor de camada 1 (física): interliga dispositivos em um único domínio de colisão.',
+    how: 'Ao receber um quadro em qualquer porta, replica os bits para TODAS as outras portas (flooding). Não aprende MAC, não filtra e não tem IP próprio — todo o tráfego chega a todos, e cada placa de rede descarta o que não lhe interessa.',
+    config: [
+      'Conecte PCs e servidores direto nas portas',
+      'Não configura IP — só repete o sinal',
+      'Todos compartilham a mesma banda (half-duplex)',
+    ],
+  },
   switch: {
     role: 'Interliga dispositivos da mesma rede (camada 2).',
     how: 'Encaminha quadros pelo endereço MAC, aprendendo a porta de cada dispositivo. Não precisa de IP para funcionar na LAN.',

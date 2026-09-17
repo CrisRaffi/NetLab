@@ -17,6 +17,8 @@ import {
   Redo2,
   LayoutGrid,
   Grid3x3,
+  GraduationCap,
+  BookOpen,
 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { DevicePalette } from './DevicePalette';
@@ -25,6 +27,9 @@ import { PropertyPanel } from './PropertyPanel';
 import { Terminal } from './Terminal';
 import { PacketInspector } from './PacketInspector';
 import { ContextualHintOverlay } from './ContextualHint';
+import { StatusLegend } from './StatusLegend';
+import { GlossaryDialog } from './GlossaryDialog';
+import { TopologyQuiz } from './TopologyQuiz';
 import { useSimulatorStore } from '../../stores/useSimulatorStore';
 import { useTerminalStore } from '../../stores/useTerminalStore';
 import { NETWORK_EXAMPLES } from '../../data/examples';
@@ -90,7 +95,11 @@ export function SimulatorWorkspace({
         undo();
         return;
       }
-      if (mod && (e.key.toLowerCase() === 'y' || (e.key.toLowerCase() === 'z' && e.shiftKey))) {
+      if (
+        mod &&
+        (e.key.toLowerCase() === 'y' ||
+          (e.key.toLowerCase() === 'z' && e.shiftKey))
+      ) {
         e.preventDefault();
         redo();
         return;
@@ -139,6 +148,8 @@ export function SimulatorWorkspace({
   >(null);
   const [exampleIndex, setExampleIndex] = useState(0);
   const [gridMode, setGridMode] = useState(false);
+  const [quizOpen, setQuizOpen] = useState(false);
+  const [glossaryOpen, setGlossaryOpen] = useState(false);
   const [showHelp] = useState(true);
   const [propertyPanelOpen, setPropertyPanelOpen] = useState(true);
   const [bottomTab, setBottomTab] = useState<
@@ -214,8 +225,13 @@ export function SimulatorWorkspace({
   const handleContextAction = (action: string, deviceId: string) => {
     switch (action) {
       case 'rename': {
-        const device = useSimulatorStore.getState().topology.devices.find((d) => d.id === deviceId);
-        const name = window.prompt('Novo nome do equipamento', device?.name ?? '');
+        const device = useSimulatorStore
+          .getState()
+          .topology.devices.find((d) => d.id === deviceId);
+        const name = window.prompt(
+          'Novo nome do equipamento',
+          device?.name ?? '',
+        );
         if (name) renameDevice(deviceId, name.trim());
         break;
       }
@@ -278,8 +294,6 @@ export function SimulatorWorkspace({
 
   const renderSimulatorContent = () => (
     <div className="flex flex-col h-full">
-
-
       {/* Instructions */}
       {!showHelp && (
         <div className="flex items-center gap-5 px-4 py-2.5 bg-[#1C2538]/70 border-b border-[#273651]/25 text-xs text-[#94A3B8] shrink-0 overflow-x-auto">
@@ -336,9 +350,14 @@ export function SimulatorWorkspace({
             />
 
             <ContextualHintOverlay
-              device={topology.devices.find((d) => d.id === selectedDeviceIds[0]) ?? null}
+              device={
+                topology.devices.find((d) => d.id === selectedDeviceIds[0]) ??
+                null
+              }
               topology={topology}
             />
+
+            <StatusLegend />
 
             {/* Floating connect mode buttons over the canvas */}
             <div className="absolute top-3 right-3 z-20 flex items-center rounded-xl border border-[--color-border-primary]/25 bg-[#0D1424]/85 backdrop-blur-md p-1 gap-1 shadow-lg">
@@ -376,7 +395,11 @@ export function SimulatorWorkspace({
                 );
               })}
               <button
-                onClick={() => organizeLayout(selectedDeviceIds.length ? selectedDeviceIds : undefined)}
+                onClick={() =>
+                  organizeLayout(
+                    selectedDeviceIds.length ? selectedDeviceIds : undefined,
+                  )
+                }
                 title={
                   selectedDeviceIds.length
                     ? 'Organizar apenas os equipamentos selecionados'
@@ -389,7 +412,11 @@ export function SimulatorWorkspace({
               </button>
               <button
                 onClick={() => setGridMode((g) => !g)}
-                title={gridMode ? 'Desativar alinhamento ao grid' : 'Ativar alinhamento ao grid'}
+                title={
+                  gridMode
+                    ? 'Desativar alinhamento ao grid'
+                    : 'Ativar alinhamento ao grid'
+                }
                 className={clsx(
                   'flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium cursor-pointer transition-all duration-150',
                   gridMode
@@ -400,11 +427,30 @@ export function SimulatorWorkspace({
                 <Grid3x3 size={14} />
                 {gridMode ? 'Grid: on' : 'Grid: off'}
               </button>
-              {(selectedDeviceIds.length > 1 || selectedBlockIds.length > 1) && (
+              <button
+                onClick={() => setGlossaryOpen(true)}
+                title="Dicionário de termos de rede em linguagem simples"
+                className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium cursor-pointer transition-all duration-150 text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/[0.04]"
+              >
+                <BookOpen size={14} />
+                Glossário
+              </button>
+              {/* 
+              <button
+                onClick={() => setQuizOpen(true)}
+                title="Gerar exercícios a partir desta topologia"
+                className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium cursor-pointer transition-all duration-150 text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/[0.04]"
+              >
+                <GraduationCap size={14} />
+                Exercícios
+              </button>
+              */}
+              {(selectedDeviceIds.length > 1 ||
+                selectedBlockIds.length > 1) && (
                 <button
                   onClick={() => {
-                  removeSelection(selectedDeviceIds, selectedBlockIds);
-                }}
+                    removeSelection(selectedDeviceIds, selectedBlockIds);
+                  }}
                   title="Excluir todos os selecionados"
                   className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium cursor-pointer transition-all duration-150 text-[#F87171] hover:bg-[#F87171]/15"
                 >
@@ -540,9 +586,15 @@ export function SimulatorWorkspace({
               <button
                 onClick={() => setIsFullscreen((v) => !v)}
                 className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium cursor-pointer transition-all duration-150 text-[--color-accent-yellow] hover:text-[--color-text-primary] hover:bg-[--color-accent-yellow]/10"
-                title={isFullscreen ? 'Sair da tela cheia' : 'Entrar em tela cheia'}
+                title={
+                  isFullscreen ? 'Sair da tela cheia' : 'Entrar em tela cheia'
+                }
               >
-                {isFullscreen ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+                {isFullscreen ? (
+                  <Minimize2 size={13} />
+                ) : (
+                  <Maximize2 size={13} />
+                )}
               </button>
               <button
                 onClick={handleBottomToggle}
@@ -598,10 +650,32 @@ export function SimulatorWorkspace({
     return createPortal(
       <div className="fixed inset-0 z-50 bg-[--color-bg-primary] flex flex-col">
         {renderSimulatorContent()}
+        {quizOpen &&
+          createPortal(
+            <TopologyQuiz onClose={() => setQuizOpen(false)} />,
+            document.body,
+          )}
+        <GlossaryDialog
+          open={glossaryOpen}
+          onClose={() => setGlossaryOpen(false)}
+        />
       </div>,
       document.body,
     );
   }
 
-  return renderSimulatorContent();
+  return (
+    <>
+      {renderSimulatorContent()}
+      {quizOpen &&
+        createPortal(
+          <TopologyQuiz onClose={() => setQuizOpen(false)} />,
+          document.body,
+        )}
+      <GlossaryDialog
+        open={glossaryOpen}
+        onClose={() => setGlossaryOpen(false)}
+      />
+    </>
+  );
 }

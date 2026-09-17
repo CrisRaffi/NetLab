@@ -1,5 +1,6 @@
 import type { Device } from '../../types';
 import { DEVICE_ICONS, DEVICE_COLORS } from './deviceIcons';
+import { Network } from 'lucide-react';
 
 export const DEVICE_BOX_SIZE = 80;
 
@@ -32,8 +33,12 @@ export function DeviceNode({
   onDoubleClick,
   onContextMenu,
 }: DeviceNodeProps) {
-  const Icon = DEVICE_ICONS[device.type];
-  const colors = DEVICE_COLORS[device.type];
+  const Icon = DEVICE_ICONS[device.type] ?? Network;
+  const colors = DEVICE_COLORS[device.type] ?? {
+    stroke: '#94A3B8',
+    fill: 'rgba(100,116,139,0.14)',
+    text: '#A9BFD6',
+  };
   const half = DEVICE_BOX_SIZE / 2;
   const primaryInterface = device.interfaces.find(i => i.ip);
   const hasUpWithIp = device.interfaces.some(i => i.status === 'up' && i.ip);

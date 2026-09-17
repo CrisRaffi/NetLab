@@ -25,6 +25,15 @@ function isSwitch(device: Device) {
   return device.type === 'switch';
 }
 
+function isHub(device: Device) {
+  return device.type === 'hub';
+}
+
+/** Dispositivos transparentes em L2 (encaminham quadros sem IP próprio). */
+function isL2Bridge(device: Device) {
+  return isSwitch(device) || isHub(device);
+}
+
 export function computeL2Neighbors(topology: Topology): Map<string, Set<string>> {
   const deviceById = new Map(topology.devices.map(d => [d.id, d]));
   const neighbors = new Map<string, Set<string>>();
@@ -36,7 +45,7 @@ export function computeL2Neighbors(topology: Topology): Map<string, Set<string>>
       .map(c => (c.deviceId1 === deviceId ? c.deviceId2 : c.deviceId1));
 
   for (const dev of topology.devices) {
-    if (isSwitch(dev)) continue;
+    if (isL2Bridge(dev)) continue;
     const visited = new Set<string>([dev.id]);
     const queue = [...connectionsFrom(dev.id)];
     while (queue.length) {
@@ -45,7 +54,7 @@ export function computeL2Neighbors(topology: Topology): Map<string, Set<string>>
       visited.add(id);
       const node = deviceById.get(id);
       if (!node) continue;
-      if (node.type === 'switch') {
+      if (isL2Bridge(node)) {
         queue.push(...connectionsFrom(id));
       } else if (node.type === 'router' || node.type === 'firewall' || node.type === 'access_point' || node.type === 'core') {
         // Roteador/AP funcionam como ponte nas portas LAN (estilização de roteador doméstico):
@@ -86,7 +95,7 @@ export function findL2Path(topology: Topology, from: string, to: string): string
       if (visited.has(nb)) continue;
       const node = deviceById.get(nb);
       if (!node) continue;
-      if (node.type !== 'switch' && node.type !== 'router' && node.type !== 'firewall' && node.type !== 'access_point' && node.type !== 'core' && nb !== to) continue;
+      if (!isL2Bridge(node) && node.type !== 'router' && node.type !== 'firewall' && node.type !== 'access_point' && node.type !== 'core' && nb !== to) continue;
       visited.add(nb);
       prev.set(nb, cur);
       queue.push(nb);
@@ -211,6 +220,7 @@ export function findRoute(topology: Topology, sourceDeviceId: string, targetIp: 
 export interface Transmission {
   packet: SimulatedPacket;
   points: { x: number; y: number }[];
+  branches?: FloodBranch[];
 }
 
 export interface PingResult {
@@ -221,8 +231,7 @@ export interface PingResult {
   reason?: RouteError;
 }
 
-function pathPointsFor(topology: Topology, routePath: string[], reverse = false): { x: number; y: number }[] {
-  const deviceById = new Map(topology.devices.map(d => [d.id, d]));
+function expandL2Path(topology: Topology, routePath: string[]): string[] {
   const full: string[] = [];
   for (let i = 0; i < routePath.length - 1; i++) {
     const seg = findL2Path(topology, routePath[i], routePath[i + 1]);
@@ -231,11 +240,59 @@ function pathPointsFor(topology: Topology, routePath: string[], reverse = false)
     else full.push(...effective);
   }
   if (full.length === 0) full.push(...routePath);
-  const points = full.map(id => {
+  return full;
+}
+
+export interface FloodBranch {
+  points: { x: number; y: number }[];
+  startFraction: number;
+}
+
+export interface PathWithFlooding {
+  points: { x: number; y: number }[];
+  branches: FloodBranch[];
+}
+
+/**
+ * Calcula o caminho principal e os ramos de flooding de um HUB:
+ * ao chegar no hub, o quadro é replicado para TODAS as portas exceto a
+ * de entrada — os vizinhos que não estão no caminho principal recebem
+ * um ramo de animação simultâneo (o NIC deles descarta o quadro).
+ */
+export function pathWithFlooding(topology: Topology, routePath: string[], reverse = false): PathWithFlooding {
+  const deviceById = new Map(topology.devices.map(d => [d.id, d]));
+  const ordered = reverse ? [...expandL2Path(topology, routePath)].reverse() : expandL2Path(topology, routePath);
+
+  const points = ordered.map(id => {
     const d = deviceById.get(id);
     return d ? { x: d.position.x, y: d.position.y } : { x: 0, y: 0 };
   });
-  return reverse ? points.reverse() : points;
+
+  const branches: FloodBranch[] = [];
+  const total = Math.max(1, ordered.length - 1);
+
+  for (let i = 1; i < ordered.length - 1; i++) {
+    const hub = deviceById.get(ordered[i]);
+    if (!hub || !isHub(hub)) continue;
+    const prevId = ordered[i - 1];
+    const nextId = ordered[i + 1];
+
+    const peerIds = topology.connections
+      .filter(c => c.deviceId1 === hub.id || c.deviceId2 === hub.id)
+      .map(c => (c.deviceId1 === hub.id ? c.deviceId2 : c.deviceId1));
+
+    for (const pid of peerIds) {
+      if (pid === prevId || pid === nextId) continue;
+      const peer = deviceById.get(pid);
+      if (!peer) continue;
+      branches.push({
+        points: [hub.position, peer.position],
+        startFraction: i / total,
+      });
+    }
+  }
+
+  return { points, branches };
 }
 
 export function ping(topology: Topology, sourceDeviceId: string, targetIp: string): PingResult {
@@ -320,13 +377,17 @@ export function ping(topology: Topology, sourceDeviceId: string, targetIp: strin
     source.interfaces.find(i => i.status === 'up' && i.ip))!;
 
   if (nextHopEntry && nextHopIp !== arpSource.ip) {
+    const arpForward = pathWithFlooding(topology, [sourceDeviceId, nextHopEntry.deviceId]);
+    const arpReturn = pathWithFlooding(topology, [sourceDeviceId, nextHopEntry.deviceId], true);
     transmissions.push({
       packet: buildArpRequest(arpSource, arpSource.ip!, nextHopIp),
-      points: pathPointsFor(topology, [sourceDeviceId, nextHopEntry.deviceId]),
+      points: arpForward.points,
+      branches: arpForward.branches,
     });
     transmissions.push({
       packet: buildArpReply(nextHopEntry.iface, nextHopIp, arpSource.mac, arpSource.ip!),
-      points: pathPointsFor(topology, [sourceDeviceId, nextHopEntry.deviceId], true),
+      points: arpReturn.points,
+      branches: arpReturn.branches,
     });
     arpLearned.push({
       deviceId: sourceDeviceId,
@@ -344,15 +405,20 @@ export function ping(topology: Topology, sourceDeviceId: string, targetIp: strin
   }).length;
   const ttl = Math.max(1, 128 - routers);
 
+  const request = pathWithFlooding(topology, route.path);
+
   transmissions.push({
     packet: buildIcmpEcho('request', arpSource.mac, nextHopMac, arpSource.ip!, targetIp, ttl + routers, 1, 0x0100),
-    points: pathPointsFor(topology, route.path),
+    points: request.points,
+    branches: request.branches,
   });
 
   if (targetIface) {
+    const reply = pathWithFlooding(topology, route.path, true);
     transmissions.push({
       packet: buildIcmpEcho('reply', targetIface.mac, nextHopMac, targetIp, srcIface.ip!, ttl, 1, 0x0100),
-      points: pathPointsFor(topology, route.path, true),
+      points: reply.points,
+      branches: reply.branches,
     });
   }
 
@@ -417,7 +483,7 @@ export function traceroute(topology: Topology, sourceDeviceId: string, targetIp:
           const targetIface = ipIndex.get(targetIp)?.iface;
           return buildIcmpEcho('request', srcIface.mac, targetIface?.mac ?? 'FF:FF:FF:FF:FF:FF', srcIface.ip!, targetIp, 1, 1, 0x0100);
         })(),
-        points: pathPointsFor(topology, route.path),
+        ...pathWithFlooding(topology, route.path),
       }]
     : [];
 

@@ -39,6 +39,12 @@ function progressOf(anim: ActiveAnimation, now: number): number {
   return Math.min(1, elapsed / anim.duration);
 }
 
+function branchProgressOf(branch: { startFraction: number }, progress: number): number {
+  if (branch.startFraction >= 1) return -1;
+  if (progress < branch.startFraction) return -1;
+  return (progress - branch.startFraction) / (1 - branch.startFraction);
+}
+
 export function PacketAnimator() {
   const animations = useSimulatorStore(s => s.animations);
   const [frameTime, setFrameTime] = useState(0);
@@ -66,20 +72,33 @@ export function PacketAnimator() {
         const { x, y } = pointAt(anim.points, progress);
         const color = PACKET_COLORS[anim.packet.type] ?? '#6366F1';
         return (
-          <g key={anim.id} transform={`translate(${x} ${y})`}>
-            <circle r={14} fill={color} opacity={0.15} />
-            <circle r={7} fill={color} stroke="#0A0E1A" strokeWidth={1.5} />
-            <text
-              x={0}
-              y={-13}
-              textAnchor="middle"
-              fontSize={9}
-              fontFamily="var(--font-mono)"
-              fill={color}
-            >
-              {PACKET_LABELS[anim.packet.type] ?? anim.packet.type.toUpperCase()}
-              <title>{PROTOCOL_TIPS[PACKET_LABELS[anim.packet.type] ?? anim.packet.type.toUpperCase()]}</title>
-            </text>
+          <g key={anim.id}>
+            <g transform={`translate(${x} ${y})`}>
+              <circle r={14} fill={color} opacity={0.15} />
+              <circle r={7} fill={color} stroke="#0A0E1A" strokeWidth={1.5} />
+              <text
+                x={0}
+                y={-13}
+                textAnchor="middle"
+                fontSize={9}
+                fontFamily="var(--font-mono)"
+                fill={color}
+              >
+                {PACKET_LABELS[anim.packet.type] ?? anim.packet.type.toUpperCase()}
+                <title>{PROTOCOL_TIPS[PACKET_LABELS[anim.packet.type] ?? anim.packet.type.toUpperCase()]}</title>
+              </text>
+            </g>
+            {(anim.branches ?? []).map((branch, bi) => {
+              const bProgress = branchProgressOf(branch, progress);
+              if (bProgress < 0 || bProgress >= 1) return null;
+              const bp = pointAt(branch.points, bProgress);
+              return (
+                <g key={`${anim.id}-branch-${bi}`} transform={`translate(${bp.x} ${bp.y})`}>
+                  <circle r={14} fill={color} opacity={0.08} />
+                  <circle r={6} fill={color} stroke="#0A0E1A" strokeWidth={1.5} />
+                </g>
+              );
+            })}
           </g>
         );
       })}

@@ -1,4 +1,4 @@
-export type DeviceType = 'pc' | 'server' | 'switch' | 'router' | 'access_point' | 'firewall' | 'printer' | 'ip_camera' | 'ip_phone' | 'cloud' | 'core';
+export type DeviceType = 'pc' | 'server' | 'hub' | 'switch' | 'router' | 'access_point' | 'firewall' | 'printer' | 'ip_camera' | 'ip_phone' | 'cloud' | 'core';
 
 export type ConnectionType = 'ethernet' | 'crossover' | 'fiber' | 'wireless';
 export type ConnectionStatus = 'connected' | 'disconnected' | 'negotiating';

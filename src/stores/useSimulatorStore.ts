@@ -11,13 +11,14 @@ import type {
 } from '../types';
 import { generateMac } from '../utils/ip';
 import type { ArpEntry } from '../engine/protocols/arp';
-import type { Transmission } from '../engine/simulation/network';
+import type { Transmission, FloodBranch } from '../engine/simulation/network';
 import { normalizeTopology } from '../engine/lab';
 
 export interface ActiveAnimation {
   id: string;
   packet: SimulatedPacket;
   points: { x: number; y: number }[];
+  branches?: FloodBranch[];
   duration: number;
   delay: number;
   startedAt: number;
@@ -26,6 +27,7 @@ export interface ActiveAnimation {
 export const DEVICE_LABELS: Record<DeviceType, string> = {
   pc: 'PC',
   server: 'Servidor',
+  hub: 'Hub',
   switch: 'Switch',
   router: 'Roteador',
   access_point: 'Access Point',
@@ -40,6 +42,7 @@ export const DEVICE_LABELS: Record<DeviceType, string> = {
 export const DEVICE_PREFIX: Record<DeviceType, string> = {
   pc: 'PC',
   server: 'SRV',
+  hub: 'HUB',
   switch: 'SW',
   router: 'R',
   access_point: 'AP',
@@ -54,6 +57,7 @@ export const DEVICE_PREFIX: Record<DeviceType, string> = {
 const INTERFACE_COUNT: Record<DeviceType, number> = {
   pc: 1,
   server: 1,
+  hub: 8,
   switch: 8,
   router: 4,
   access_point: 1,
@@ -970,6 +974,7 @@ export const useSimulatorStore = create<SimulatorState>()(
           id: `anim-${t.packet.id}`,
           packet: t.packet,
           points: t.points,
+          branches: t.branches,
           duration: 900 + Math.max(0, t.points.length - 2) * 160,
           delay: i * 450,
           startedAt: performance.now(),
