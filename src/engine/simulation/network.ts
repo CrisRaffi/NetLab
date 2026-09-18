@@ -2,6 +2,7 @@ import type { Device, Topology, SimulatedPacket, NetworkInterface } from '../../
 import { isSameSubnet, maskToCidr, isValidIp, getNetworkAddress } from '../../utils/ip';
 import { buildArpRequest, buildArpReply, buildIcmpEcho } from './PacketFactory';
 import type { ArpEntry } from '../protocols/arp';
+import type { DhcpLeaseResult } from './dhcp';
 
 export interface IpIndexEntry {
   deviceId: string;
@@ -34,35 +35,99 @@ function isL2Bridge(device: Device) {
   return isSwitch(device) || isHub(device);
 }
 
+function vlanValue(device: Device | undefined, ifaceId: string): number {
+  return device?.interfaces.find(i => i.id === ifaceId)?.vlan ?? 0;
+}
+
+/** Sem VLAN configurada = VLAN 1 (default). */
+function effVlan(v: number): number {
+  return v > 0 ? v : 1;
+}
+
+/**
+ * Determina a VLAN efetiva de um enlace entre duas interfaces.
+ * Retorna -1 quando as duas pontas têm VLANs explícitas diferentes
+ * (enlace bloqueado por incompatibilidade de VLAN).
+ */
+function linkVlan(
+  deviceById: Map<string, Device>,
+  aDev: string,
+  aIface: string,
+  bDev: string,
+  bIface: string,
+): number {
+  const a = vlanValue(deviceById.get(aDev), aIface);
+  const b = vlanValue(deviceById.get(bDev), bIface);
+  if (a > 0 && b > 0 && a !== b) return -1;
+  return Math.max(effVlan(a), effVlan(b));
+}
+
+interface L2QueueItem {
+  id: string;
+  tag: number;
+}
+
+/** Vizinhos alcançáveis em L2 respeitando VLANs (switch filtra portas por VLAN). */
+function l2Hops(
+  topology: Topology,
+  deviceById: Map<string, Device>,
+  fromId: string,
+  tag: number,
+): L2QueueItem[] {
+  const from = deviceById.get(fromId);
+  if (!from) return [];
+  const out: L2QueueItem[] = [];
+
+  for (const c of topology.connections) {
+    if (c.deviceId1 !== fromId && c.deviceId2 !== fromId) continue;
+    const peerId = c.deviceId1 === fromId ? c.deviceId2 : c.deviceId1;
+    const myIface = c.deviceId1 === fromId ? c.interfaceId1 : c.interfaceId2;
+    const peerIface = c.deviceId1 === fromId ? c.interfaceId2 : c.interfaceId1;
+
+    const eff = linkVlan(deviceById, fromId, myIface, peerId, peerIface);
+    if (eff === -1) continue;
+
+    if (from.type === 'switch' && tag > 0 && eff !== tag) continue;
+    if (from.type === 'core' && tag > 0 && eff !== tag) continue;
+
+    const peer = deviceById.get(peerId);
+    const nextTag = peer && (peer.type === 'switch' || peer.type === 'core') ? eff : 0;
+    out.push({ id: peerId, tag: nextTag });
+  }
+
+  return out;
+}
+
 export function computeL2Neighbors(topology: Topology): Map<string, Set<string>> {
   const deviceById = new Map(topology.devices.map(d => [d.id, d]));
   const neighbors = new Map<string, Set<string>>();
   for (const d of topology.devices) neighbors.set(d.id, new Set());
 
-  const connectionsFrom = (deviceId: string) =>
-    topology.connections
-      .filter(c => c.deviceId1 === deviceId || c.deviceId2 === deviceId)
-      .map(c => (c.deviceId1 === deviceId ? c.deviceId2 : c.deviceId1));
-
   for (const dev of topology.devices) {
     if (isL2Bridge(dev)) continue;
-    const visited = new Set<string>([dev.id]);
-    const queue = [...connectionsFrom(dev.id)];
+    const visited = new Set<string>();
+    const queue: L2QueueItem[] = [{ id: dev.id, tag: 0 }];
     while (queue.length) {
-      const id = queue.shift()!;
-      if (visited.has(id)) continue;
-      visited.add(id);
-      const node = deviceById.get(id);
+      const cur = queue.shift()!;
+      if (visited.has(cur.id)) continue;
+      visited.add(cur.id);
+      const node = deviceById.get(cur.id);
       if (!node) continue;
-      if (isL2Bridge(node)) {
-        queue.push(...connectionsFrom(id));
-      } else if (node.type === 'router' || node.type === 'firewall' || node.type === 'access_point' || node.type === 'core') {
-        // Roteador/AP funcionam como ponte nas portas LAN (estilização de roteador doméstico):
-        // visíveis como vizinhos (gateway) e transparentes na camada 2.
-        neighbors.get(dev.id)!.add(id);
-        queue.push(...connectionsFrom(id));
-      } else {
-        neighbors.get(dev.id)!.add(id);
+
+      for (const hop of l2Hops(topology, deviceById, cur.id, cur.tag)) {
+        const peer = deviceById.get(hop.id);
+        if (!peer || visited.has(hop.id)) continue;
+
+        if (isL2Bridge(peer)) {
+          queue.push(hop);
+        } else if (peer.type === 'router' || peer.type === 'firewall' || peer.type === 'access_point' || peer.type === 'core') {
+          // Roteador/AP funcionam como ponte nas portas LAN (estilização de roteador doméstico):
+          // visíveis como vizinhos (gateway) e transparentes na camada 2.
+          neighbors.get(dev.id)!.add(hop.id);
+          queue.push(hop);
+        } else {
+          neighbors.get(dev.id)!.add(hop.id);
+        }
       }
     }
   }
@@ -80,25 +145,29 @@ export function findL2Path(topology: Topology, from: string, to: string): string
   if (from === to) return [from];
   const deviceById = new Map(topology.devices.map(d => [d.id, d]));
   const prev = new Map<string, string>();
-  const visited = new Set<string>([from]);
-  const queue = [from];
-
-  const connectionsFrom = (deviceId: string) =>
-    topology.connections
-      .filter(c => c.deviceId1 === deviceId || c.deviceId2 === deviceId)
-      .map(c => (c.deviceId1 === deviceId ? c.deviceId2 : c.deviceId1));
+  const visited = new Set<string>();
+  const queue: L2QueueItem[] = [{ id: from, tag: 0 }];
 
   while (queue.length) {
     const cur = queue.shift()!;
-    if (cur === to) break;
-    for (const nb of connectionsFrom(cur)) {
-      if (visited.has(nb)) continue;
-      const node = deviceById.get(nb);
+    if (visited.has(cur.id)) continue;
+    visited.add(cur.id);
+    if (cur.id === to) break;
+
+    for (const hop of l2Hops(topology, deviceById, cur.id, cur.tag)) {
+      const node = deviceById.get(hop.id);
       if (!node) continue;
-      if (!isL2Bridge(node) && node.type !== 'router' && node.type !== 'firewall' && node.type !== 'access_point' && node.type !== 'core' && nb !== to) continue;
-      visited.add(nb);
-      prev.set(nb, cur);
-      queue.push(nb);
+      if (visited.has(hop.id)) continue;
+      if (
+        !isL2Bridge(node) &&
+        node.type !== 'router' &&
+        node.type !== 'firewall' &&
+        node.type !== 'access_point' &&
+        node.type !== 'core' &&
+        hop.id !== to
+      ) continue;
+      prev.set(hop.id, cur.id);
+      queue.push(hop);
     }
   }
 
@@ -521,15 +590,17 @@ export function getRoutingTable(topology: Topology, deviceId: string): string[] 
   return lines;
 }
 
-export function formatIpconfig(device: Device, all = false): string[] {
+export function formatIpconfig(device: Device, all = false, leases: DhcpLeaseResult[] = []): string[] {
   const lines: string[] = [];
   const configured = device.interfaces.filter(i => i.ip);
+  const leaseFor = (ifaceId: string) => leases.find(l => l.interfaceId === ifaceId);
 
   if (configured.length === 0) {
     return ['Nenhum adaptador de rede possui endereço IP configurado.', '', 'Use o painel de propriedades para configurar uma interface.'];
   }
 
   for (const iface of configured) {
+    const lease = leaseFor(iface.id);
     lines.push(`Adaptador: ${iface.name}`);
     lines.push(`   Endereço IPv4. . . . . . . . . . : ${iface.ip}`);
     lines.push(`   Máscara de Sub-rede. . . . . . . : ${iface.subnetMask ?? '255.255.255.0'}`);
@@ -540,7 +611,12 @@ export function formatIpconfig(device: Device, all = false): string[] {
     if (all) {
       lines.push(`   Endereço Físico. . . . . . . . . : ${iface.mac}`);
       lines.push(`   Status. . . . . . . . . . . . . : ${iface.status === 'up' ? 'Conectado' : 'Desconectado'}`);
-      lines.push('   DHCP Habilitado . . . . . . . . : Não');
+      lines.push(`   DHCP Habilitado . . . . . . . . : ${lease ? 'Sim' : 'Não'}`);
+      if (lease) {
+        lines.push(`   Servidor DHCP. . . . . . . . . . : ${lease.serverIp} (${lease.networkName})`);
+        lines.push(`   Lease Obtido em. . . . . . . . . : ${lease.ip}`);
+        lines.push(`   Lease Expira em. . . . . . . . . : em ${lease.leaseTime} s`);
+      }
     }
     lines.push('');
   }

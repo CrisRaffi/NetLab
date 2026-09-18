@@ -12,6 +12,7 @@ import type {
 import { generateMac } from '../utils/ip';
 import type { ArpEntry } from '../engine/protocols/arp';
 import type { Transmission, FloodBranch } from '../engine/simulation/network';
+import type { DhcpLeaseResult } from '../engine/simulation/dhcp';
 import { normalizeTopology } from '../engine/lab';
 
 export interface ActiveAnimation {
@@ -157,6 +158,16 @@ export function createDefaultTopology(): Topology {
   };
 }
 
+export function createEmptyTopology(): Topology {
+  return {
+    id: `empty-${Date.now()}`,
+    name: 'Laboratório Vazio',
+    devices: [],
+    connections: [],
+    blocks: [],
+  };
+}
+
 interface SimulatorState {
   topology: Topology;
   selectedDeviceIds: string[];
@@ -173,6 +184,9 @@ interface SimulatorState {
     timestamp: number;
   }[];
   arpTables: Record<string, ArpEntry[]>;
+  dhcpLeases: DhcpLeaseResult[];
+  applyDhcpLease: (lease: DhcpLeaseResult) => void;
+  applyDhcpRelease: (deviceId: string, interfaceId: string) => void;
   packets: SimulatedPacket[];
   selectedPacketId: string | null;
   animations: ActiveAnimation[];
@@ -189,6 +203,7 @@ interface SimulatorState {
 
   loadTopology: (topology: Topology) => void;
   resetTopology: () => void;
+  clearBoard: () => void;
   addDevice: (type: DeviceType, position: { x: number; y: number }) => void;
   removeDevice: (deviceId: string) => void;
   removeSelection: (deviceIds: string[], blockIds: string[]) => void;
@@ -237,6 +252,7 @@ interface SimulatorState {
   ) => void;
   toggleInterfaceStatus: (deviceId: string, interfaceId: string) => void;
   updateRoutes: (deviceId: string, routes: Route[]) => void;
+  updateDeviceConfig: (deviceId: string, config: Partial<Device['config']>) => void;
 
   logPacket: (from: string, to: string, type: string) => void;
   clearPacketLog: () => void;
@@ -364,6 +380,7 @@ export const useSimulatorStore = create<SimulatorState>()(
       copiedDeviceIds: [],
       packetLog: [],
       arpTables: {},
+      dhcpLeases: [],
       packets: [],
       selectedPacketId: null,
       animations: [],
@@ -380,6 +397,7 @@ export const useSimulatorStore = create<SimulatorState>()(
           connectingFromId: null,
           connectType: null,
           arpTables: {},
+          dhcpLeases: [],
           packets: [],
           selectedPacketId: null,
           animations: [],
@@ -398,6 +416,26 @@ export const useSimulatorStore = create<SimulatorState>()(
           connectType: null,
           packetLog: [],
           arpTables: {},
+          dhcpLeases: [],
+          packets: [],
+          selectedPacketId: null,
+          animations: [],
+          undoStack: [],
+          redoStack: [],
+          deviceValidation: {},
+        }),
+
+      clearBoard: () =>
+        set({
+          topology: createEmptyTopology(),
+          selectedDeviceIds: [],
+          selectedConnectionId: null,
+          selectedBlockIds: [],
+          connectingFromId: null,
+          connectType: null,
+          packetLog: [],
+          arpTables: {},
+          dhcpLeases: [],
           packets: [],
           selectedPacketId: null,
           animations: [],
@@ -951,6 +989,22 @@ export const useSimulatorStore = create<SimulatorState>()(
         });
       },
 
+      updateDeviceConfig: (deviceId, config) => {
+        const { topology, undoStack } = get();
+        set({
+          topology: {
+            ...topology,
+            devices: topology.devices.map((d) =>
+              d.id === deviceId
+                ? { ...d, config: { ...d.config, ...config } }
+                : d,
+            ),
+          },
+          undoStack: pushUndo(topology, undoStack),
+          redoStack: [],
+        });
+      },
+
       logPacket: (from, to, type) =>
         set((state) => ({
           packetLog: [
@@ -1012,6 +1066,71 @@ export const useSimulatorStore = create<SimulatorState>()(
         });
       },
 
+      applyDhcpLease: (lease) => {
+        const { topology, dhcpLeases, undoStack } = get();
+        const nextLeases = dhcpLeases.filter(
+          (l) => !(l.deviceId === lease.deviceId && l.interfaceId === lease.interfaceId),
+        );
+        set({
+          dhcpLeases: [...nextLeases, lease],
+          topology: {
+            ...topology,
+            devices: topology.devices.map((d) =>
+              d.id === lease.deviceId
+                ? {
+                    ...d,
+                    interfaces: d.interfaces.map((i) =>
+                      i.id === lease.interfaceId
+                        ? {
+                            ...i,
+                            ip: lease.ip,
+                            subnetMask: lease.subnetMask,
+                            gateway: lease.gateway || undefined,
+                            dns: lease.dns || undefined,
+                          }
+                        : i,
+                    ),
+                  }
+                : d,
+            ),
+          },
+          undoStack: pushUndo(topology, undoStack),
+          redoStack: [],
+        });
+      },
+
+      applyDhcpRelease: (deviceId, interfaceId) => {
+        const { topology, dhcpLeases, undoStack } = get();
+        set({
+          dhcpLeases: dhcpLeases.filter(
+            (l) => !(l.deviceId === deviceId && l.interfaceId === interfaceId),
+          ),
+          topology: {
+            ...topology,
+            devices: topology.devices.map((d) =>
+              d.id === deviceId
+                ? {
+                    ...d,
+                    interfaces: d.interfaces.map((i) =>
+                      i.id === interfaceId
+                        ? {
+                            ...i,
+                            ip: undefined,
+                            subnetMask: undefined,
+                            gateway: undefined,
+                            dns: undefined,
+                          }
+                        : i,
+                    ),
+                  }
+                : d,
+            ),
+          },
+          undoStack: pushUndo(topology, undoStack),
+          redoStack: [],
+        });
+      },
+
       undo: () => {
         const { undoStack, topology, redoStack } = get();
         if (undoStack.length === 0) return;
@@ -1051,13 +1170,14 @@ export const useSimulatorStore = create<SimulatorState>()(
     }),
     {
       name: 'netlab-simulator',
-      partialize: (state) => ({ topology: state.topology }),
+      partialize: (state) => ({ topology: state.topology, dhcpLeases: state.dhcpLeases }),
       merge: (persisted: unknown, current: SimulatorState): SimulatorState => ({
         ...current,
         ...(persisted as Record<string, unknown>),
         topology: normalizeTopology(
           (persisted as { topology?: Topology })?.topology ?? current.topology,
         ),
+        dhcpLeases: (persisted as { dhcpLeases?: DhcpLeaseResult[] })?.dhcpLeases ?? [],
       }),
     },
   ),

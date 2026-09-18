@@ -31,9 +31,26 @@ export interface Route {
   interfaceName: string;
 }
 
+export interface DhcpConfig {
+  enabled: boolean;
+  rangeStart: string;
+  rangeEnd: string;
+  subnetMask: string;
+  gateway: string;
+  dns?: string;
+  leaseTime: number;
+}
+
+export interface DnsRecord {
+  name: string;
+  ip: string;
+}
+
 export interface DeviceConfig {
   hostname: string;
   routes: Route[];
+  dhcp?: DhcpConfig;
+  dnsRecords?: DnsRecord[];
 }
 
 export interface Device {

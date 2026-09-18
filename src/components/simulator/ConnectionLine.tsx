@@ -8,6 +8,26 @@ const STATUS_COLORS: Record<Connection['status'], string> = {
 
 const WIRELESS_COLOR = '#10B981';
 
+/*
+ * Hierarquia dos equipamentos: o tráfego "desce" de onde vem a Internet
+ * (nuvem) para os dispositivos finais. Usado para orientar a direção das
+ * bolinhas de tráfego nos cabos, refletindo o fluxo lógico da rede.
+ */
+const DEV_RANK: Record<string, number> = {
+  cloud: 0,
+  core: 1,
+  router: 1,
+  firewall: 1,
+  server: 2,
+  access_point: 2,
+  switch: 3,
+  hub: 3,
+  printer: 4,
+  ip_camera: 4,
+  ip_phone: 4,
+  pc: 4,
+};
+
 interface ConnectionLineProps {
   connection: Connection;
   devices: Device[];
@@ -71,6 +91,33 @@ export function ConnectionLine({ connection, devices, selected, onSelect }: Conn
           />
         )}
       </line>
+
+      {/* Traffic flow dots (bolinhas indicando tráfego ativo) */}
+      {linkUp && status === 'connected' && (
+        <line
+            x1={dev1.position.x}
+            y1={dev1.position.y}
+            x2={dev2.position.x}
+            y2={dev2.position.y}
+            stroke={color}
+            strokeWidth={3.5}
+            strokeLinecap="round"
+            strokeDasharray="0.01 26"
+            pointerEvents="none"
+            opacity={selected ? 0.95 : 0.7}
+          >
+          <animate
+            attributeName="stroke-dashoffset"
+            values={
+              (DEV_RANK[dev2.type] ?? 5) < (DEV_RANK[dev1.type] ?? 5)
+                ? '0;26.01'
+                : '0;-26.01'
+            }
+            dur="1.6s"
+            repeatCount="indefinite"
+          />
+        </line>
+      )}
 
       {/* Delete indicator when selected */}
       {selected && (

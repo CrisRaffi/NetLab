@@ -1,4 +1,4 @@
-const CACHE = 'netlab-v1';
+const CACHE = 'netlab-v2';
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['/'])));

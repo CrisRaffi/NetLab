@@ -32,13 +32,15 @@ import type {
   Device,
   Route as NetworkRoute,
   DeviceType,
+  DhcpConfig,
+  DnsRecord,
 } from '../../types';
 import type { ArpEntry } from '../../engine/protocols/arp';
 import { clsx } from 'clsx';
 import { useRef, useState } from 'react';
 import { IpCalculator } from './IpCalculator';
 
-type PanelTab = 'config' | 'interfaces' | 'ports' | 'rotas';
+type PanelTab = 'config' | 'interfaces' | 'ports' | 'rotas' | 'services';
 
 /*
  * Constante fora do componente para que o selector nunca crie
@@ -48,11 +50,14 @@ const EMPTY_ARP: ArpEntry[] = [];
 
 function getTabs(type: DeviceType): PanelTab[] {
   switch (type) {
+    case 'server':
+      return ['config', 'interfaces', 'services'];
     case 'switch':
     case 'hub':
       return ['config', 'ports'];
     case 'router':
     case 'firewall':
+    case 'core':
       return ['config', 'interfaces', 'rotas'];
     default:
       return ['config', 'interfaces'];
@@ -392,6 +397,27 @@ function InterfaceConfig({
             if (v && !isValidIp(v)) return 'IP fora do range (0–255)';
           }}
         />
+        <label className="block">
+          <span className="text-[9px] uppercase tracking-wider text-[--color-text-muted]" title="VLAN (802.1Q) — agrupa equipamentos em redes virtuais isoladas">
+            VLAN
+          </span>
+          <select
+            value={iface.vlan ? String(iface.vlan) : ''}
+            onChange={(e) =>
+              updateInterface(device.id, iface.id, {
+                vlan: e.target.value ? Number(e.target.value) : undefined,
+              })
+            }
+            className="mt-1 w-full bg-[#0D1424] border border-[--color-border-primary]/70 rounded-lg px-2.5 py-1.5 text-xs font-mono text-[--color-text-primary] focus:outline-none focus:ring-1 focus:border-[--color-accent-blue] focus:ring-[--color-accent-blue]/20"
+          >
+            <option value="">Padrão (sem VLAN)</option>
+            <option value={10}>VLAN 10</option>
+            <option value={20}>VLAN 20</option>
+            <option value={30}>VLAN 30</option>
+            <option value={40}>VLAN 40</option>
+            <option value={50}>VLAN 50</option>
+          </select>
+        </label>
         <button
           onClick={autoConfigure}
           title="Auto configurar IP/Máscara/Gateway conforme a rede conectada"
@@ -410,6 +436,7 @@ function SwitchPorts({ device }: { device: Device }) {
   const toggleInterfaceStatus = useSimulatorStore(
     (s) => s.toggleInterfaceStatus,
   );
+  const updateInterface = useSimulatorStore((s) => s.updateInterface);
 
   return (
     <div className="rounded-xl border border-[--color-border-primary]/50 bg-[#111A2C]/40 p-3">
@@ -441,6 +468,7 @@ function SwitchPorts({ device }: { device: Device }) {
                     ? 'border-[--color-border-primary]/60 bg-[#0D1424]/60 opacity-55 hover:opacity-80'
                     : 'border-[--color-border-primary]/60 bg-[#0D1424]/60 hover:bg-[--color-bg-hover]/50',
               )}
+              title="Clique para ativar/desativar a porta"
             >
               <span
                 className={clsx(
@@ -452,7 +480,7 @@ function SwitchPorts({ device }: { device: Device }) {
                       : 'bg-[--color-text-muted]/50',
                 )}
               />
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="text-[10px] font-mono text-[--color-text-secondary] truncate">
                   {iface.name.replace('FastEthernet', 'Fa')}
                 </p>
@@ -462,12 +490,34 @@ function SwitchPorts({ device }: { device: Device }) {
                   </p>
                 )}
               </div>
+              <span
+                onClick={(e) => e.stopPropagation()}
+                className="ml-auto shrink-0"
+                title="VLAN da porta"
+              >
+                <select
+                  value={iface.vlan ? String(iface.vlan) : ''}
+                  onChange={(e) =>
+                    updateInterface(device.id, iface.id, {
+                      vlan: e.target.value ? Number(e.target.value) : undefined,
+                    })
+                  }
+                  className="bg-[#0D1424] border border-[--color-border-primary]/50 rounded text-[9px] font-mono text-[--color-text-muted] focus:outline-none cursor-pointer"
+                >
+                  <option value="">—</option>
+                  <option value={10}>VLAN 10</option>
+                  <option value={20}>VLAN 20</option>
+                  <option value={30}>VLAN 30</option>
+                  <option value={40}>VLAN 40</option>
+                  <option value={50}>VLAN 50</option>
+                </select>
+              </span>
             </button>
           );
         })}
       </div>
       <p className="text-[9px] text-[--color-text-muted]/70 mt-2">
-        Clique numa porta para ativá-la/desativá-la.
+        Clique na porta para ativar/desativar; no canto, escolha a VLAN da porta.
       </p>
     </div>
   );
@@ -610,6 +660,189 @@ function RouteEditor({ device }: { device: Device }) {
 interface PropertyPanelProps {
   open: boolean;
   onToggle: () => void;
+}
+
+function DhcpServicesEditor({ device }: { device: Device }) {
+  const updateDeviceConfig = useSimulatorStore((s) => s.updateDeviceConfig);
+  const current = device.config.dhcp;
+  const [draft, setDraft] = useState<DhcpConfig | undefined>(current);
+
+  const value = draft ?? {
+    enabled: true,
+    rangeStart: '',
+    rangeEnd: '',
+    subnetMask: '255.255.255.0',
+    gateway: '',
+    dns: '',
+    leaseTime: 3600,
+  };
+
+  const patch = (p: Partial<DhcpConfig>) => {
+    const next = { ...value, ...p };
+    setDraft(next);
+    updateDeviceConfig(device.id, { dhcp: next });
+  };
+
+  const set = (field: keyof DhcpConfig) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = e.target.value;
+    patch({ [field]: field === 'leaseTime' ? Number(v) || 0 : v } as Partial<DhcpConfig>);
+  };
+
+  return (
+    <Section
+      title="Servidor DHCP"
+      icon={<Settings2 size={10} />}
+      action={
+        <button
+          type="button"
+          onClick={() => patch({ enabled: !value.enabled })}
+          className={clsx(
+            'flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[10px] font-bold cursor-pointer transition-colors',
+            value.enabled
+              ? 'border-[--color-status-connected]/30 bg-[--color-status-connected]/10 text-[--color-status-connected]'
+              : 'border-[--color-border-primary]/60 bg-[#1C2538] text-[--color-text-muted]',
+          )}
+        >
+          <Power size={10} />
+          {value.enabled ? 'Ativo' : 'Desativado'}
+        </button>
+      }
+    >
+      {value.enabled && (
+        <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-1.5">
+            <IpInput
+              label="Início da faixa"
+              value={value.rangeStart}
+              placeholder="192.168.1.100"
+              resetKey={`${device.id}-dhcp-start`}
+              onCommit={(v) => patch({ rangeStart: v })}
+              validate={(v) => (v && !isValidIp(v) ? 'IP inválido' : undefined)}
+            />
+            <IpInput
+              label="Fim da faixa"
+              value={value.rangeEnd}
+              placeholder="192.168.1.200"
+              resetKey={`${device.id}-dhcp-end`}
+              onCommit={(v) => patch({ rangeEnd: v })}
+              validate={(v) => (v && !isValidIp(v) ? 'IP inválido' : undefined)}
+            />
+          </div>
+          <IpInput
+            label="Máscara de sub-rede"
+            value={value.subnetMask}
+            placeholder="255.255.255.0"
+            resetKey={`${device.id}-dhcp-mask`}
+            onCommit={(v) => patch({ subnetMask: v })}
+            validate={(v) => (v && !isValidMask(v) ? 'Máscara inválida' : undefined)}
+          />
+          <IpInput
+            label="Gateway padrão"
+            value={value.gateway}
+            placeholder="192.168.1.1"
+            resetKey={`${device.id}-dhcp-gw`}
+            onCommit={(v) => patch({ gateway: v })}
+            validate={(v) => (v && !isValidIp(v) ? 'IP inválido' : undefined)}
+          />
+          <IpInput
+            label="DNS"
+            value={value.dns ?? ''}
+            placeholder="192.168.1.5"
+            resetKey={`${device.id}-dhcp-dns`}
+            onCommit={(v) => patch({ dns: v })}
+            validate={(v) => (v && !isValidIp(v) ? 'IP inválido' : undefined)}
+          />
+          <label className="block">
+            <span className="text-[9px] uppercase tracking-wider text-[--color-text-muted]">Duração do lease (s)</span>
+            <input
+              value={String(value.leaseTime)}
+              onChange={set('leaseTime')}
+              inputMode="numeric"
+              className="mt-1 w-full bg-[#0D1424] border border-[--color-border-primary]/70 rounded-lg px-2.5 py-1.5 text-xs font-mono text-[--color-text-primary] focus:outline-none focus:ring-1 focus:border-[--color-accent-blue] focus:ring-[--color-accent-blue]/20"
+            />
+          </label>
+          <ul className="text-[9px] text-[--color-text-muted]/70 leading-relaxed space-y-0.5 pt-1 border-t border-[--color-border-primary]/40">
+            <li>• Clientes no mesmo domínio L2 podem usar <span className="font-mono text-[--color-text-secondary]">ipconfig /release</span> e <span className="font-mono text-[--color-text-secondary]">ipconfig /renew</span>.</li>
+            <li>• IPs fora da faixa ou em uso são ignorados.</li>
+          </ul>
+        </div>
+      )}
+    </Section>
+  );
+}
+
+function DnsServicesEditor({ device }: { device: Device }) {
+  const updateDeviceConfig = useSimulatorStore((s) => s.updateDeviceConfig);
+  const records: DnsRecord[] = device.config.dnsRecords ?? [];
+  const [name, setName] = useState('');
+  const [ip, setIp] = useState('');
+
+  const add = () => {
+    const n = name.trim().toLowerCase();
+    if (!n || !isValidIp(ip)) return;
+    if (records.some((r) => r.name === n)) return;
+    updateDeviceConfig(device.id, {
+      dnsRecords: [...records, { name: n, ip }],
+    });
+    setName('');
+    setIp('');
+  };
+
+  const remove = (index: number) => {
+    updateDeviceConfig(device.id, {
+      dnsRecords: records.filter((_, i) => i !== index),
+    });
+  };
+
+  return (
+    <Section title="Registros DNS" icon={<Network size={10} />}>
+      {records.length > 0 && (
+        <div className="space-y-1 mb-2">
+          {records.map((r, i) => (
+            <div
+              key={`${r.name}-${i}`}
+              className="flex items-center justify-between gap-2 rounded-lg bg-[#0D1424]/70 border border-[--color-border-primary]/50 px-2 py-1.5 font-mono text-[10px]"
+            >
+              <span className="text-[--color-text-secondary] truncate">{r.name}</span>
+              <span className="text-[--color-text-muted] shrink-0">→ {r.ip}</span>
+              <button
+                onClick={() => remove(i)}
+                className="p-1 rounded text-[--color-text-muted] hover:text-[--color-accent-red] hover:bg-[--color-accent-red]/10 cursor-pointer shrink-0"
+                title="Remover registro"
+              >
+                <X size={11} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="grid grid-cols-2 gap-1.5">
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Nome (ex.: site.rede.local)"
+          className="w-full min-w-0 bg-[#0D1424] border border-[--color-border-primary]/70 rounded-lg px-2 py-1.5 text-[10px] font-mono text-[--color-text-primary] placeholder:text-[--color-text-muted]/60 focus:outline-none focus:border-[--color-accent-blue] col-span-2"
+        />
+        <input
+          value={ip}
+          onChange={(e) => setIp(e.target.value)}
+          placeholder="IP destino (ex.: 192.168.1.50)"
+          onKeyDown={(e) => { if (e.key === 'Enter') add(); }}
+          className="w-full min-w-0 bg-[#0D1424] border border-[--color-border-primary]/70 rounded-lg px-2 py-1.5 text-[10px] font-mono text-[--color-text-primary] placeholder:text-[--color-text-muted]/60 focus:outline-none focus:border-[--color-accent-blue] col-span-2"
+        />
+      </div>
+      <button
+        onClick={add}
+        className="mt-1.5 w-full flex items-center justify-center gap-1 rounded-lg bg-[#1C2538] hover:bg-[#273651] text-[--color-text-secondary] hover:text-[--color-text-primary] text-[10px] font-medium px-2 py-1.5 cursor-pointer transition-colors"
+      >
+        <Plus size={11} /> Adicionar registro
+      </button>
+      <p className="text-[9px] text-[--color-text-muted]/70 mt-1.5">
+        Configure o DNS dos clientes para este servidor e use{' '}
+        <span className="font-mono text-[--color-text-secondary]">nslookup</span>.
+      </p>
+    </Section>
+  );
 }
 
 export function PropertyPanel({ open, onToggle }: PropertyPanelProps) {
@@ -901,7 +1134,14 @@ export function PropertyPanel({ open, onToggle }: PropertyPanelProps) {
             {t === 'interfaces' && <Network size={11} />}
             {t === 'ports' && <Cpu size={11} />}
             {t === 'rotas' && <Route size={11} />}
-            {t === 'config' ? 'Config' : t}
+            {t === 'services' && <Settings2 size={11} />}
+            {t === 'config'
+              ? 'Config'
+              : t === 'interfaces'
+                ? 'Interfaces'
+                : t === 'services'
+                  ? 'Serviços'
+                  : t}
           </button>
         ))}
       </div>
@@ -975,6 +1215,13 @@ export function PropertyPanel({ open, onToggle }: PropertyPanelProps) {
         {activeTab === 'ports' && <SwitchPorts device={device} />}
 
         {activeTab === 'rotas' && <RouteEditor device={device} />}
+
+        {activeTab === 'services' && (
+          <div className="space-y-4">
+            <DhcpServicesEditor device={device} />
+            <DnsServicesEditor device={device} />
+          </div>
+        )}
 
 <button
   onClick={() => openTerminal(device.id)}

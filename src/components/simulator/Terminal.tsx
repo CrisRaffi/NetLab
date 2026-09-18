@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 
 import { useSimulatorStore } from '../../stores/useSimulatorStore';
 import { useTerminalStore } from '../../stores/useTerminalStore';
+import { useSessionStore } from '../../stores/useSessionStore';
 
 import { executeCommand, getAutocomplete } from '../../engine/commands';
 import { CommandSuggestBox } from './CommandSuggestBox';
@@ -44,6 +45,14 @@ export function Terminal() {
   const runTransmissions = useSimulatorStore((s) => s.runTransmissions);
 
   const addArpEntries = useSimulatorStore((s) => s.addArpEntries);
+
+  const dhcpLeases = useSimulatorStore((s) => s.dhcpLeases);
+
+  const applyDhcpLease = useSimulatorStore((s) => s.applyDhcpLease);
+
+  const applyDhcpRelease = useSimulatorStore((s) => s.applyDhcpRelease);
+
+  const logEvent = useSessionStore((s) => s.logEvent);
 
   /*
    * Estado local
@@ -115,7 +124,42 @@ export function Terminal() {
       topology,
       deviceId,
       arpTable: arpTables[deviceId] ?? [],
+      dhcpLeases,
     });
+
+    /*
+     * Registra o comando na sessão (relatório).
+     */
+    const commandName = command.split(/\s+/)[0]?.toLowerCase() ?? '';
+    const eventType: 'command' | 'dhcp' | 'dns' | 'web' | 'error' =
+      commandName === 'ipconfig' && (command.includes('/release') || command.includes('/renew'))
+        ? 'dhcp'
+        : commandName === 'nslookup'
+          ? 'dns'
+          : commandName === 'web' || commandName === 'http' || commandName === 'ping' || commandName === 'tracert'
+            ? 'web'
+            : /^'.*' não é/.test(result.output[0] ?? '')
+              ? 'error'
+              : 'command';
+
+    logEvent({
+      deviceId,
+      deviceName: device.name,
+      command,
+      type: eventType,
+      detail: result.output[0] ?? command,
+      success: result.transmissions.length > 0 || !result.output.some(l => l.includes('Falha') || l.includes('não pode encontrar')),
+    });
+
+    /*
+     * Aplica lease DHCP (renew) ou libera IP (release).
+     */
+    if (result.dhcpLease) {
+      applyDhcpLease(result.dhcpLease);
+    }
+    if (result.dhcpRelease) {
+      applyDhcpRelease(result.dhcpRelease.deviceId, result.dhcpRelease.interfaceId);
+    }
 
     /*
      * Limpa o terminal quando solicitado.

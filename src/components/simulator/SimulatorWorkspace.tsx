@@ -11,14 +11,13 @@ import {
   Wifi,
   Copy,
   Home,
+  FilePlus2,
   Maximize2,
   Minimize2,
   Undo2,
   Redo2,
   LayoutGrid,
   Grid3x3,
-  GraduationCap,
-  BookOpen,
 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { DevicePalette } from './DevicePalette';
@@ -77,6 +76,7 @@ export function SimulatorWorkspace({
   const undoStack = useSimulatorStore((s) => s.undoStack);
   const redoStack = useSimulatorStore((s) => s.redoStack);
   const renameDevice = useSimulatorStore((s) => s.renameDevice);
+  const clearBoard = useSimulatorStore((s) => s.clearBoard);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -147,7 +147,7 @@ export function SimulatorWorkspace({
     'ethernet' | 'wireless' | null
   >(null);
   const [exampleIndex, setExampleIndex] = useState(0);
-  const [gridMode, setGridMode] = useState(false);
+  const [gridMode, setGridMode] = useState(true);
   const [quizOpen, setQuizOpen] = useState(false);
   const [glossaryOpen, setGlossaryOpen] = useState(false);
   const [showHelp] = useState(true);
@@ -212,6 +212,10 @@ export function SimulatorWorkspace({
 
     selectDevice(deviceId);
     setPropertyPanelOpen(true);
+
+    if (terminalOpen) {
+      useTerminalStore.getState().openTerminal(deviceId);
+    }
   };
 
   const handleBackgroundClick = () => {
@@ -427,6 +431,7 @@ export function SimulatorWorkspace({
                 <Grid3x3 size={14} />
                 {gridMode ? 'Grid: on' : 'Grid: off'}
               </button>
+              {/*
               <button
                 onClick={() => setGlossaryOpen(true)}
                 title="Dicionário de termos de rede em linguagem simples"
@@ -435,6 +440,7 @@ export function SimulatorWorkspace({
                 <BookOpen size={14} />
                 Glossário
               </button>
+               */}
               {/* 
               <button
                 onClick={() => setQuizOpen(true)}
@@ -507,6 +513,27 @@ export function SimulatorWorkspace({
                     {packets.length}
                   </span>
                 )}
+              </button>
+
+              {/* New board */}
+              <button
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      'Criar um novo quadro?\n\nTodo o trabalho atual será apagado.',
+                    )
+                  ) {
+                    clearBoard();
+                  }
+                }}
+                className={clsx(
+                  'flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] font-medium cursor-pointer transition-all duration-150',
+                  'text-[--color-accent-green] hover:text-[--color-text-primary] hover:bg-[--color-accent-green]/10',
+                )}
+                title="Apagar tudo e criar um quadro vazio"
+              >
+                <FilePlus2 size={13} />
+                Novo
               </button>
 
               {/* Example */}
@@ -630,7 +657,8 @@ export function SimulatorWorkspace({
 
                     <p className="text-[10px] text-[#64748B] mt-1">
                       No console você pode executar ipconfig, ping, tracert, arp
-                      e mais.
+                      e mais. Com o console já aberto, basta clicar em outro
+                      equipamento para trocar.
                     </p>
                   </div>
                 )
