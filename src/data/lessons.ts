@@ -26,6 +26,7 @@ export interface Lesson {
   title: string;
   subtitle: string;
   sections: LessonSection[];
+  video?: { youtubeId: string; title: string };
 }
 
 export const LESSONS: Lesson[] = [
@@ -34,6 +35,10 @@ export const LESSONS: Lesson[] = [
     title: 'Camada de Transporte e PDUs',
     subtitle:
       'Entenda, em linguagem simples, como os dados viajam entre os programas e o nome que cada camada dá ao seu pacote de dados.',
+    video: {
+      youtubeId: '2_hmGQyOL38',
+      title: 'TCP vs UDP: entenda as diferenças',
+    },
     sections: [
       {
         id: 'o-que-faz',
@@ -256,6 +261,10 @@ export const LESSONS: Lesson[] = [
     title: 'Modelo de Referência OSI e Arquitetura TCP/IP',
     subtitle:
       'Entenda, em linguagem simples, as 7 camadas do modelo OSI, a arquitetura TCP/IP em 4 camadas e como os dados viajam de um computador a outro.',
+    video: {
+      youtubeId: 'PFpyOrWuFKw',
+      title: 'Modelo OSI x TCP/IP (comparação completa)',
+    },
     sections: [
       {
         id: 'o-que-e-osi',

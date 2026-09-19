@@ -280,6 +280,28 @@ export function LearnLessonPage() {
             </section>
           ))}
 
+          {/* Videoaula */}
+          {lesson.video && (
+            <section className="rounded-xl border border-[--color-border-primary]/70 bg-[--color-bg-card] p-5">
+              <h2 className="flex items-center gap-2 text-base font-semibold text-[--color-text-primary] mb-3">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[--color-bg-tertiary] text-[10px] font-bold text-[--color-accent-blue]">
+                  <Play size={11} />
+                </span>
+                Videoaula: {lesson.video.title}
+              </h2>
+              <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-black">
+                <iframe
+                  className="absolute inset-0 w-full h-full border-0"
+                  src={`https://www.youtube.com/embed/${lesson.video.youtubeId}`}
+                  title={lesson.video.title}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  loading="lazy"
+                />
+              </div>
+            </section>
+          )}
+
           {/* CTA */}
           <div className="rounded-xl border border-[--color-accent-blue]/30 bg-[--color-accent-blue]/10 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
