@@ -35,16 +35,16 @@ export function DeviceNode({
 }: DeviceNodeProps) {
   const Icon = DEVICE_ICONS[device.type] ?? Network;
   const colors = DEVICE_COLORS[device.type] ?? {
-    stroke: '#94A3B8',
+    stroke: '#A8B8CF',
     fill: 'rgba(100,116,139,0.14)',
-    text: '#A9BFD6',
+    text: '#BFCBDD',
   };
   const half = DEVICE_BOX_SIZE / 2;
   const primaryInterface = device.interfaces.find(i => i.ip);
   const hasUpWithIp = device.interfaces.some(i => i.status === 'up' && i.ip);
   const needsIp = NEEDS_IP_TYPES.has(device.type);
 
-  const statusColor = !connected ? '#64748B' : needsIp && !hasUpWithIp ? '#F59E0B' : '#10B981';
+  const statusColor = !connected ? '#8094AD' : needsIp && !hasUpWithIp ? '#F59E0B' : '#10B981';
   const statusLabel = !connected ? 'sem link' : needsIp && !hasUpWithIp ? 'falta IP' : 'conectado';
 
   return (
@@ -116,14 +116,14 @@ export function DeviceNode({
       {/* Validation badge */}
       {validate && (
         <g>
-          <circle cx={-half + 11} cy={-half + 11} r={7} fill={validate === 'pass' ? '#22C55E' : '#EF4444'} stroke="#0A0E1A" strokeWidth={1.5} />
+          <circle cx={-half + 11} cy={-half + 11} r={7} fill={validate === 'pass' ? '#22C55E' : '#EF4444'} stroke="#111A2C" strokeWidth={1.5} />
           <text
             x={-half + 11}
             y={-half + 14}
             textAnchor="middle"
             fontSize={9}
             fontWeight={700}
-            fill="#0A0E1A"
+            fill="#111A2C"
             style={{ pointerEvents: 'none', userSelect: 'none' }}
           >
             {validate === 'pass' ? '✓' : '✕'}
@@ -132,7 +132,7 @@ export function DeviceNode({
       )}
 
       {/* Status dot */}
-      <circle cx={half - 11} cy={-half + 11} r={4} fill={statusColor} stroke="#0A0E1A" strokeWidth={1.5} />
+      <circle cx={half - 11} cy={-half + 11} r={4} fill={statusColor} stroke="#111A2C" strokeWidth={1.5} />
       {statusColor === '#10B981' && (
         <circle cx={half - 11} cy={-half + 11} r={7} fill="none" stroke="#10B981" strokeWidth={1} opacity={0.5}>
           <animate attributeName="r" values="5;9" dur="1.6s" repeatCount="indefinite" />
@@ -153,7 +153,7 @@ export function DeviceNode({
         fontSize={9}
         fontWeight={600}
         fontFamily="var(--font-sans, Inter, sans-serif)"
-        fill="#E8EDF5"
+        fill="#EEF2F9"
         style={{ pointerEvents: 'none', userSelect: 'none' }}
       >
         {truncateName(device.name)}
@@ -167,7 +167,7 @@ export function DeviceNode({
           textAnchor="middle"
           fontSize={8}
           fontFamily="var(--font-mono, monospace)"
-          fill="#64748B"
+          fill="#8094AD"
           style={{ pointerEvents: 'none', userSelect: 'none' }}
         >
           {primaryInterface.ip}
@@ -179,7 +179,7 @@ export function DeviceNode({
           textAnchor="middle"
           fontSize={7}
           fontFamily="var(--font-sans, Inter, sans-serif)"
-          fill="#64748B"
+          fill="#8094AD"
           style={{ pointerEvents: 'none', userSelect: 'none' }}
         >
           {statusLabel}

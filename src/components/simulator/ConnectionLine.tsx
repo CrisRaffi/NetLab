@@ -122,7 +122,7 @@ export function ConnectionLine({ connection, devices, selected, onSelect }: Conn
       {/* Delete indicator when selected */}
       {selected && (
         <>
-          <circle cx={midX} cy={midY} r={10} fill="#111A2C" stroke="#6366F1" strokeWidth={1.5} />
+          <circle cx={midX} cy={midY} r={10} fill="#182743" stroke="#6366F1" strokeWidth={1.5} />
           <text
             x={midX}
             y={midY + 3.5}

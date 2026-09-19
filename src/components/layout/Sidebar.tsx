@@ -20,6 +20,7 @@ import {
   ShieldCheck,
   Braces,
   Radio,
+  Workflow,
 } from 'lucide-react';
 import { useProgressStore } from '../../stores/useProgressStore';
 import { getLevelFromXp } from '../../stores/useProgressStore';
@@ -60,6 +61,11 @@ const NAV_GROUPS: NavGroup[] = [
         to: '/aprender/transporte-pdu',
         label: 'Transporte e PDUs',
         icon: Radio,
+      },
+      {
+        to: '/aprender/modelo-osi-tcpip',
+        label: 'Modelo OSI e TCP/IP',
+        icon: Workflow,
       },
       /* 
       { to: '/materia/fundamentos', label: 'Fundamentos', icon: Braces },

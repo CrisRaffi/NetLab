@@ -16,6 +16,9 @@ import {
   EncapsulationDiagram,
   HandshakeDiagram,
   LayersDiagram,
+  OsiLayersDiagram,
+  OsiPipelineDiagram,
+  TcpIpDiagram,
 } from '../components/lesson/Diagrams';
 import { LESSONS, getLessonById, type LessonBlock } from '../data/lessons';
 import { clsx } from 'clsx';
@@ -25,6 +28,9 @@ const DIAGRAMS = {
   encapsulation: EncapsulationDiagram,
   handshake: HandshakeDiagram,
   dns: DnsDiagram,
+  'osi-layers': OsiLayersDiagram,
+  'tcpip-layers': TcpIpDiagram,
+  'osi-pipeline': OsiPipelineDiagram,
 } as const;
 
 const DIAGRAM_PLAY_MS = {
@@ -32,6 +38,9 @@ const DIAGRAM_PLAY_MS = {
   encapsulation: 5200,
   handshake: 5300,
   dns: 3700,
+  'osi-layers': 4800,
+  'tcpip-layers': 4000,
+  'osi-pipeline': 9500,
 } as const;
 
 function DiagramFigure({ block }: { block: Extract<LessonBlock, { kind: 'diagram' }> }) {
@@ -278,7 +287,7 @@ export function LearnLessonPage() {
                 Pronto para testar seus conhecimentos?
               </p>
               <p className="text-xs text-[--color-text-muted] mt-1">
-                Responda o questionário sobre Camada de Transporte e PDUs. Se errar,
+                Responda o questionário sobre {lesson.title}. Se errar,
                 o sistema te ensina o assunto na hora.
               </p>
             </div>

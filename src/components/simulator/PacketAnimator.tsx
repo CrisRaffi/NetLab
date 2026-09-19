@@ -75,7 +75,7 @@ export function PacketAnimator() {
           <g key={anim.id}>
             <g transform={`translate(${x} ${y})`}>
               <circle r={14} fill={color} opacity={0.15} />
-              <circle r={7} fill={color} stroke="#0A0E1A" strokeWidth={1.5} />
+              <circle r={7} fill={color} stroke="#111A2C" strokeWidth={1.5} />
               <text
                 x={0}
                 y={-13}
@@ -95,7 +95,7 @@ export function PacketAnimator() {
               return (
                 <g key={`${anim.id}-branch-${bi}`} transform={`translate(${bp.x} ${bp.y})`}>
                   <circle r={14} fill={color} opacity={0.08} />
-                  <circle r={6} fill={color} stroke="#0A0E1A" strokeWidth={1.5} />
+                  <circle r={6} fill={color} stroke="#111A2C" strokeWidth={1.5} />
                 </g>
               );
             })}

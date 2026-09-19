@@ -100,7 +100,7 @@ const handlePointerMove = (ev: PointerEvent) => {
         cx={block.x + block.width}
         cy={block.y + block.height}
         r={7}
-        fill="#0D1424"
+        fill="#131C33"
         stroke={STROKE}
         strokeWidth={1.5}
         className="pointer-events-auto cursor-nwse-resize"

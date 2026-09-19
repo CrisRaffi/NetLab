@@ -27,9 +27,23 @@ function shuffleList<T>(list: T[]): T[] {
   return arr;
 }
 
+function shuffleAlternatives(question: QuizQuestion): QuizQuestion {
+  const correct = question.alternatives[question.correctIndex];
+  const alternatives = shuffleList(question.alternatives);
+  return {
+    ...question,
+    alternatives,
+    correctIndex: alternatives.findIndex((a) => a.letter === correct.letter),
+  };
+}
+
+function buildQuestions(source: QuizQuestion[]): QuizQuestion[] {
+  return shuffleList(source).map(shuffleAlternatives);
+}
+
 export function QuizPlayer({ quiz, onExit, onFinish }: QuizPlayerProps) {
   const [questions, setQuestions] = useState<QuizQuestion[]>(() =>
-    shuffleList(quiz.questions),
+    buildQuestions(quiz.questions),
   );
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -67,7 +81,7 @@ export function QuizPlayer({ quiz, onExit, onFinish }: QuizPlayerProps) {
   }
 
   function handleRestart() {
-    setQuestions(shuffleList(quiz.questions));
+    setQuestions(buildQuestions(quiz.questions));
     setCurrentIndex(0);
     setSelectedIndex(null);
     setAnswerState('idle');

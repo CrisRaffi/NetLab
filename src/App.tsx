@@ -16,6 +16,7 @@ import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { AchievementsPage } from './pages/AchievementsPage';
 import { ConfigPage } from './pages/ConfigPage';
 import { PacketJourneyPage } from './features/packet-journey/pages/PacketJourneyPage';
+import { JogoPage } from './pages/JogoPage';
 import { DesktopOnlyGate } from './components/common/DesktopOnlyGate';
 
 export default function App() {
@@ -26,6 +27,7 @@ export default function App() {
         <Route path="/entrar" element={<LoginPage />} />
         <Route path="/cadastro" element={<RegisterPage />} />
         <Route path="/recuperar-senha" element={<ForgotPasswordPage />} />
+        <Route path="/jogo" element={<JogoPage />} />
         <Route element={<Layout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/mapa" element={<LearningMapPage />} />

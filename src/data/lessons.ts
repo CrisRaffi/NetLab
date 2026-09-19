@@ -1,4 +1,11 @@
-export type DiagramType = 'layers' | 'encapsulation' | 'handshake' | 'dns';
+export type DiagramType =
+  | 'layers'
+  | 'encapsulation'
+  | 'handshake'
+  | 'dns'
+  | 'osi-layers'
+  | 'tcpip-layers'
+  | 'osi-pipeline';
 
 export type LessonBlock =
   | { kind: 'paragraph'; text: string }
@@ -239,6 +246,182 @@ export const LESSONS: Lesson[] = [
               'Arquitetura de rede: o papel de cada participante (ex.: cliente-servidor).',
               'Protocolo: as regras da conversa entre os dispositivos.',
             ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'modelo-osi-tcpip',
+    title: 'Modelo de Referência OSI e Arquitetura TCP/IP',
+    subtitle:
+      'Entenda, em linguagem simples, as 7 camadas do modelo OSI, a arquitetura TCP/IP em 4 camadas e como os dados viajam de um computador a outro.',
+    sections: [
+      {
+        id: 'o-que-e-osi',
+        title: 'O que é o modelo OSI',
+        blocks: [
+          {
+            kind: 'paragraph',
+            text: 'O modelo OSI (Open Systems Interconnection) é um "mapa" criado pela ISO em 1984 para ensinar e padronizar como dois computadores conversam. Ele divide toda a conversa em 7 andares (camadas), da aplicação até o cabo físico. Nenhum computador real segue as 7 camadas ao pé da letra, mas é a melhor forma de entender e projetar redes.',
+          },
+          {
+            kind: 'analogy',
+            text: 'Pense num prédio de 7 andares. Cada andar tem a sua função e só conversa com o andar de cima e o de baixo. Se você reformar o 2º andar, os outros continuam funcionando normalmente — é isso que as camadas fazem pelos sistemas de rede.',
+          },
+          {
+            kind: 'diagram',
+            type: 'osi-layers',
+            caption: 'As 7 camadas do modelo OSI e um exemplo do dia a dia para cada uma. Clique em reproduzir para ver o pacote “descendo” as camadas.',
+          },
+          {
+            kind: 'callout',
+            tone: 'tip',
+            title: 'Regras de ouro das camadas',
+            text: 'Cada camada usa os serviços da camada de baixo e oferece serviços para a de cima. Assim, um problema em um andar pode ser corrigido sem quebrar os outros — é por isso que redes evoluem aos poucos.',
+          },
+        ],
+      },
+      {
+        id: 'camadas-superiores',
+        title: 'Camadas de Aplicação, Apresentação e Sessão',
+        blocks: [
+          {
+            kind: 'paragraph',
+            text: 'As três camadas de cima são as que o usuário "sente". Elas cuidam da conversa entre os programas, do formato dos dados e do controle da sessão.',
+          },
+          {
+            kind: 'table',
+            headers: ['Camada', 'Função', 'Exemplo do dia a dia'],
+            rows: [
+              ['Aplicação (7)', 'É o programa que você usa; define as regras da conversa', 'Navegador, e-mail, WhatsApp; protocolos HTTP, SMTP, DNS'],
+              ['Apresentação (6)', 'Traduz, formata e compacta os dados (e faz criptografia)', 'Converte uma imagem para abrir no seu celular'],
+              ['Sessão (5)', 'Abre, mantém e encerra o "diálogo" entre os programas', 'O login que mantém você conectado ao site'],
+            ],
+          },
+          {
+            kind: 'analogy',
+            text: 'A camada de aplicação é a vitrine da loja (o que você vê), a apresentação é o tradutor que fala com o cliente estrangeiro (adapta o formato) e a sessão é o telefone: você disca, conversa e desliga quando termina — e se a ligação cair, redisca.',
+          },
+        ],
+      },
+      {
+        id: 'camadas-inferiores',
+        title: 'Camadas de Transporte, Rede, Enlace e Física',
+        blocks: [
+          {
+            kind: 'paragraph',
+            text: 'As quatro camadas de baixo são as que fazem o trabalho pesado: dividir os dados, encontrar o caminho e transformar tudo em sinais.',
+          },
+          {
+            kind: 'table',
+            headers: ['Camada', 'PDU', 'O que faz', 'Exemplo do dia a dia'],
+            rows: [
+              ['Transporte (4)', 'Segmento', 'Divide a mensagem e garante a entrega (TCP) ou entrega direto (UDP)', 'A empresa de entregas que confirma cada encomenda'],
+              ['Rede (3)', 'Datagrama', 'Endereça com IP e escolhe o caminho entre redes', 'O carteiro que descobre a rota até outra cidade'],
+              ['Enlace (2)', 'Quadro', 'Entrega dentro da mesma rede usando o endereço MAC', 'O entregador do bairro que sabe a casa exata'],
+              ['Física (1)', 'Bits', 'Transforma os dados em sinais elétricos, luz ou ondas', 'A estrada: cabos, fibra ótica e Wi-Fi'],
+            ],
+          },
+          {
+            kind: 'analogy',
+            text: 'Uma encomenda sua passa por etapas: o entregador do bairro (enlace) a leva até o centro de distribuição; o sistema de rotas (rede) escolhe a estrada para outra cidade; a transportadora (transporte) confirma que ela chegou; e a estrada em si (física) é por onde o caminhão anda.',
+          },
+        ],
+      },
+      {
+        id: 'encapsulamento',
+        title: 'Como os dados viajam: encapsulamento',
+        blocks: [
+          {
+            kind: 'paragraph',
+            text: 'Quando um computador envia dados, a informação "desce" pelas camadas. Cada camada pega o pacote que recebeu da camada de cima, adiciona o seu próprio cabeçalho (um envelope com as informações dela) e passa para a camada de baixo. No destino, o processo é inverso: cada camada lê e remove o seu cabeçalho, subindo até a aplicação.',
+          },
+          {
+            kind: 'diagram',
+            type: 'osi-pipeline',
+            caption: 'O pacote desce no emissor ganhando cabeçalhos (encapsulamento), atravessa o meio físico e sobe no receptor sendo "desempacotado" (desencapsulamento).',
+          },
+          {
+            kind: 'analogy',
+            text: 'É como a boneca russa: você embala um presente, coloca numa caixa, escreve o endereço e lacra com fita. Quem recebe vai desembalando camada por camada até chegar no presente. Cada camada da rede é uma "caixa" a mais.',
+          },
+          {
+            kind: 'diagram',
+            type: 'encapsulation',
+            caption: 'Cada camada dá um nome ao pacote: Mensagem (aplicação), Segmento (transporte), Datagrama (rede) e Quadro (enlace).',
+          },
+          {
+            kind: 'diagram',
+            type: 'layers',
+            caption: 'Cada camada "conversa" com a mesma camada no outro computador — as camadas pares falam a mesma língua.',
+          },
+          {
+            kind: 'callout',
+            tone: 'info',
+            title: 'O conceito de PDU',
+            text: 'PDU (Protocol Data Unit) é o nome que cada camada dá ao pacote. Decorar esses nomes cai direto em provas: Mensagem → Segmento → Datagrama → Quadro → Bits.',
+          },
+        ],
+      },
+      {
+        id: 'tcp-ip',
+        title: 'A arquitetura TCP/IP',
+        blocks: [
+          {
+            kind: 'paragraph',
+            text: 'O modelo OSI é ótimo para aprender, mas a Internet de verdade usa o modelo TCP/IP, criado nos anos 1970 para o projeto ARPANET. Ele é mais enxuto: tem apenas 4 camadas, porque junta as camadas que têm funções parecidas no OSI.',
+          },
+          {
+            kind: 'diagram',
+            type: 'tcpip-layers',
+            caption: 'As 4 camadas do TCP/IP e a correspondência com o modelo OSI. As camadas 5, 6 e 7 do OSI viraram a camada de Aplicação; as camadas 1 e 2 viraram o Acesso à Rede.',
+          },
+          {
+            kind: 'table',
+            headers: ['TCP/IP', 'Equivale no OSI', 'Protocolos principais'],
+            rows: [
+              ['Aplicação', 'Camadas 7, 6 e 5', 'HTTP, SMTP, DNS, FTP'],
+              ['Transporte', 'Camada 4', 'TCP e UDP'],
+              ['Internet', 'Camada 3', 'IP, ICMP, ARP'],
+              ['Acesso à Rede', 'Camadas 2 e 1', 'Ethernet, Wi-Fi, fibra'],
+            ],
+          },
+          {
+            kind: 'analogy',
+            text: 'O modelo OSI é a planta do prédio (a teoria completa e organizada); o TCP/IP é o prédio já construído e funcionando (o que roda na Internet hoje). Estudar os dois é entender tanto o projeto quanto a prática.',
+          },
+        ],
+      },
+      {
+        id: 'revisao',
+        title: 'Revisão rápida e macetes',
+        blocks: [
+          {
+            kind: 'paragraph',
+            text: 'Para a prova, o essencial é saber: quantas camadas cada modelo tem, os nomes das camadas, a PDU de cada uma, um protocolo exemplo e a ordem. Guarde os nomes das camadas do OSI de baixo para cima: Física, Enlace, Rede, Transporte, Sessão, Apresentação, Aplicação.',
+          },
+          {
+            kind: 'callout',
+            tone: 'tip',
+            title: 'Macete para memorizar',
+            text: 'Lembre da frase: "FERNANDO Exige Redes Todo Sábado Até Amanhã". As iniciais são F-E-R-T-S-A-A, exatamente as 7 camadas do OSI de baixo para cima: Física, Enlace, Rede, Transporte, Sessão, Apresentação, Aplicação.',
+          },
+          {
+            kind: 'list',
+            items: [
+              'OSI tem 7 camadas; TCP/IP tem 4 camadas.',
+              'O TCP/IP une as camadas 5, 6 e 7 do OSI (Aplicação) e as camadas 1 e 2 (Acesso à Rede).',
+              'PDUs em ordem: Mensagem, Segmento, Datagrama, Quadro, Bits.',
+              'TCP é confiável e orientado à conexão; UDP é rápido e não confiável.',
+              'Encapsulamento é adicionar cabeçalhos no envio; desencapsulamento é removê-los no recebimento.',
+            ],
+          },
+          {
+            kind: 'callout',
+            tone: 'warning',
+            title: 'Atenção às pegadinhas',
+            text: 'Enlace não roteia entre redes — isso é função da camada de Rede. E "apresentação" cuida do formato dos dados, não da abertura da conexão (isso é a Sessão). Leia a pergunta com calma.',
           },
         ],
       },

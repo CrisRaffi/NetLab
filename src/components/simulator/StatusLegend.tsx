@@ -20,7 +20,7 @@ const ROWS: LegendRow[] = [
     color: '#F59E0B',
     label: 'Conectado, mas falta configurar (IP)',
   },
-  { symbol: 'dot', color: '#64748B', label: 'Sem link (não conectado)' },
+  { symbol: 'dot', color: '#8094AD', label: 'Sem link (não conectado)' },
   { symbol: 'line', color: '#10B981', label: 'Cabo ativo' },
   { symbol: 'line', color: '#F43F5E', label: 'Cabo inativo (porta desligada)' },
   {

@@ -501,7 +501,7 @@ export const TopologyCanvas = forwardRef<
             height="24"
             patternUnits="userSpaceOnUse"
           >
-            <circle cx="12" cy="12" r="0.7" fill="#273651" opacity="0.5" />
+            <circle cx="12" cy="12" r="0.7" fill="#354A6F" opacity="0.6" />
           </pattern>
           {/* Grid accent lines every 5 cells */}
           <pattern
@@ -516,18 +516,18 @@ export const TopologyCanvas = forwardRef<
               y1="0"
               x2="120"
               y2="0"
-              stroke="#273651"
+              stroke="#354A6F"
               strokeWidth="0.4"
-              opacity="0.45"
+              opacity="0.5"
             />
             <line
               x1="0"
               y1="0"
               x2="0"
               y2="120"
-              stroke="#273651"
+              stroke="#354A6F"
               strokeWidth="0.4"
-              opacity="0.45"
+              opacity="0.5"
             />
           </pattern>
           {/* Node glow */}
