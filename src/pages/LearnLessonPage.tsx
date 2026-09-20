@@ -9,6 +9,7 @@ import {
   List,
   Play,
   TriangleAlert,
+  CheckCircle,
 } from 'lucide-react';
 import { PageHeader } from '../components/common/PageHeader';
 import {
@@ -204,6 +205,22 @@ export function LearnLessonPage() {
   const { lessonId } = useParams<{ lessonId: string }>();
   const lesson = lessonId ? getLessonById(lessonId) : LESSONS[0];
 
+  const readKey = lesson ? `netlab:lesson-read:${lesson.id}` : null;
+  const [read, setRead] = useState(() =>
+    readKey ? localStorage.getItem(readKey) === '1' : false,
+  );
+
+  function toggleRead() {
+    if (!readKey) return;
+    const next = !read;
+    setRead(next);
+    if (next) {
+      localStorage.setItem(readKey, '1');
+    } else {
+      localStorage.removeItem(readKey);
+    }
+  }
+
   if (!lesson) {
     return (
       <div className="page-container">
@@ -224,6 +241,13 @@ export function LearnLessonPage() {
         subtitle={lesson.subtitle}
         accent="blue"
         icon={<Layers size={19} />}
+        badge={
+          read ? (
+            <span className="flex items-center gap-1.5 rounded-full border border-[--color-accent-green]/30 bg-[--color-accent-green]/10 px-2.5 py-1 text-[10px] font-semibold text-[--color-accent-green]">
+              <CheckCircle size={11} /> Concluída
+            </span>
+          ) : undefined
+        }
         actions={
           <Link
             to="/questionarios"
@@ -316,12 +340,27 @@ export function LearnLessonPage() {
                 o sistema te ensina o assunto na hora.
               </p>
             </div>
-            <Link
-              to="/questionarios"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-[--color-accent-blue]/10 text-[--color-accent-cyan] border border-[--color-accent-blue]/30 px-4 py-2 text-xs font-semibold transition-colors hover:bg-[--color-accent-blue]/20 shrink-0"
-            >
-              <Play size={12} /> Fazer o quiz
-            </Link>
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <Link
+                to="/questionarios"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-[--color-accent-blue]/10 text-[--color-accent-cyan] border border-[--color-accent-blue]/30 px-4 py-2 text-xs font-semibold transition-colors hover:bg-[--color-accent-blue]/20 shrink-0"
+              >
+                <Play size={12} /> Fazer o quiz
+              </Link>
+              <button
+                type="button"
+                onClick={toggleRead}
+                className={clsx(
+                  'inline-flex items-center gap-1.5 rounded-lg border px-4 py-2 text-xs font-semibold transition-colors shrink-0 cursor-pointer',
+                  read
+                    ? 'border-[--color-accent-green]/30 bg-[--color-accent-green]/10 text-[--color-accent-green] hover:bg-[--color-accent-green]/20'
+                    : 'border-[--color-border-secondary]/60 text-[--color-text-muted] hover:text-[--color-text-secondary] hover:bg-white/[0.04]',
+                )}
+              >
+                <CheckCircle size={12} />
+                {read ? 'Concluída' : 'Marcar como concluída'}
+              </button>
+            </div>
           </div>
         </div>
       </div>

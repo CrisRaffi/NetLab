@@ -394,6 +394,9 @@ function DoubtCard({
             <span className="text-[10px] text-[--color-text-muted]">
               · {timeLabel(doubt.createdAt)}
             </span>
+            <span className="rounded-full border border-[--color-accent-purple]/30 bg-[--color-accent-purple]/10 px-2 py-0.5 text-[10px] font-medium text-[--color-accent-purple]">
+              {doubt.topic || 'Geral'}
+            </span>
           </div>
           <h4 className="mt-1 text-sm font-semibold text-[--color-accent-purple]">
             {doubt.title}

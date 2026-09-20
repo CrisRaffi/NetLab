@@ -18,6 +18,7 @@ import { SimulatorWorkspace } from '../components/simulator/SimulatorWorkspace';
 import { INITIAL_EXERCISES } from '../data/exercises';
 import { useProgressStore } from '../stores/useProgressStore';
 import { useSimulatorStore } from '../stores/useSimulatorStore';
+import { toast } from '../stores/useToastStore';
 import { normalizeTopology, runValidation } from '../engine/lab';
 import type { LabValidation } from '../engine/lab';
 import type { Exercise, Topology } from '../types';
@@ -168,6 +169,7 @@ function LabWorkspace({ exercise }: { exercise: Exercise }) {
       completeExercise(exercise.id, exercise.concepts, exercise.xpReward);
       const award = ACHIEVEMENTS_BY_LAB[exercise.id];
       if (award) unlockAchievement(award);
+      toast('success', `Laboratório aprovado! +${exercise.xpReward} XP`);
     }
   };
 

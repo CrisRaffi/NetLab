@@ -86,11 +86,17 @@ export function PacketJourneyPage() {
       : TCP_IP_LAYERS[selected - 1];
 
   const JOURNEY_STEPS = [
-    { label: 'Montar o pacote', icon: Package },
-    { label: 'Enviar pela rede', icon: SendHorizonal },
-    { label: 'Desencapsular', icon: Layers },
-    { label: 'Avaliar', icon: ClipboardCheck },
+    { label: 'Montar o pacote', icon: Package, target: 'journey-step-1' },
+    { label: 'Enviar pela rede', icon: SendHorizonal, target: 'journey-step-2' },
+    { label: 'Desencapsular', icon: Layers, target: 'journey-step-3' },
+    { label: 'Avaliar', icon: ClipboardCheck, target: 'journey-step-4' },
   ];
+
+  const scrollToStep = (target: string) => {
+    document
+      .getElementById(target)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   return (
     <div className="space-y-3 w-full" style={{ padding: 16 }}>
@@ -101,7 +107,7 @@ export function PacketJourneyPage() {
         accent="cyan"
         badge={
           <span className="text-[10px] font-mono px-2 py-0.5 rounded-full border border-[--color-accent-green]/30 text-[--color-accent-green] bg-[--color-accent-green]/8">
-            FASE 4 · exercícios e pontuação
+            Exercícios interativos
           </span>
         }
       />
@@ -134,21 +140,24 @@ export function PacketJourneyPage() {
               {i > 0 && (
                 <span className="hidden sm:block h-px flex-1 min-w-4 bg-[--color-border-secondary]/60" />
               )}
-              <div
+              <button
+                type="button"
+                onClick={() => scrollToStep(s.target)}
+                title={`Ir para: ${s.label}`}
                 className={clsx(
-                  'flex items-center gap-2 px-2.5 py-1.5 rounded-lg border transition-colors',
+                  'flex items-center gap-2 px-2.5 py-1.5 rounded-lg border transition-colors cursor-pointer',
                   done
-                    ? 'border-[--color-accent-green]/30 bg-[--color-accent-green]/8 text-[--color-accent-green]'
+                    ? 'border-[--color-accent-green]/30 bg-[--color-accent-green]/8 text-[--color-accent-green] hover:bg-[--color-accent-green]/15'
                     : active
-                      ? 'border-[--color-accent-cyan]/40 bg-[--color-accent-cyan]/10 text-[--color-accent-cyan]'
-                      : 'border-[--color-border-primary] text-[--color-text-muted]',
+                      ? 'border-[--color-accent-cyan]/40 bg-[--color-accent-cyan]/10 text-[--color-accent-cyan] hover:bg-[--color-accent-cyan]/15'
+                      : 'border-[--color-border-primary] text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/[0.04]',
                 )}
               >
                 <Icon size={13} />
                 <span className="text-[10px] font-semibold whitespace-nowrap">
                   {s.label}
                 </span>
-              </div>
+              </button>
             </Fragment>
           );
         })}
@@ -157,6 +166,8 @@ export function PacketJourneyPage() {
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-4 items-start">
         <div className="space-y-3 min-w-0">
           <Card
+            id="journey-step-1"
+            style={{ scrollMarginTop: 16 }}
             title="Montando o pacote"
             subtitle="Coloque cada cartão na ordem em que ele envelopa os dados"
             icon={<Package size={16} />}
@@ -183,6 +194,8 @@ export function PacketJourneyPage() {
           </Card>
 
           <Card
+            id="journey-step-2"
+            style={{ scrollMarginTop: 16 }}
             title="Envio de mensagem"
             subtitle="PC → SWITCH → ROUTER → SERVER"
             padding="md"
@@ -192,6 +205,8 @@ export function PacketJourneyPage() {
           </Card>
 
           <Card
+            id="journey-step-3"
+            style={{ scrollMarginTop: 16 }}
             title="Desencapsulando no SERVER"
             subtitle="O pacote chega cheio de cabeçalhos — vamos removê-los um a um até a mensagem"
             padding="md"
@@ -201,6 +216,8 @@ export function PacketJourneyPage() {
           </Card>
 
           <Card
+            id="journey-step-4"
+            style={{ scrollMarginTop: 16 }}
             title="Avaliando o que você aprendeu"
             subtitle="Responda, erre, use dicas e entenda o porquê — a nota é só uma consequência"
             icon={<ClipboardCheck size={16} />}

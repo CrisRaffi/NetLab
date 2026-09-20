@@ -1,4 +1,4 @@
-import { Play, Clock, ListChecks } from 'lucide-react';
+import { Play, Clock, ListChecks, Zap } from 'lucide-react';
 import type { Quiz } from '../../data/quizzes';
 
 interface QuizCardProps {
@@ -36,6 +36,9 @@ export function QuizCard({ quiz, onStart, bestScore }: QuizCardProps) {
         <span className="inline-flex items-center gap-1">
           <Clock size={11} /> {'~' +
             Math.ceil(quiz.questions.length * 1.5)} min
+        </span>
+        <span className="inline-flex items-center gap-1 text-[--color-accent-blue]">
+          <Zap size={11} /> +{quiz.questions.length * 5} XP
         </span>
       </div>
 

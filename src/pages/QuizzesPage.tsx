@@ -8,6 +8,7 @@ import { QuizPlayer } from '../components/quiz/QuizPlayer';
 import { QUIZZES, getQuizById } from '../data/quizzes';
 import { useQuizStore } from '../stores/useQuizStore';
 import { useAuth } from '../features/auth/AuthContext';
+import { toast } from '../stores/useToastStore';
 
 export function QuizzesPage() {
   const [activeQuizId, setActiveQuizId] = useState<string | null>(null);
@@ -22,7 +23,13 @@ export function QuizzesPage() {
         <QuizPlayer
           quiz={activeQuiz}
           onExit={() => setActiveQuizId(null)}
-          onFinish={(score, total) => saveQuiz(activeQuiz.id, score, total)}
+          onFinish={(score, total) => {
+            saveQuiz(activeQuiz.id, score, total);
+            toast(
+              'success',
+              `Quiz concluído: ${score}/${total}! ${score === total ? 'Nota máxima! 🎉' : ''}`,
+            );
+          }}
         />
       </div>
     );

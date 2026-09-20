@@ -35,6 +35,7 @@ import { runValidation } from '../engine/lab';
 import type { LabValidation } from '../engine/lab';
 import { useProgressStore } from '../stores/useProgressStore';
 import { useSimulatorStore } from '../stores/useSimulatorStore';
+import { toast } from '../stores/useToastStore';
 import type { Topology } from '../types';
 import { clsx } from 'clsx';
 
@@ -219,6 +220,7 @@ function BreakSession({
           .length + 1;
       if (breaksDone === 1) unlockAchievement(ACHIEVEMENTS.troubleshooter);
       if (breaksDone === 5) unlockAchievement(ACHIEVEMENTS.firefighter);
+      toast('success', `Rede consertada! +${scenario.xpReward} XP`);
     }
   };
 

@@ -20,6 +20,7 @@ import {
   ClipboardList,
   BookOpenText,
   CircleUserRound,
+  MessagesSquare,
 } from 'lucide-react';
 
 const NAV = [
@@ -84,6 +85,12 @@ const FEATURES = [
     tile: 'background:#14b8a624;color:#2dd4bf;border-color:#14b8a64d',
     title: 'Conta e Sincronização',
     text: 'Crie sua conta para sincronizar progresso e pontuações na nuvem, com recuperação de senha e proteção contra força bruta.',
+  },
+  {
+    icon: MessagesSquare,
+    tile: 'background:#a78bfa24;color:#c4b5fd;border-color:#a78bfa4d',
+    title: 'Comunidade',
+    text: 'Converse no chat geral com outros alunos e envie dúvidas para receber respostas — aprendizado é melhor em grupo.',
   },
 ];
 
