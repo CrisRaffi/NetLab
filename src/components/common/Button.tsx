@@ -1,7 +1,7 @@
 ﻿import { forwardRef, type ButtonHTMLAttributes } from 'react';
 import { clsx } from 'clsx';
 
-type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'success';
+type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'success' | 'accent';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -18,6 +18,8 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   danger: 'bg-gradient-to-br from-[#F43F5E] to-[#E11D48] hover:from-[#FB7185] hover:to-[#F43F5E] text-white glow-red border border-white/10 hover:border-white/20',
   success:
     'bg-gradient-to-br from-[#10B981] to-[#059669] hover:from-[#34D399] hover:to-[#10B981] text-white glow-green border border-white/10 hover:border-white/20',
+  accent:
+    'bg-[--color-accent-blue]/10 text-[--color-accent-cyan] border border-[--color-accent-blue]/30 hover:bg-[--color-accent-blue]/20',
 };
 
 const SIZE_CLASSES: Record<ButtonSize, string> = {

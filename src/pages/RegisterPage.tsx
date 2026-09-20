@@ -10,6 +10,7 @@ import {
   UserRound,
 } from 'lucide-react';
 import { AuthLayout } from '../components/auth/AuthLayout';
+import { Button } from '../components/common/Button';
 import { useAuth } from '../features/auth/AuthContext';
 import { authErrorMessage } from '../features/auth/authErrors';
 import {
@@ -231,14 +232,15 @@ export function RegisterPage() {
           </div>
         )}
 
-        <button
+        <Button
           type="submit"
           disabled={loading || !configured || lockSeconds > 0}
-          className="w-full inline-flex items-center justify-center gap-1.5 rounded-lg bg-[--color-accent-blue]/10 text-[--color-accent-cyan] border border-[--color-accent-blue]/30 px-4 py-2 text-xs font-semibold transition-colors hover:bg-[--color-accent-blue]/20 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          variant="accent"
+          className="w-full"
         >
           {loading ? 'Criando conta…' : 'Criar conta'}
           {!loading && <ArrowRight size={12} />}
-        </button>
+        </Button>
 
         <p className="text-[10px] text-[--color-text-muted] leading-relaxed">
           A senha deve ter pelo menos {PASSWORD_MIN_LENGTH} caracteres (sem

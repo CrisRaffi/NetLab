@@ -372,11 +372,11 @@ h1,h2,h3,h4,h5,h6 { font-size: inherit; font-weight: inherit; letter-spacing: in
 .-translate-x-1\/2 { transform: translateX(-50%) }
 
 /* ─── Typography: Sizes ─── */
-.text-\[8px\] { font-size: 8px }
-.text-\[8\.5px\] { font-size: 8.5px }
-.text-\[9px\] { font-size: 9px }
-.text-\[10px\] { font-size: 10px }
-.text-\[11px\] { font-size: 11px }
+.text-\[8px\] { font-size: 11px }
+.text-\[8\.5px\] { font-size: 11px }
+.text-\[9px\] { font-size: 11px }
+.text-\[10px\] { font-size: 11px }
+.text-\[11px\] { font-size: 12px }
 .text-\[13px\] { font-size: 13px }
 .text-\[14px\] { font-size: 14px }
 .text-\[15px\] { font-size: 15px }
@@ -809,7 +809,7 @@ h1,h2,h3,h4,h5,h6 { font-size: inherit; font-weight: inherit; letter-spacing: in
 }
 
 .section-label {
-  font-size: 10px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: .1em;
   font-weight: 700;
@@ -855,7 +855,7 @@ h1,h2,h3,h4,h5,h6 { font-size: inherit; font-weight: inherit; letter-spacing: in
   gap: 6px;
   padding: 3px 10px;
   border-radius: 999px;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: .02em;
 }
@@ -1167,7 +1167,7 @@ h1,h2,h3,h4,h5,h6 { font-size: inherit; font-weight: inherit; letter-spacing: in
 .pr-2 { padding-right: 8px }
 .py-5 { padding-block: 20px }
 .py-10 { padding-block: 40px }
-.text-\[7px\] { font-size: 7px }
+.text-\[7px\] { font-size: 11px }
 .text-\[\#0A0E1A\] { color: #111A2C }
 .text-\[\#F87171\] { color: #F87171 }
 .text-\[--color-text-muted\]\/80 { color: color-mix(in srgb, var(--color-text-muted) 80%, transparent) }
@@ -1288,4 +1288,14 @@ h1,h2,h3,h4,h5,h6 { font-size: inherit; font-weight: inherit; letter-spacing: in
   gap: 0.75rem;
   padding: 0.75rem 1.25rem;
   border-top: 1px solid color-mix(in srgb, var(--color-border-primary) 40%, transparent);
+}
+
+/* Acessibilidade: reduzir movimento */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

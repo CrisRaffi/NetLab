@@ -151,7 +151,7 @@ export function SimulatorWorkspace({
   const [quizOpen, setQuizOpen] = useState(false);
   const [glossaryOpen, setGlossaryOpen] = useState(false);
   const [showHelp] = useState(true);
-  const [propertyPanelOpen, setPropertyPanelOpen] = useState(true);
+  const [propertyPanelOpen, setPropertyPanelOpen] = useState(false);
   const [bottomTab, setBottomTab] = useState<
     'console' | 'packets' | 'evaluation'
   >(defaultBottomTab ?? 'console');

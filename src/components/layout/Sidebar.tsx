@@ -6,7 +6,6 @@ import {
   Map,
   FlaskConical,
   Bug,
-  FileQuestion,
   ClipboardList,
   Trophy,
   Settings,
@@ -21,6 +20,7 @@ import {
   Braces,
   Radio,
   Workflow,
+  MessagesSquare,
 } from 'lucide-react';
 import { useProgressStore } from '../../stores/useProgressStore';
 import { getLevelFromXp } from '../../stores/useProgressStore';
@@ -43,19 +43,20 @@ interface NavGroup {
 
 const NAV_GROUPS: NavGroup[] = [
   {
-    label: 'Plataforma',
+    label: 'Início',
     icon: LayoutDashboard,
     defaultOpen: true,
     items: [
       { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-      { to: '/mapa', label: 'Mapa de Aprendizado', icon: Map },
+      { to: '/comunidade', label: 'Comunidade', icon: MessagesSquare },
     ],
   },
   {
-    label: 'Matérias',
+    label: 'Aprender',
     icon: Layers,
     defaultOpen: true,
     items: [
+      { to: '/mapa', label: 'Mapa de Aprendizado', icon: Map },
       { to: '/viagem', label: 'A Viagem do Pacote', icon: Gamepad2 },
       {
         to: '/aprender/transporte-pdu',
@@ -75,7 +76,7 @@ const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    label: 'Laboratório',
+    label: 'Praticar',
     icon: FlaskConical,
     defaultOpen: true,
     items: [
@@ -83,10 +84,14 @@ const NAV_GROUPS: NavGroup[] = [
         to: '/simulador',
         label: 'Laboratório Livre',
         icon: Network,
-        highlight: true,
         mobileHidden: true,
       },
-      { to: '/labs', label: 'Laboratórios', icon: FlaskConical, mobileHidden: true },
+      {
+        to: '/labs',
+        label: 'Laboratórios',
+        icon: FlaskConical,
+        mobileHidden: true,
+      },
       {
         to: '/troubleshooting',
         label: 'Troubleshooting',
@@ -94,7 +99,6 @@ const NAV_GROUPS: NavGroup[] = [
         mobileHidden: true,
       },
       { to: '/questionarios', label: 'Questionários', icon: ClipboardList },
-      { to: '/prova', label: 'Modo Prova', icon: FileQuestion },
     ],
   },
 ];
@@ -106,7 +110,7 @@ const BOTTOM_ITEMS: NavItem[] = [
 
 const navItemClass = ({ isActive }: { isActive: boolean }) =>
   clsx(
-    'flex items-center gap-2.5 px-3 py-1.5 text-xs rounded-lg transition-all duration-200',
+    'flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg transition-all duration-200',
     isActive
       ? 'bg-[--color-accent-blue]/15 text-[--color-accent-cyan] font-semibold ring-inset-blue'
       : 'text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/[0.04]',

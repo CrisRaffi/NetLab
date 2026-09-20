@@ -2,8 +2,6 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Bell,
-  Search,
-  Activity,
   Sparkles,
   ChevronDown,
   LogIn,
@@ -14,6 +12,7 @@ import {
 import { useAuth } from '../../features/auth/AuthContext';
 import { logAuthEvent } from '../../features/auth/authLog';
 import { clsx } from 'clsx';
+import { CommandSearch } from './CommandSearch';
 
 export function Header({ onOpenMenu }: { onOpenMenu?: () => void }) {
   const [showNotifications, setShowNotifications] = useState(false);
@@ -46,37 +45,11 @@ export function Header({ onOpenMenu }: { onOpenMenu?: () => void }) {
       )}
       {/* Search */}
       <div className="flex flex-1 max-w-xl mx-auto">
-        <div className="relative w-full group">
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[--color-text-muted] transition-colors group-focus-within:text-[--color-accent-blue]" />
-          <input
-            type="text"
-            placeholder="Buscar conceito, laboratório, comando..."
-            className={clsx(
-              'w-full bg-[#0D1424]/80 border border-[--color-border-primary]/45 rounded-xl pl-10 pr-3 sm:pr-16 py-2 text-sm',
-              'text-[--color-text-primary] placeholder:text-[--color-text-muted]/60',
-              'focus:outline-none focus:border-[--color-accent-blue] focus:ring-2 focus:ring-[--color-accent-blue]/15 focus:bg-[#0D1424]',
-              'transition-all duration-200',
-              'hover:border-[--color-border-secondary]/80'
-            )}
-          />
-          <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:flex items-center px-2 py-1 rounded-md border border-white/10 bg-white/5 text-[9px] text-[--color-text-muted] font-mono">
-            Ctrl K
-          </kbd>
-        </div>
+        <CommandSearch />
       </div>
 
       {/* Right actions */}
       <div className="flex items-center gap-1.5 shrink-0">
-        <button
-          onClick={() => {}}
-          className="relative p-2.5 rounded-xl text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/5 transition-colors cursor-pointer"
-          title="Status do sistema"
-          aria-label="Status"
-        >
-          <Activity size={17} />
-          <span className="absolute right-2 top-2 w-1.5 h-1.5 rounded-full bg-[--color-status-connected]" />
-        </button>
-
         <div className="relative">
           <button
             onClick={() => setShowNotifications(v => !v)}
@@ -89,7 +62,6 @@ export function Header({ onOpenMenu }: { onOpenMenu?: () => void }) {
             aria-label="Notificações"
           >
             <Bell size={17} />
-            <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[--color-accent-blue] ring-2 ring-[#0D1424]" />
           </button>
           {showNotifications && (
             <div className="absolute right-0 top-full mt-2.5 w-72 rounded-2xl bg-[--color-bg-card] border border-[--color-border-primary] shadow-2xl shadow-black/50 overflow-hidden z-40 glass-strong animate-fade-in-up">

@@ -8,9 +8,6 @@ import {
   BookOpen,
   Network,
   GraduationCap,
-  Map,
-  ClipboardList,
-  Gamepad2,
   Lightbulb,
   ChevronLeft,
   ChevronRight,
@@ -22,6 +19,7 @@ import { Button } from '../components/common/Button';
 import { useProgressStore } from '../stores/useProgressStore';
 import { useQuizStore } from '../stores/useQuizStore';
 import { useAuth } from '../features/auth/AuthContext';
+import { WelcomeChecklist } from '../components/onboarding/WelcomeChecklist';
 import { INITIAL_EXERCISES } from '../data/exercises';
 import { CONCEPT_DEFINITIONS } from '../data/content/concepts';
 import { protocolTip } from '../data/protocolTips';
@@ -64,37 +62,6 @@ const MODULE_GROUPS: { name: string; conceptIds: string[]; color: string }[] = [
     name: 'Serviços',
     conceptIds: ['dhcp', 'dns', 'routing-basics'],
     color: 'bg-[--color-accent-red]',
-  },
-];
-
-const QUICK_ACTIONS = [
-  {
-    to: '/mapa',
-    title: 'Mapa de Aprendizado',
-    desc: 'Sua trilha guiada, conceito por conceito',
-    icon: Map,
-    chip: 'bg-[--color-accent-blue]/12 text-[--color-accent-blue] border-[--color-accent-blue]/25',
-  },
-  {
-    to: '/simulador',
-    title: 'Simulador',
-    desc: 'Monte redes e veja os pacotes na prática',
-    icon: Network,
-    chip: 'bg-[--color-accent-cyan]/12 text-[--color-accent-cyan] border-[--color-accent-cyan]/25',
-  },
-  {
-    to: '/questionarios',
-    title: 'Questionários',
-    desc: 'Teste o que você aprendeu e evolua',
-    icon: ClipboardList,
-    chip: 'bg-[--color-accent-green]/12 text-[--color-accent-green] border-[--color-accent-green]/25',
-  },
-  {
-    to: '/viagem',
-    title: 'A Viagem do Pacote',
-    desc: 'Acompanhe os dados do início ao fim',
-    icon: Gamepad2,
-    chip: 'bg-[--color-accent-purple]/12 text-[--color-accent-purple] border-[--color-accent-purple]/25',
   },
 ];
 
@@ -263,6 +230,7 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-5 page-container">
+      <WelcomeChecklist show={!hasProgress} />
       {/* Hero compacto: informações + anel na mesma linha */}
       <section
         className="relative overflow-hidden rounded-2xl border border-[--color-border-primary]/40 bg-gradient-to-br from-[#0A2340] via-[#111A2C] to-[#0D1424] card-shadow-soft packet-flow"
@@ -370,31 +338,6 @@ export function DashboardPage() {
             </svg>
           </div>
         </div>
-      </section>
-
-      {/* Atalhos rápidos */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4" style={stagger(1)}>
-        {QUICK_ACTIONS.map((action) => (
-          <Link
-            key={action.to}
-            to={action.to}
-            className="group relative rounded-xl border border-[--color-border-primary]/45 bg-[--color-bg-card]/70 backdrop-blur-sm card-shadow packet-flow overflow-hidden transition-all duration-150 hover:-translate-y-0.5 hover:border-[--color-accent-blue]/50"
-          >
-            <div className="flex items-center gap-3 p-4">
-              <span className={clsx('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border', action.chip)}>
-                <action.icon size={20} />
-              </span>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-[--color-text-primary] truncate">{action.title}</p>
-                <p className="text-xs text-[--color-text-muted] line-clamp-1 mt-0.5">{action.desc}</p>
-              </div>
-              <ArrowRight
-                size={15}
-                className="shrink-0 text-[--color-accent-blue] opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all"
-              />
-            </div>
-          </Link>
-        ))}
       </section>
 
       {/* Dica rápida */}

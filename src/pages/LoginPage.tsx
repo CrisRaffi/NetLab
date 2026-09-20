@@ -9,6 +9,7 @@ import {
   TriangleAlert,
 } from 'lucide-react';
 import { AuthLayout } from '../components/auth/AuthLayout';
+import { Button } from '../components/common/Button';
 import { useAuth } from '../features/auth/AuthContext';
 import { loginErrorMessage } from '../features/auth/authErrors';
 import {
@@ -174,10 +175,11 @@ export function LoginPage() {
           </div>
         )}
 
-        <button
+        <Button
           type="submit"
           disabled={disabled}
-          className="w-full inline-flex items-center justify-center gap-1.5 rounded-lg bg-[--color-accent-blue]/10 text-[--color-accent-cyan] border border-[--color-accent-blue]/30 px-4 py-2 text-xs font-semibold transition-colors hover:bg-[--color-accent-blue]/20 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          variant="accent"
+          className="w-full"
         >
           {loading
             ? 'Entrando…'
@@ -185,7 +187,7 @@ export function LoginPage() {
               ? `Bloqueado ${Math.ceil(lockSeconds / 60)} min`
               : 'Entrar'}
           {!loading && lockSeconds === 0 && <ArrowRight size={12} />}
-        </button>
+        </Button>
 
         <p className="text-center text-[11px] text-[--color-text-muted]">
           Nunca compartilhe sua senha. Ainda não tem conta?{' '}

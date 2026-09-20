@@ -282,14 +282,17 @@ export function LearnLessonPage() {
 
           {/* Videoaula */}
           {lesson.video && (
-            <section className="rounded-xl border border-[--color-border-primary]/70 bg-[--color-bg-card] p-5">
+            <section className="packet-flow card-shadow relative overflow-hidden rounded-xl border border-[--color-border-primary]/70 bg-[--color-bg-card] p-5">
               <h2 className="flex items-center gap-2 text-base font-semibold text-[--color-text-primary] mb-3">
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[--color-bg-tertiary] text-[10px] font-bold text-[--color-accent-blue]">
                   <Play size={11} />
                 </span>
                 Videoaula: {lesson.video.title}
               </h2>
-              <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-black">
+              <div
+                className="relative w-full rounded-lg overflow-hidden bg-black"
+                style={{ aspectRatio: '16 / 9' }}
+              >
                 <iframe
                   className="absolute inset-0 w-full h-full border-0"
                   src={`https://www.youtube.com/embed/${lesson.video.youtubeId}`}

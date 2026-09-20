@@ -1,12 +1,25 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Lock, ChevronRight, Play, Map as MapIcon } from 'lucide-react';
+import {
+  Lock,
+  ChevronRight,
+  Play,
+  Map as MapIcon,
+  BookOpen,
+  FlaskConical,
+  ClipboardList,
+  CheckCircle,
+} from 'lucide-react';
 import {
   useProgressStore,
   type ProgressState,
 } from '../stores/useProgressStore';
 import { CONCEPT_DEFINITIONS, CONCEPT_ORDER } from '../data/content/concepts';
+import { getLessonById } from '../data/lessons';
 import { protocolTip } from '../data/protocolTips';
 import { PageHeader } from '../components/common/PageHeader';
+import { Modal } from '../components/common/Modal';
+import { INITIAL_EXERCISES } from '../data/exercises';
 import {
   getWeakConcepts,
   getDueForReview,
@@ -82,8 +95,174 @@ function isConceptUnlocked(
   });
 }
 
+const CONCEPT_LESSON: Record<string, string> = {
+  'osi-model': 'modelo-osi-tcpip',
+  'tcp-ip-model': 'modelo-osi-tcpip',
+  encapsulation: 'modelo-osi-tcpip',
+  frames: 'modelo-osi-tcpip',
+  'mac-address': 'modelo-osi-tcpip',
+  'switch-operations': 'modelo-osi-tcpip',
+  arp: 'modelo-osi-tcpip',
+};
+
+function ConceptModal({
+  conceptId,
+  onClose,
+}: {
+  conceptId: string | null;
+  onClose: () => void;
+}) {
+  const store = useProgressStore();
+  if (!conceptId) return null;
+
+  const def = CONCEPT_DEFINITIONS[conceptId];
+  if (!def) return null;
+
+  const mastery = getConceptMastery(store, conceptId);
+  const unlocked = isConceptUnlocked(store, conceptId, def.prerequisites);
+  const lessonId = CONCEPT_LESSON[conceptId];
+  const labs = INITIAL_EXERCISES.filter((ex) =>
+    ex.concepts.includes(conceptId),
+  );
+
+  const statusLabel = !unlocked
+    ? 'Bloqueado'
+    : mastery === 0
+      ? 'Não iniciado'
+      : mastery >= 80
+        ? 'Dominado'
+        : 'Em progresso';
+
+  const statusTone = !unlocked
+    ? 'text-[--color-text-muted] border-[--color-border-primary] bg-[--color-bg-tertiary]'
+    : mastery >= 80
+      ? 'text-[--color-accent-green] border-[--color-accent-green]/30 bg-[--color-accent-green]/10'
+      : mastery > 0
+        ? 'text-[--color-accent-yellow] border-[--color-accent-yellow]/30 bg-[--color-accent-yellow]/10'
+        : 'text-[--color-accent-blue] border-[--color-accent-blue]/30 bg-[--color-accent-blue]/10';
+
+  return (
+    <Modal open onClose={onClose} title={def.name} size="md">
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className={clsx('chip', statusTone)}>{statusLabel}</span>
+          <span className="chip bg-[--color-bg-tertiary] text-[--color-text-muted] border border-[--color-border-primary]">
+            Nível {def.level}
+          </span>
+          <span className="chip bg-[--color-bg-tertiary] text-[--color-text-muted] border border-[--color-border-primary]">
+            Maestria {Math.round(mastery)}%
+          </span>
+        </div>
+
+        {!unlocked && def.prerequisites.length > 0 && (
+          <div className="rounded-lg border border-[--color-accent-yellow]/30 bg-[--color-accent-yellow]/5 p-3 text-xs text-[--color-text-secondary] leading-relaxed">
+            <p className="font-medium text-[--color-accent-yellow] mb-1">
+              Para liberar este conceito, domine primeiro:
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {def.prerequisites.map((p) => (
+                <span
+                  key={p}
+                  className="text-[11px] text-[--color-text-muted] px-2 py-0.5 rounded bg-[--color-bg-tertiary]"
+                >
+                  {CONCEPT_DEFINITIONS[p]?.name ?? p}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-[--color-text-muted] mb-2">
+            O que fazer
+          </p>
+          <div className="space-y-2">
+            {lessonId && (
+              <Link
+                to={`/aprender/${lessonId}`}
+                onClick={onClose}
+                className="flex items-center gap-3 rounded-lg border border-[--color-accent-blue]/25 bg-[--color-accent-blue]/5 p-3 transition-colors hover:border-[--color-accent-blue]/50 hover:bg-[--color-accent-blue]/10"
+              >
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[--color-accent-blue]/10 text-[--color-accent-blue]">
+                  <BookOpen size={15} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-xs font-semibold text-[--color-text-primary]">
+                    Estudar a lição
+                  </span>
+                  <span className="block text-[11px] text-[--color-text-muted] truncate">
+                    {getLessonById(lessonId)?.title ?? 'Lição com diagramas animados'}
+                  </span>
+                </span>
+                <Play size={14} className="shrink-0 text-[--color-accent-blue]" />
+              </Link>
+            )}
+
+            {labs.length > 0 && (
+              <div className="rounded-lg border border-[--color-border-primary]/50 overflow-hidden">
+                <p className="flex items-center gap-2 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-[--color-text-muted] border-b border-[--color-border-primary]/40">
+                  <FlaskConical size={11} className="text-[--color-accent-green]" />
+                  Laboratórios relacionados ({labs.length})
+                </p>
+                {labs.slice(0, 3).map((ex) => (
+                  <Link
+                    key={ex.id}
+                    to={`/labs/${ex.id}`}
+                    onClick={onClose}
+                    className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:bg-[--color-bg-hover]"
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-xs font-medium text-[--color-text-secondary]">
+                        {ex.title}
+                      </span>
+                      <span className="block text-[11px] text-[--color-text-muted]">
+                        {ex.estimatedTime} min · +{ex.xpReward} XP
+                      </span>
+                    </span>
+                    <Play size={13} className="shrink-0 text-[--color-accent-green]" />
+                  </Link>
+                ))}
+              </div>
+            )}
+
+            <Link
+              to="/questionarios"
+              onClick={onClose}
+              className="flex items-center gap-3 rounded-lg border border-[--color-accent-purple]/25 bg-[--color-accent-purple]/5 p-3 transition-colors hover:border-[--color-accent-purple]/50 hover:bg-[--color-accent-purple]/10"
+            >
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[--color-accent-purple]/10 text-[--color-accent-purple]">
+                <ClipboardList size={15} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-xs font-semibold text-[--color-text-primary]">
+                  Testar no questionário
+                </span>
+                <span className="block text-[11px] text-[--color-text-muted]">
+                  {mastery >= 80
+                    ? 'Revise e mantenha sua maestria'
+                    : mastery > 0
+                      ? 'Consolide o que já aprendeu'
+                      : 'Aprenda testando seus conhecimentos'}
+                </span>
+              </span>
+              <Play size={14} className="shrink-0 text-[--color-accent-purple]" />
+            </Link>
+          </div>
+        </div>
+
+        {unlocked && mastery >= 80 && (
+          <p className="flex items-center gap-1.5 text-[11px] text-[--color-accent-green]">
+            <CheckCircle size={12} /> Você domina este conceito. Continue revisando para fixar.
+          </p>
+        )}
+      </div>
+    </Modal>
+  );
+}
+
 export function LearningMapPage() {
   const store = useProgressStore();
+  const [selectedConcept, setSelectedConcept] = useState<string | null>(null);
 
   const allConcepts = CONCEPT_ORDER.map((id) => ({
     id,
@@ -166,20 +345,23 @@ export function LearningMapPage() {
 
                   <div className="flex flex-wrap gap-1.5 mb-2">
                     {items.map((c) => (
-                      <span
+                      <button
                         key={c.id}
+                        type="button"
+                        onClick={() => setSelectedConcept(c.id)}
+                        title={`Abrir ações de "${c.name}"`}
                         className={clsx(
-                          'px-2 py-0.5 rounded text-[10px] border',
+                          'px-2 py-0.5 rounded text-[11px] border transition-all cursor-pointer',
                           c.unlocked
                             ? c.mastery >= 80
-                              ? 'border-[--color-accent-green]/30 bg-[--color-accent-green]/10 text-[--color-accent-green]'
-                              : 'border-[--color-accent-blue]/30 bg-[--color-accent-blue]/10 text-[--color-accent-blue]'
-                            : 'border-[--color-border-primary] text-[--color-text-muted]',
+                              ? 'border-[--color-accent-green]/30 bg-[--color-accent-green]/10 text-[--color-accent-green] hover:bg-[--color-accent-green]/20'
+                              : 'border-[--color-accent-blue]/30 bg-[--color-accent-blue]/10 text-[--color-accent-blue] hover:bg-[--color-accent-blue]/20'
+                            : 'border-[--color-border-primary] text-[--color-text-muted] hover:border-[--color-border-secondary]',
                         )}
                       >
                         {c.unlocked && c.mastery >= 80 ? '✅ ' : ''}
                         {c.name}
-                      </span>
+                      </button>
                     ))}
                   </div>
 
@@ -371,13 +553,15 @@ export function LearningMapPage() {
 
                       <div className="flex flex-wrap gap-1 mt-1">
                         {row.concepts.map((id) => (
-                          <span
+                          <button
                             key={id}
-                            className="text-[10px] text-[--color-text-muted]"
-                            title={protocolTip(CONCEPT_DEFINITIONS[id]?.name)}
+                            type="button"
+                            onClick={() => setSelectedConcept(id)}
+                            title={`Abrir ações de "${CONCEPT_DEFINITIONS[id]?.name}"`}
+                            className="text-[11px] text-[--color-text-muted] hover:text-[--color-accent-cyan] underline decoration-dotted underline-offset-2 cursor-pointer transition-colors"
                           >
                             {CONCEPT_DEFINITIONS[id]?.name}
-                          </span>
+                          </button>
                         ))}
                       </div>
                     </div>
@@ -412,6 +596,11 @@ export function LearningMapPage() {
           )}
         </div>
       </div>
+
+      <ConceptModal
+        conceptId={selectedConcept}
+        onClose={() => setSelectedConcept(null)}
+      />
     </div>
   );
 }

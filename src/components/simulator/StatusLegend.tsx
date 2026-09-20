@@ -80,7 +80,7 @@ export function StatusLegend() {
   if (!open) {
     return (
       <button
-        style={{ marginLeft: 200 }}
+        style={{ marginLeft: 215 }}
         onClick={() => setOpen(true)}
         className="absolute bottom-3 left-3 z-20 flex items-center gap-1.5 rounded-full border border-[--color-border-primary]/40 bg-[#0D1424]/85 px-3 py-1.5 text-[10px] font-semibold text-[--color-text-secondary] hover:text-[--color-text-primary] hover:bg-[#111A2C]/90 backdrop-blur-md shadow-lg cursor-pointer transition-colors"
         title="Mostrar legenda de cores e status"
