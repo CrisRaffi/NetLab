@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  Bell,
-  Sparkles,
   ChevronDown,
   LogIn,
   LogOut,
@@ -11,11 +9,10 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../features/auth/AuthContext';
 import { logAuthEvent } from '../../features/auth/authLog';
-import { clsx } from 'clsx';
 import { CommandSearch } from './CommandSearch';
+import { StreakBadge } from './StreakBadge';
 
 export function Header({ onOpenMenu }: { onOpenMenu?: () => void }) {
-  const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -29,10 +26,6 @@ export function Header({ onOpenMenu }: { onOpenMenu?: () => void }) {
 
   return (
     <header className="relative flex items-center justify-between gap-4 h-16 px-4 lg:px-6 bg-[--color-bg-secondary]/55 backdrop-blur-md shrink-0 z-30">
-      <div
-        aria-hidden
-        className="absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-[--color-accent-blue]/45 to-transparent"
-      />
       {/* Menu (mobile) */}
       {onOpenMenu && (
         <button
@@ -49,38 +42,8 @@ export function Header({ onOpenMenu }: { onOpenMenu?: () => void }) {
       </div>
 
       {/* Right actions */}
-      <div className="flex items-center gap-1.5 shrink-0">
-        <div className="relative">
-          <button
-            onClick={() => setShowNotifications(v => !v)}
-            className={clsx(
-              'relative p-2.5 rounded-xl text-[--color-text-muted] transition-all cursor-pointer',
-              showNotifications
-                ? 'bg-white/5 text-[--color-text-primary]'
-                : 'hover:text-[--color-text-primary] hover:bg-white/5',
-            )}
-            aria-label="Notificações"
-          >
-            <Bell size={17} />
-          </button>
-          {showNotifications && (
-            <div className="absolute right-0 top-full mt-2.5 w-72 rounded-2xl bg-[--color-bg-card] border border-[--color-border-primary] shadow-2xl shadow-black/50 overflow-hidden z-40 glass-strong animate-fade-in-up">
-              <div className="px-4 py-3 border-b border-[--color-border-primary]/50 flex items-center justify-between">
-                <span className="text-xs font-semibold text-[--color-text-primary]">
-                  Notificações
-                </span>
-                <span className="chip bg-[--color-accent-blue]/10 text-[--color-accent-blue]">
-                  0
-                </span>
-              </div>
-              <div className="flex flex-col items-center gap-2 p-6 text-xs text-[--color-text-muted] text-center">
-                <Sparkles size={18} className="text-[--color-accent-blue]/60" />
-                Nenhuma notificação no momento
-              </div>
-            </div>
-          )}
-        </div>
-
+      <div className="flex items-center gap-2 shrink-0">
+        <StreakBadge />
         {/* Profile */}
         {user ? (
           <div className="relative">
@@ -119,6 +82,14 @@ export function Header({ onOpenMenu }: { onOpenMenu?: () => void }) {
                     {user.email}
                   </p>
                 </div>
+                <Link
+                  to="/perfil"
+                  onClick={() => setShowUserMenu(false)}
+                  className="w-full flex items-center gap-2 px-4 py-2.5 text-xs text-[--color-text-secondary] hover:bg-white/5 hover:text-[--color-text-primary] transition-colors cursor-pointer"
+                >
+                  <CircleUserRound size={13} className="text-[--color-accent-cyan]" />
+                  Meu perfil
+                </Link>
                 <button
                   onClick={handleSignOut}
                   className="w-full flex items-center gap-2 px-4 py-2.5 text-xs text-[--color-text-secondary] hover:bg-white/5 hover:text-[--color-text-primary] transition-colors cursor-pointer"

@@ -7,6 +7,18 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == uid;
     }
 
+    // Perfis públicos (avatar, banner) — leitura pública, escrita só do dono
+    match /user-profiles/{uid} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Estatísticas públicas (nível, XP, conquistas) — leitura pública, escrita do dono
+    match /public-stats/{uid} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == uid;
+    }
+
     // Chat geral da comunidade — leitura pública, escrita só logado
     match /community-chat/{docId} {
       allow read: if true;

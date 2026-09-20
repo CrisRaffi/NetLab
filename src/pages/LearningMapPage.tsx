@@ -9,6 +9,7 @@ import {
   FlaskConical,
   ClipboardList,
   CheckCircle,
+  CheckCircle2,
 } from 'lucide-react';
 import {
   useProgressStore,
@@ -351,7 +352,7 @@ export function LearningMapPage() {
                         onClick={() => setSelectedConcept(c.id)}
                         title={`Abrir ações de "${c.name}"`}
                         className={clsx(
-                          'px-2 py-0.5 rounded text-[11px] border transition-all cursor-pointer',
+                          'inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] border transition-all cursor-pointer',
                           c.unlocked
                             ? c.mastery >= 80
                               ? 'border-[--color-accent-green]/30 bg-[--color-accent-green]/10 text-[--color-accent-green] hover:bg-[--color-accent-green]/20'
@@ -359,7 +360,9 @@ export function LearningMapPage() {
                             : 'border-[--color-border-primary] text-[--color-text-muted] hover:border-[--color-border-secondary]',
                         )}
                       >
-                        {c.unlocked && c.mastery >= 80 ? '✅ ' : ''}
+                        {c.unlocked && c.mastery >= 80 && (
+                          <CheckCircle2 size={10} />
+                        )}
                         {c.name}
                       </button>
                     ))}
@@ -428,8 +431,8 @@ export function LearningMapPage() {
                 {reinforcementSuggestions.map((s) => (
                   <div key={s.conceptId} className="flex items-start gap-2">
                     <div className="flex-shrink-0">
-                      <span className="text-[10px] text-[--color-accent-green] font-medium">
-                        📚
+                      <span className="text-[--color-accent-green]">
+                        <BookOpen size={12} />
                       </span>
                     </div>
 
@@ -475,7 +478,7 @@ export function LearningMapPage() {
           )}
         </div>
 
-        <div className="rounded-lg border border-[--color-border-primary]/70 bg-[--color-bg-card] p-5 overflow-x-auto">
+        <div className="rounded-2xl border border-[--color-border-primary]/70 bg-[--color-bg-card] p-5 overflow-x-auto card-shadow">
           <h3 className="text-sm font-semibold text-[--color-text-primary] mb-4 uppercase tracking-wider">
             REDES DE COMPUTADORES
           </h3>
@@ -539,11 +542,17 @@ export function LearningMapPage() {
                   >
                     <span
                       className={clsx(
-                        'text-lg',
+                        'flex h-5 w-5 shrink-0 items-center justify-center',
                         unlocked ? '' : 'text-[--color-text-muted]',
                       )}
                     >
-                      {mastery >= 80 ? '✅' : unlocked ? '📘' : '🔒'}
+                      {mastery >= 80 ? (
+                        <CheckCircle2 size={18} className="text-[--color-accent-green]" />
+                      ) : unlocked ? (
+                        <BookOpen size={18} className="text-[--color-accent-blue]" />
+                      ) : (
+                        <Lock size={18} />
+                      )}
                     </span>
 
                     <div className="flex-1 min-w-0">

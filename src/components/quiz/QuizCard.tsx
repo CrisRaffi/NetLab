@@ -9,7 +9,7 @@ interface QuizCardProps {
 
 export function QuizCard({ quiz, onStart, bestScore }: QuizCardProps) {
   return (
-    <div className="rounded-xl border border-[--color-border-primary]/70 bg-[--color-bg-card] p-5 flex flex-col gap-3 transition-colors hover:border-[--color-accent-blue]/40">
+    <div className="rounded-2xl border border-[--color-border-primary]/45 bg-[--color-bg-card] p-5 flex flex-col gap-3 card-shadow transition-all duration-150 hover:border-[--color-accent-blue]/40 hover:-translate-y-0.5">
       <div className="flex items-center justify-between gap-2">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-[--color-accent-purple]/10 text-[--color-accent-purple] border border-[--color-accent-purple]/30 px-2.5 py-0.5 text-[10px] font-medium">
           {quiz.topic}

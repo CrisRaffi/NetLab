@@ -9,6 +9,7 @@ import { QUIZZES, getQuizById } from '../data/quizzes';
 import { useQuizStore } from '../stores/useQuizStore';
 import { useAuth } from '../features/auth/AuthContext';
 import { toast } from '../stores/useToastStore';
+import { markActivity } from '../features/retention/streak';
 
 export function QuizzesPage() {
   const [activeQuizId, setActiveQuizId] = useState<string | null>(null);
@@ -25,6 +26,7 @@ export function QuizzesPage() {
           onExit={() => setActiveQuizId(null)}
           onFinish={(score, total) => {
             saveQuiz(activeQuiz.id, score, total);
+            markActivity();
             toast(
               'success',
               `Quiz concluído: ${score}/${total}! ${score === total ? 'Nota máxima! 🎉' : ''}`,

@@ -40,6 +40,7 @@ export interface Doubt {
   title: string;
   body: string;
   createdAt: number;
+  resolved: boolean;
   replies: DoubtReply[];
 }
 
@@ -103,11 +104,12 @@ export function subscribeDoubts(
   );
 }
 
-export async function sendDoubt(doubt: Omit<Doubt, 'id' | 'replies'>): Promise<void> {
+export async function sendDoubt(doubt: Omit<Doubt, 'id' | 'replies' | 'resolved'>): Promise<void> {
   if (!db) return;
   await addDoc(collection(db, 'community-doubts'), {
     ...doubt,
     topic: doubt.topic ?? 'Geral',
+    resolved: false,
     replies: [],
   });
 }
@@ -125,4 +127,12 @@ export async function sendDoubtReply(
 export async function deleteDoubt(doubtId: string): Promise<void> {
   if (!db) return;
   await deleteDoc(doc(db, 'community-doubts', doubtId));
+}
+
+export async function setDoubtResolved(
+  doubtId: string,
+  resolved: boolean,
+): Promise<void> {
+  if (!db) return;
+  await updateDoc(doc(db, 'community-doubts', doubtId), { resolved });
 }

@@ -15,6 +15,7 @@ import { RegisterPage } from './pages/RegisterPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { AchievementsPage } from './pages/AchievementsPage';
 import { ConfigPage } from './pages/ConfigPage';
+import { ProfilePage } from './pages/ProfilePage';
 import { CommunityPage } from './pages/CommunityPage';
 import { PacketJourneyPage } from './features/packet-journey/pages/PacketJourneyPage';
 import { DesktopOnlyGate } from './components/common/DesktopOnlyGate';
@@ -66,6 +67,7 @@ export default function App() {
           <Route path="/questionarios" element={<QuizzesPage />} />
           <Route path="/aprender/:lessonId" element={<LearnLessonPage />} />
           <Route path="/conquistas" element={<AchievementsPage />} />
+          <Route path="/perfil" element={<ProfilePage />} />
           <Route path="/comunidade" element={<CommunityPage />} />
           <Route path="/config" element={<ConfigPage />} />
           <Route path="/viagem" element={<PacketJourneyPage />} />

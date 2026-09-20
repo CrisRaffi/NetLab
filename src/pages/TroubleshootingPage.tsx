@@ -36,6 +36,7 @@ import type { LabValidation } from '../engine/lab';
 import { useProgressStore } from '../stores/useProgressStore';
 import { useSimulatorStore } from '../stores/useSimulatorStore';
 import { toast } from '../stores/useToastStore';
+import { markActivity } from '../features/retention/streak';
 import type { Topology } from '../types';
 import { clsx } from 'clsx';
 
@@ -114,7 +115,7 @@ function Intro({ onStart }: { onStart: () => void }) {
 
   return (
     <div className="page-container space-y-6">
-      <div className="flex flex-col items-start rounded-lg border border-[--color-border-primary] bg-[--color-bg-card] p-5">
+      <div className="flex flex-col items-start rounded-2xl border border-[--color-border-primary]/45 bg-[--color-bg-card] p-5 card-shadow">
         <div className="flex items-center gap-2 mb-1">
           <Bug size={20} className="text-[--color-accent-red]" />
           <h1 className="text-lg font-bold text-[--color-text-primary]">
@@ -143,7 +144,7 @@ function Intro({ onStart }: { onStart: () => void }) {
         {BREAK_SCENARIOS.map((sc) => (
           <div
             key={sc.id}
-            className="rounded-lg border border-[--color-border-primary] bg-[--color-bg-card] p-3 flex flex-col gap-1.5"
+            className="rounded-2xl border border-[--color-border-primary]/45 bg-[--color-bg-card] p-3 flex flex-col gap-1.5 card-shadow"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -213,14 +214,17 @@ function BreakSession({
     const result = runValidation(topology, scenario.validation, { arpTables });
     setValidation(result);
 
-    if (result.passed && !alreadyComplete) {
-      completeExercise(challengeId, scenario.concepts, scenario.xpReward);
-      const breaksDone =
-        progress.completedExercises.filter((id) => id.startsWith('brk-'))
-          .length + 1;
-      if (breaksDone === 1) unlockAchievement(ACHIEVEMENTS.troubleshooter);
-      if (breaksDone === 5) unlockAchievement(ACHIEVEMENTS.firefighter);
-      toast('success', `Rede consertada! +${scenario.xpReward} XP`);
+    if (result.passed) {
+      markActivity();
+      if (!alreadyComplete) {
+        completeExercise(challengeId, scenario.concepts, scenario.xpReward);
+        const breaksDone =
+          progress.completedExercises.filter((id) => id.startsWith('brk-'))
+            .length + 1;
+        if (breaksDone === 1) unlockAchievement(ACHIEVEMENTS.troubleshooter);
+        if (breaksDone === 5) unlockAchievement(ACHIEVEMENTS.firefighter);
+        toast('success', `Rede consertada! +${scenario.xpReward} XP`);
+      }
     }
   };
 

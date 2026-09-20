@@ -18,6 +18,7 @@ import { auth, db, firebaseConfigured } from '../../lib/firebase';
 import { loadQuizScores, saveQuizScore } from './firestoreQuiz';
 import { loadBoards, saveBoardsToCloud } from './firestoreBoard';
 import { loadProgress, saveProgressToCloud } from './firestoreProgress';
+import { savePublicStats, computePublicStats } from '../community/publicStats';
 import { useQuizStore, type QuizResult } from '../../stores/useQuizStore';
 import {
   useSavedBoardsStore,
@@ -221,6 +222,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => {
         void saveProgressToCloud(user.uid, state.progress);
+        void savePublicStats(user.uid, computePublicStats(state.progress));
       }, 600);
     });
     return () => {
@@ -228,6 +230,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         clearTimeout(timer);
         const latest = useProgressStore.getState().progress;
         void saveProgressToCloud(user.uid, latest);
+        void savePublicStats(user.uid, computePublicStats(latest));
       }
       unsub();
     };

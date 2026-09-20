@@ -24,9 +24,25 @@ import {
   validatePassword,
 } from '../features/auth/passwordPolicy';
 import { logAuthEvent } from '../features/auth/authLog';
+import { clsx } from 'clsx';
 
 const fieldCls =
   'w-full bg-[#0D1424] border border-[--color-border-primary]/70 rounded-lg py-2 text-sm text-[--color-text-primary] placeholder:text-[--color-text-muted]/60 focus:outline-none focus:border-[--color-accent-blue]';
+
+function passwordStrength(
+  pw: string,
+): { score: number; label: string; color: string } {
+  if (!pw) return { score: 0, label: '', color: '' };
+  let score = 0;
+  if (pw.length >= PASSWORD_MIN_LENGTH) score++;
+  if (pw.length >= 10) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  if (score >= 4) return { score, label: 'Forte', color: 'bg-[--color-accent-green]' };
+  if (score >= 3) return { score, label: 'Boa', color: 'bg-[--color-accent-blue]' };
+  if (score >= 2) return { score, label: 'Média', color: 'bg-[--color-accent-yellow]' };
+  return { score, label: 'Fraca', color: 'bg-[--color-accent-red]' };
+}
 
 function Field({
   label,
@@ -66,6 +82,7 @@ export function RegisterPage() {
   const [lockSeconds, setLockSeconds] = useState(0);
 
   const key = email.trim().toLowerCase();
+  const pwStrength = passwordStrength(password);
 
   useEffect(() => {
     const tick = () => setLockSeconds(getLockRemainingSeconds(key));
@@ -198,6 +215,30 @@ export function RegisterPage() {
             </span>
           )}
         </Field>
+
+        {password && (
+          <div className="-mt-1">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-[--color-text-muted]">
+                Força da senha
+              </span>
+              <span className="text-[10px] font-medium text-[--color-text-secondary]">
+                {pwStrength.label}
+              </span>
+            </div>
+            <div className="flex gap-1">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <span
+                  key={i}
+                  className={clsx(
+                    'h-1 flex-1 rounded-full transition-colors',
+                    i < pwStrength.score ? pwStrength.color : 'bg-[--color-bg-tertiary]',
+                  )}
+                />
+              ))}
+            </div>
+          </div>
+        )}
 
         <Field label="Confirmar senha" icon={<Lock size={14} />}>
           {(base) => (

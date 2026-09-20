@@ -22,6 +22,7 @@ import {
   TcpIpDiagram,
 } from '../components/lesson/Diagrams';
 import { LESSONS, getLessonById, type LessonBlock } from '../data/lessons';
+import { markActivity } from '../features/retention/streak';
 import { clsx } from 'clsx';
 
 const DIAGRAMS = {
@@ -216,6 +217,7 @@ export function LearnLessonPage() {
     setRead(next);
     if (next) {
       localStorage.setItem(readKey, '1');
+      markActivity();
     } else {
       localStorage.removeItem(readKey);
     }
@@ -261,7 +263,7 @@ export function LearnLessonPage() {
       <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-4">
         {/* TOC sidebar */}
         <aside className="space-y-4">
-          <div className="rounded-xl border border-[--color-border-primary]/70 bg-[--color-bg-card] p-4 sticky top-4">
+          <div className="rounded-2xl border border-[--color-border-primary]/70 bg-[--color-bg-card] p-4 sticky top-4">
             <p className="section-label mb-2 flex items-center gap-1.5">
               <List size={11} /> Nesta lição
             </p>
@@ -288,7 +290,7 @@ export function LearnLessonPage() {
             <section
               key={s.id}
               id={s.id}
-              className="rounded-xl border border-[--color-border-primary]/70 bg-[--color-bg-card] p-5 space-y-3"
+              className="rounded-2xl border border-[--color-border-primary]/70 bg-[--color-bg-card] p-5 space-y-3"
             >
               <h2 className="flex items-center gap-2 text-base font-semibold text-[--color-text-primary]">
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[--color-bg-tertiary] text-[10px] font-bold text-[--color-accent-blue]">
@@ -306,7 +308,7 @@ export function LearnLessonPage() {
 
           {/* Videoaula */}
           {lesson.video && (
-            <section className="packet-flow card-shadow relative overflow-hidden rounded-xl border border-[--color-border-primary]/70 bg-[--color-bg-card] p-5">
+            <section className="card-shadow relative overflow-hidden rounded-2xl border border-[--color-border-primary]/70 bg-[--color-bg-card] p-5">
               <h2 className="flex items-center gap-2 text-base font-semibold text-[--color-text-primary] mb-3">
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[--color-bg-tertiary] text-[10px] font-bold text-[--color-accent-blue]">
                   <Play size={11} />
@@ -330,7 +332,7 @@ export function LearnLessonPage() {
           )}
 
           {/* CTA */}
-          <div className="rounded-xl border border-[--color-accent-blue]/30 bg-[--color-accent-blue]/10 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="rounded-2xl border border-[--color-accent-blue]/30 bg-[--color-accent-blue]/10 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-[--color-text-primary]">
                 Pronto para testar seus conhecimentos?

@@ -10,6 +10,8 @@ import {
   CornerDownRight,
   AlertTriangle,
   Trash2,
+  CheckCircle,
+  CheckCircle2,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { PageHeader } from '../components/common/PageHeader';
@@ -17,6 +19,7 @@ import { Button } from '../components/common/Button';
 import { useAuth } from '../features/auth/AuthContext';
 import { db } from '../lib/firebase';
 import { toast } from '../stores/useToastStore';
+import { UserHoverCard } from '../components/community/UserHoverCard';
 import {
   subscribeChat,
   subscribeDoubts,
@@ -25,6 +28,7 @@ import {
   sendDoubtReply,
   deleteChatMessage,
   deleteDoubt,
+  setDoubtResolved,
   type ChatMessage,
   type Doubt,
 } from '../features/community/firestoreCommunity';
@@ -43,14 +47,6 @@ const DOUBT_TOPICS = [
   { id: 'Simulador / Lab', label: 'Simulador / Lab' },
 ];
 
-function initials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return '?';
-  const first = parts[0][0];
-  const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
-  return (first + last).toUpperCase();
-}
-
 function timeLabel(ts: number): string {
   const d = new Date(ts);
   const now = new Date();
@@ -61,25 +57,6 @@ function timeLabel(ts: number): string {
   const hh = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   if (sameDay) return hh;
   return `${d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} · ${hh}`;
-}
-
-function Avatar({ name, tone }: { name: string; tone: number }) {
-  const palettes = [
-    'linear-gradient(135deg,#6366f1,#8b5cf6)',
-    'linear-gradient(135deg,#10b981,#059669)',
-    'linear-gradient(135deg,#38bdf8,#06b6d4)',
-    'linear-gradient(135deg,#f59e0b,#f97316)',
-    'linear-gradient(135deg,#f43f5e,#ec4899)',
-    'linear-gradient(135deg,#14b8a6,#0d9488)',
-  ];
-  return (
-    <span
-      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
-      style={{ background: palettes[tone % palettes.length] }}
-    >
-      {initials(name)}
-    </span>
-  );
 }
 
 function isOwn(
@@ -216,13 +193,17 @@ function ChatPanel() {
                 )}
               >
                 {!sameAuthor && (
-                  <Avatar name={m.authorName} tone={m.authorEmail?.length ?? 0} />
+                  <UserHoverCard
+                    uid={m.authorUid}
+                    name={m.authorName}
+                    side={mine ? 'right' : 'left'}
+                  />
                 )}
                 <div
                   className={clsx(
                     'max-w-[78%] rounded-2xl px-3.5 py-2',
                     mine
-                      ? 'rounded-br-md bg-gradient-to-br from-[#6366F1] to-[#4F46E5] text-white'
+                      ? 'rounded-br-md bg-[#4F46E5] text-white'
                       : 'rounded-bl-md border border-[--color-border-primary]/40 bg-[#0D1424]/80',
                   )}
                 >
@@ -385,9 +366,12 @@ function DoubtCard({
   return (
     <div className="rounded-xl border border-[--color-border-primary]/45 bg-[#0D1424]/70 p-4">
       <div className="flex items-start gap-3">
-        <Avatar name={doubt.authorName} tone={doubt.authorEmail?.length ?? 0} />
+        <UserHoverCard
+          uid={doubt.authorUid}
+          name={doubt.authorName}
+        />
         <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <span className="text-xs font-semibold text-[--color-text-primary]">
               {doubt.authorName}
             </span>
@@ -397,6 +381,11 @@ function DoubtCard({
             <span className="rounded-full border border-[--color-accent-purple]/30 bg-[--color-accent-purple]/10 px-2 py-0.5 text-[10px] font-medium text-[--color-accent-purple]">
               {doubt.topic || 'Geral'}
             </span>
+            {doubt.resolved && (
+              <span className="inline-flex items-center gap-1 rounded-full border border-[--color-accent-green]/30 bg-[--color-accent-green]/10 px-2 py-0.5 text-[10px] font-medium text-[--color-accent-green]">
+                <CheckCircle size={10} /> Resolvida
+              </span>
+            )}
           </div>
           <h4 className="mt-1 text-sm font-semibold text-[--color-accent-purple]">
             {doubt.title}
@@ -418,6 +407,23 @@ function DoubtCard({
                 ? 'Responder'
                 : `${replyCount} resposta${replyCount > 1 ? 's' : ''}`}
             </button>
+            {mine && (
+              <button
+                type="button"
+                onClick={() => {
+                  void setDoubtResolved(doubt.id, !doubt.resolved);
+                }}
+                className={clsx(
+                  'flex items-center gap-1 text-[10px] font-medium transition-colors cursor-pointer',
+                  doubt.resolved
+                    ? 'text-[--color-accent-green] hover:text-[--color-text-primary]'
+                    : 'text-[--color-text-muted] hover:text-[--color-accent-green]',
+                )}
+              >
+                <CheckCircle2 size={11} />
+                {doubt.resolved ? 'Reabrir dúvida' : 'Marcar como resolvida'}
+              </button>
+            )}
             {mine && (
               <button
                 type="button"
@@ -458,6 +464,11 @@ function DoubtCard({
               <div className="min-w-0 flex-1">
                 <p className="text-[10px] font-semibold text-[--color-text-secondary]">
                   {r.authorName}
+                  {doubt.resolved && (
+                    <span className="ml-1.5 inline-flex items-center gap-0.5 rounded-full border border-[--color-accent-yellow]/30 bg-[--color-accent-yellow]/10 px-1.5 py-0.5 text-[9px] font-semibold text-[--color-accent-yellow]">
+                      <Sparkles size={8} /> Mentor
+                    </span>
+                  )}
                   <span className="ml-1 font-normal text-[9px] text-[--color-text-muted]">
                     · {timeLabel(r.createdAt)}
                   </span>
@@ -695,7 +706,7 @@ function DoubtsPanel() {
 }
 
 export function CommunityPage() {
-  const [tab, setTab] = useState<Tab>('chat');
+  const [tab, setTab] = useState<Tab>('duvidas');
   const online = Boolean(db);
 
   const tabs = useMemo(

@@ -10,7 +10,6 @@ import {
   Trophy,
   Settings,
   Gamepad2,
-  Sparkles,
   Search,
   ChevronDown,
   Layers,
@@ -30,7 +29,6 @@ interface NavItem {
   to: string;
   label: string;
   icon: LucideIcon;
-  highlight?: boolean;
   mobileHidden?: boolean;
 }
 
@@ -110,9 +108,9 @@ const BOTTOM_ITEMS: NavItem[] = [
 
 const navItemClass = ({ isActive }: { isActive: boolean }) =>
   clsx(
-    'flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg transition-all duration-200',
+    'relative flex items-center gap-2.5 px-3 py-2 text-[13px] rounded-lg transition-all duration-200',
     isActive
-      ? 'bg-[--color-accent-blue]/15 text-[--color-accent-cyan] font-semibold ring-inset-blue'
+      ? 'bg-[--color-accent-blue]/12 text-[--color-text-primary] font-semibold'
       : 'text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/[0.04]',
   );
 
@@ -123,34 +121,25 @@ function NavItemLink({ item }: { item: NavItem }) {
       className={({ isActive }) =>
         clsx(
           navItemClass({ isActive }),
-          item.highlight && 'nav-highlight',
           item.mobileHidden && 'hidden lg:flex',
         )
       }
     >
       {({ isActive }) => (
         <>
+          {isActive && (
+            <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-full bg-[--color-accent-cyan]" />
+          )}
           <item.icon
-            size={13}
+            size={16}
             className={clsx(
               'shrink-0',
-              item.highlight
+              isActive
                 ? 'text-[--color-accent-cyan]'
-                : isActive
-                  ? 'text-[--color-accent-blue]'
-                  : 'text-[--color-text-muted]',
+                : 'text-[--color-text-muted]',
             )}
           />
           <span className="block truncate">{item.label}</span>
-          {item.highlight && (
-            <span className="flex ml-auto items-center gap-1 text-[8px] font-bold uppercase tracking-wider text-[--color-accent-cyan]">
-              <Sparkles size={9} />
-              Começar
-            </span>
-          )}
-          {isActive && !item.highlight && (
-            <span className="block ml-auto h-1.5 w-1.5 rounded-full bg-[--color-accent-blue] glow-dot" />
-          )}
         </>
       )}
     </NavLink>

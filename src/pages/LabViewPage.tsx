@@ -19,6 +19,7 @@ import { INITIAL_EXERCISES } from '../data/exercises';
 import { useProgressStore } from '../stores/useProgressStore';
 import { useSimulatorStore } from '../stores/useSimulatorStore';
 import { toast } from '../stores/useToastStore';
+import { markActivity } from '../features/retention/streak';
 import { normalizeTopology, runValidation } from '../engine/lab';
 import type { LabValidation } from '../engine/lab';
 import type { Exercise, Topology } from '../types';
@@ -31,6 +32,54 @@ const DIFFICULTY_TONE = {
   4: 'red',
   5: 'purple',
 } as const;
+
+function GuidedFirstLab() {
+  const [dismissed, setDismissed] = useState(
+    () => sessionStorage.getItem('netlab:guided-01') === '1',
+  );
+
+  if (dismissed) return null;
+
+  const steps = [
+    'Selecione o PC-01 e abra o console com "Abrir console"',
+    'Configure eth0 de PC-01 e PC-02 com os IPs 192.168.1.10 e .20 (máscara 255.255.255.0)',
+    'No console do PC-01, digite: ping 192.168.1.20',
+  ];
+
+  return (
+    <div className="shrink-0 border-b border-[--color-border-primary]/40 bg-[--color-bg-card]/70 px-4 py-3">
+      <div className="flex items-center justify-between gap-3">
+        <p className="flex items-center gap-2 text-xs font-semibold text-[--color-text-primary]">
+          <GraduationCap size={14} className="text-[--color-accent-blue]" />
+          Primeiro Ping — passo a passo
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            sessionStorage.setItem('netlab:guided-01', '1');
+            setDismissed(true);
+          }}
+          className="shrink-0 text-[11px] text-[--color-text-muted] hover:text-[--color-text-primary] transition-colors cursor-pointer"
+        >
+          Dispensar
+        </button>
+      </div>
+      <ol className="mt-2.5 grid grid-cols-1 sm:grid-cols-3 gap-2">
+        {steps.map((s, i) => (
+          <li
+            key={i}
+            className="flex items-start gap-2 text-[11px] text-[--color-text-secondary] leading-relaxed"
+          >
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[--color-accent-blue]/15 text-[--color-accent-blue] text-[10px] font-bold">
+              {i + 1}
+            </span>
+            <span>{s}</span>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
 
 const ACHIEVEMENTS_BY_LAB: Record<
   string,
@@ -165,11 +214,14 @@ function LabWorkspace({ exercise }: { exercise: Exercise }) {
     });
     setDeviceValidation(dv);
 
-    if (result.passed && !alreadyComplete) {
-      completeExercise(exercise.id, exercise.concepts, exercise.xpReward);
-      const award = ACHIEVEMENTS_BY_LAB[exercise.id];
-      if (award) unlockAchievement(award);
-      toast('success', `Laboratório aprovado! +${exercise.xpReward} XP`);
+    if (result.passed) {
+      markActivity();
+      if (!alreadyComplete) {
+        completeExercise(exercise.id, exercise.concepts, exercise.xpReward);
+        const award = ACHIEVEMENTS_BY_LAB[exercise.id];
+        if (award) unlockAchievement(award);
+        toast('success', `Laboratório aprovado! +${exercise.xpReward} XP`);
+      }
     }
   };
 
@@ -423,6 +475,8 @@ function LabWorkspace({ exercise }: { exercise: Exercise }) {
           </div>
         )}
       </div>
+
+      {exercise.id === 'lab-01-first-network' && <GuidedFirstLab />}
 
       <div className="flex-1 min-h-0">
         <SimulatorWorkspace

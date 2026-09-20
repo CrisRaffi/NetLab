@@ -398,6 +398,7 @@ export function SimulatorWorkspace({
                   </button>
                 );
               })}
+              <span className="mx-1 h-5 w-px bg-[--color-border-primary]/40" aria-hidden />
               <button
                 onClick={() =>
                   organizeLayout(

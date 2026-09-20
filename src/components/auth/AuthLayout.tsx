@@ -84,7 +84,7 @@ export function AuthLayout({
               </aside>
             )}
 
-            <div className="w-full max-w-sm shrink-0">
+            <div className="w-full max-w-[400px] shrink-0">
               {children}
               {showBenefits && (
                 <p className="flex items-center justify-center gap-1.5 text-[10px] text-[--color-text-muted]/60 lg:hidden mt-4">

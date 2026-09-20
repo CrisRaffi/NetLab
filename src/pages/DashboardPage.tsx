@@ -11,6 +11,10 @@ import {
   Lightbulb,
   ChevronLeft,
   ChevronRight,
+  Clock,
+  Zap,
+  FlaskConical,
+  MessagesSquare,
 } from 'lucide-react';
 import { Card } from '../components/common/Card';
 import { ProgressBar } from '../components/common/ProgressBar';
@@ -20,12 +24,20 @@ import { useProgressStore } from '../stores/useProgressStore';
 import { useQuizStore } from '../stores/useQuizStore';
 import { useAuth } from '../features/auth/AuthContext';
 import { WelcomeChecklist } from '../components/onboarding/WelcomeChecklist';
+import { WeeklySummaryCard } from '../components/dashboard/WeeklySummaryCard';
+import {
+  getDailyGoalState,
+  updateDailyGoal,
+  GOAL_PRESETS,
+} from '../features/retention/dailyGoal';
+import { getDueForReview } from '../data/reinforcements';
+import { QUIZZES } from '../data/quizzes';
 import { INITIAL_EXERCISES } from '../data/exercises';
 import { CONCEPT_DEFINITIONS } from '../data/content/concepts';
 import { protocolTip } from '../data/protocolTips';
 import { clsx } from 'clsx';
 
-const MODULE_GROUPS: { name: string; conceptIds: string[]; color: string }[] = [
+const MODULE_GROUPS: { name: string; conceptIds: string[] }[] = [
   {
     name: 'Fundamentos',
     conceptIds: [
@@ -36,32 +48,26 @@ const MODULE_GROUPS: { name: string; conceptIds: string[]; color: string }[] = [
       'ethernet-basics',
       'client-server',
     ],
-    color: 'bg-[--color-accent-blue]',
   },
   {
     name: 'Modelos',
     conceptIds: ['osi-model', 'tcp-ip-model', 'encapsulation'],
-    color: 'bg-[--color-accent-purple]',
   },
   {
     name: 'Ethernet',
     conceptIds: ['mac-address', 'switch-operations', 'arp', 'frames'],
-    color: 'bg-[--color-accent-cyan]',
   },
   {
     name: 'IPv4',
     conceptIds: ['ipv4-basics', 'subnet-mask', 'gateway', 'broadcast'],
-    color: 'bg-[--color-accent-green]',
   },
   {
     name: 'Subnetting',
     conceptIds: ['subnetting', 'cidr', 'host-calculation'],
-    color: 'bg-[--color-accent-yellow]',
   },
   {
     name: 'Serviços',
     conceptIds: ['dhcp', 'dns', 'routing-basics'],
-    color: 'bg-[--color-accent-red]',
   },
 ];
 
@@ -91,8 +97,8 @@ function TipBanner() {
 
   return (
     <section
-      className="packet-flow relative overflow-hidden rounded-xl border border-[--color-accent-purple]/25 bg-gradient-to-r from-[--color-accent-purple]/10 via-[--color-bg-card]/60 to-[--color-accent-blue]/10 px-5 py-4 flex flex-wrap items-center gap-x-4 gap-y-2"
-      style={stagger(1)}
+      className="card-flair relative rounded-2xl border border-[--color-border-primary]/45 bg-[--color-bg-card]/70 backdrop-blur-sm card-shadow px-5 py-4 flex flex-wrap items-center gap-x-4 gap-y-2"
+      style={stagger(3)}
     >
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[--color-accent-purple]/30 bg-[--color-accent-purple]/10 text-[--color-accent-purple]">
         <Lightbulb size={18} />
@@ -110,9 +116,9 @@ function TipBanner() {
           type="button"
           onClick={prev}
           aria-label="Dica anterior"
-          className="flex h-7 w-7 items-center justify-center rounded-lg border border-[--color-border-primary]/60 text-[--color-text-muted] transition-colors hover:text-[--color-text-primary] hover:bg-[--color-bg-hover]/60 cursor-pointer"
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[--color-border-primary]/60 text-[--color-text-muted] transition-colors hover:text-[--color-text-primary] hover:bg-[--color-bg-hover]/60 cursor-pointer"
         >
-          <ChevronLeft size={14} />
+          <ChevronLeft size={15} />
         </button>
         <span className="flex items-center gap-1">
           {STUDY_TIPS.map((_, i) => (
@@ -131,12 +137,77 @@ function TipBanner() {
           type="button"
           onClick={next}
           aria-label="Próxima dica"
-          className="flex h-7 w-7 items-center justify-center rounded-lg border border-[--color-border-primary]/60 text-[--color-text-muted] transition-colors hover:text-[--color-text-primary] hover:bg-[--color-bg-hover]/60 cursor-pointer"
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[--color-border-primary]/60 text-[--color-text-muted] transition-colors hover:text-[--color-text-primary] hover:bg-[--color-bg-hover]/60 cursor-pointer"
         >
-          <ChevronRight size={14} />
+          <ChevronRight size={15} />
         </button>
       </div>
     </section>
+  );
+}
+
+function CommunitySpotlight() {
+  const featuredLab =
+    INITIAL_EXERCISES.find((ex) => ex.id === 'lab-01-first-network') ??
+    INITIAL_EXERCISES[0];
+  const featuredQuiz = QUIZZES[0];
+
+  return (
+    <Card
+      title="Em alta na comunidade"
+      subtitle="Destaques sugeridos para você"
+      icon={<MessagesSquare size={16} />}
+      padding="none"
+      actions={
+        <Link
+          to="/comunidade"
+          className="text-xs text-[--color-accent-blue] hover:text-[--color-text-primary] flex items-center gap-1"
+        >
+          Ver comunidade <ArrowRight size={12} />
+        </Link>
+      }
+    >
+      <div className="divide-y divide-[--color-border-primary]/60">
+        {featuredLab && (
+          <Link
+            to={`/labs/${featuredLab.id}`}
+            className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-[--color-bg-hover]/70"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[--color-accent-green]/10 text-[--color-accent-green]">
+              <Network size={16} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-xs font-medium text-[--color-text-primary]">
+                {featuredLab.title}
+              </span>
+              <span className="block text-[11px] text-[--color-text-muted]">
+                Lab em destaque · {featuredLab.estimatedTime} min · +{featuredLab.xpReward} XP
+              </span>
+            </span>
+            <ArrowRight size={13} className="shrink-0 text-[--color-text-muted]" />
+          </Link>
+        )}
+        {featuredQuiz && (
+          <Link
+            to="/questionarios"
+            className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-[--color-bg-hover]/70"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[--color-accent-purple]/10 text-[--color-accent-purple]">
+              <BookOpen size={16} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-xs font-medium text-[--color-text-primary]">
+                {featuredQuiz.name}
+              </span>
+              <span className="block text-[11px] text-[--color-text-muted]">
+                Quiz em alta · {featuredQuiz.questions.length} questões
+              </span>
+            </span>
+            <ArrowRight size={13} className="shrink-0 text-[--color-text-muted]" />
+          </Link>
+        )}
+      </div>
+    </Card>
   );
 }
 
@@ -145,6 +216,116 @@ function getGreeting(): string {
   if (h < 12) return 'Bom dia';
   if (h < 18) return 'Boa tarde';
   return 'Boa noite';
+}
+
+function DailyGoalCard() {
+  const totalXp = useProgressStore((s) => s.progress.xp);
+  const [state, setState] = useState(() => getDailyGoalState(totalXp));
+  const earned = Math.max(0, totalXp - state.baseline);
+  const pct = Math.min(100, Math.round((earned / state.goal) * 100));
+  const done = earned >= state.goal;
+
+  function changeGoal(goal: number) {
+    setState(updateDailyGoal(goal, totalXp));
+  }
+
+  return (
+    <section
+      className="card-flair rounded-2xl border border-[--color-border-primary]/45 bg-[--color-bg-card]/70 backdrop-blur-sm card-shadow px-5 py-4 flex flex-wrap items-center gap-4"
+      style={stagger(1)}
+    >
+      <span
+        className={clsx(
+          'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border',
+          done
+            ? 'border-[--color-accent-green]/30 bg-[--color-accent-green]/10 text-[--color-accent-green]'
+            : 'border-[--color-accent-yellow]/30 bg-[--color-accent-yellow]/10 text-[--color-accent-yellow]',
+        )}
+      >
+        <Zap size={18} />
+      </span>
+      <div className="min-w-[220px] flex-1">
+        <div className="flex items-center justify-between mb-1.5">
+          <p className="text-xs font-semibold text-[--color-text-primary]">
+            {done ? 'Meta de hoje cumprida! 🎉' : 'Meta de hoje'}
+          </p>
+          <span className="text-xs font-medium text-[--color-text-secondary]">
+            {earned} / {state.goal} XP
+          </span>
+        </div>
+        <ProgressBar
+          value={pct}
+          colorClass={
+            done
+              ? 'bg-[--color-accent-green]'
+              : 'bg-gradient-to-r from-[--color-accent-yellow] to-[--color-accent-blue]'
+          }
+        />
+        <p className="text-[11px] text-[--color-text-muted] mt-1">
+          {done
+            ? 'Excelente! Continue no ritmo para manter a sequência.'
+            : `${state.goal - earned} XP para bater a meta de hoje.`}
+        </p>
+      </div>
+      <div className="flex shrink-0 flex-col gap-1">
+        <label className="text-[10px] font-semibold uppercase tracking-wider text-[--color-text-muted]">
+          Meta
+        </label>
+        <div className="flex gap-1">
+          {GOAL_PRESETS.map((g) => (
+            <button
+              key={g}
+              type="button"
+              onClick={() => changeGoal(g)}
+              className={clsx(
+                'rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors cursor-pointer',
+                state.goal === g
+                  ? 'border-[--color-accent-yellow]/40 bg-[--color-accent-yellow]/15 text-[--color-accent-yellow]'
+                  : 'border-[--color-border-primary]/60 text-[--color-text-muted] hover:text-[--color-text-primary] hover:bg-white/[0.04]',
+              )}
+            >
+              {g}
+            </button>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ReviewToday({
+  concepts,
+}: {
+  concepts: Array<{ conceptId: string; name: string; level: number }>;
+}) {
+  return (
+    <Card
+      title="Revisar hoje"
+      subtitle="Conceitos prontos para revisão — reforce para fixar"
+      icon={<Target size={16} />}
+      className="packet-flow"
+      actions={
+        <Link
+          to="/mapa"
+          className="inline-flex items-center gap-1 rounded-lg bg-[--color-accent-blue]/10 text-[--color-accent-cyan] border border-[--color-accent-blue]/30 px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-[--color-accent-blue]/20 shrink-0"
+        >
+          Revisar no Mapa <ArrowRight size={12} />
+        </Link>
+      }
+    >
+      <div className="flex flex-wrap gap-2">
+        {concepts.map((c) => (
+          <span
+            key={c.conceptId}
+            className="inline-flex items-center gap-1.5 rounded-full border border-[--color-accent-yellow]/30 bg-[--color-accent-yellow]/10 px-2.5 py-1 text-[11px] font-medium text-[--color-accent-yellow]"
+          >
+            <Target size={11} />
+            {c.name}
+          </span>
+        ))}
+      </div>
+    </Card>
+  );
 }
 
 const stagger = (i: number) => ({
@@ -179,18 +360,17 @@ export function DashboardPage() {
 
   const overall = getOverall();
 
+  const dueReview = getDueForReview(progress.concepts);
+
   const weakConcepts = MODULE_GROUPS.flatMap((g) => g.conceptIds)
     .map((id) => ({ id, mastery: getMastery(id) }))
     .sort((a, b) => a.mastery - b.mastery)
     .slice(0, 5);
 
-  const masteredCount = progress.concepts.filter((c) => c.mastery >= 80).length;
   const labsDoneCount = completedIds.filter((id) =>
     INITIAL_EXERCISES.some((ex) => ex.id === id),
   ).length;
   const quizCount = Object.keys(quizResults).length;
-  const hours = Math.floor(progress.stats.totalTime / 60);
-  const minutes = progress.stats.totalTime % 60;
 
   const hasProgress =
     progress.xp > 0 ||
@@ -205,201 +385,253 @@ export function DashboardPage() {
       ? { label: 'Revisitar', to: `/labs/${lastCompletedId}`, variant: 'primary' as const }
       : { label: 'Começar agora', to: '/mapa', variant: 'primary' as const };
 
-  const statPills = [
+  const heroSubtitle = nextExercise
+    ? `${nextExercise.title} espera por você. Retome de onde parou.`
+    : hasProgress
+      ? 'Você já concluiu todos os laboratórios. Que tal revisar um tema ou testar seus conhecimentos?'
+      : 'Monte redes, resolva problemas e acompanhe cada pacote. Escolha um ponto de partida!';
+
+  const kpis = [
     {
-      label: `Nível ${progress.level}`,
-      detail: `${progress.xp.toLocaleString('pt-BR')} XP`,
-      dot: 'bg-[--color-accent-blue]',
+      label: 'Nível',
+      value: String(progress.level),
+      sub: `${progress.xp.toLocaleString('pt-BR')} XP`,
+      icon: Zap,
     },
     {
-      label: `${labsDoneCount}/${INITIAL_EXERCISES.length} labs`,
-      detail: 'concluídos',
-      dot: 'bg-[--color-accent-green]',
+      label: 'Laboratórios',
+      value: `${labsDoneCount}/${INITIAL_EXERCISES.length}`,
+      sub: 'concluídos',
+      icon: FlaskConical,
     },
     {
-      label: `${progress.achievements.length} conquistas`,
-      detail: 'desbloqueadas',
-      dot: 'bg-[--color-accent-yellow]',
+      label: 'Quizzes',
+      value: String(quizCount),
+      sub: 'realizados',
+      icon: BookOpen,
     },
     {
-      label: `${hours}h${minutes > 0 ? ` ${minutes}m` : ''}`,
-      detail: 'estudados',
-      dot: 'bg-[--color-accent-cyan]',
+      label: 'Conquistas',
+      value: String(progress.achievements.length),
+      sub: 'desbloqueadas',
+      icon: Trophy,
     },
   ];
+
+  const stepCard = (() => {
+    if (nextExercise) {
+      return {
+        kicker: 'Sua próxima etapa',
+        title: nextExercise.title,
+        description: `${nextExercise.difficulty}/5 de dificuldade · ${nextExercise.estimatedTime} min · +${nextExercise.xpReward} XP`,
+        to: heroCta.to,
+        cta: 'Continuar',
+      };
+    }
+    if (lastCompleted) {
+      return {
+        kicker: 'Bom retorno!',
+        title: `Revisitar: ${lastCompleted.title}`,
+        description: `Concluído · ${lastCompleted.estimatedTime} min para revisão`,
+        to: heroCta.to,
+        cta: 'Revisitar',
+      };
+    }
+    return {
+      kicker: 'Primeiros passos',
+      title: 'Comece pelo Mapa de Aprendizado',
+      description: 'Trilha guiada, conceito por conceito, até a prática.',
+      to: '/mapa',
+      cta: 'Começar agora',
+    };
+  })();
 
   return (
     <div className="space-y-5 page-container">
       <WelcomeChecklist show={!hasProgress} />
-      {/* Hero compacto: informações + anel na mesma linha */}
-      <section
-        className="relative overflow-hidden rounded-2xl border border-[--color-border-primary]/40 bg-gradient-to-br from-[#0A2340] via-[#111A2C] to-[#0D1424] card-shadow-soft packet-flow"
-        style={stagger(0)}
-      >
-        <div aria-hidden className="absolute inset-0 bg-grid-pattern opacity-30" />
-        <div aria-hidden className="absolute -right-16 -top-24 h-56 w-56 rounded-full bg-[--color-accent-blue]/12 blur-3xl" />
-        <div className="relative px-6 py-5 flex flex-wrap items-center gap-x-8 gap-y-5">
-          <div className="flex-1 min-w-[260px]">
-            <div className="flex flex-wrap items-center gap-2 mb-2">
-              <Badge tone="blue">
-                {nextExercise ? 'Próximo desafio' : hasProgress ? 'Bom retorno!' : 'Bem-vindo(a) à jornada'}
-              </Badge>
-              {nextExercise && (
-                <span className="text-[10px] font-mono text-[--color-text-muted]">
-                  {nextExercise.difficulty}/5 dificuldade · {nextExercise.estimatedTime} min · +{nextExercise.xpReward} XP
-                </span>
-              )}
-            </div>
-            <h1 className="text-xl font-bold text-[--color-text-primary] tracking-tight mb-1.5">
+
+      {/* F6 — Resumo semanal (1ª sessão da semana) */}
+      <WeeklySummaryCard />
+
+      {/* Zona 1 — Saudação + CTA único + card "próxima etapa" */}
+      <section className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-4" style={stagger(0)}>
+        <div className="card-flair relative overflow-hidden rounded-2xl border border-[--color-border-primary]/40 bg-[--color-bg-card] card-shadow-soft flex flex-col justify-center px-6 py-6">
+          <div aria-hidden className="absolute inset-0 bg-grid-pattern opacity-25" />
+          <div aria-hidden className="absolute -right-16 -top-24 h-56 w-56 rounded-full bg-[--color-accent-blue]/10 blur-3xl" />
+          <div className="relative">
+            <Badge tone="blue">
+              {nextExercise
+                ? 'Próximo desafio'
+                : hasProgress
+                  ? 'Bom retorno!'
+                  : 'Bem-vindo(a) à jornada'}
+            </Badge>
+            <h1 className="text-2xl font-bold text-[--color-text-primary] tracking-tight mt-2.5 mb-1.5">
               {greeting}
             </h1>
-            <p className="text-xs text-[--color-text-muted] leading-relaxed line-clamp-2 max-w-2xl mb-4">
-              {nextExercise
-                ? `${nextExercise.title} espera por você. Retome de onde parou e siga avançando.`
-                : hasProgress
-                  ? 'Você já concluiu todos os laboratórios. Que tal revisar um tema ou testar seus conhecimentos?'
-                  : 'Aqui você monta redes, resolve problemas e acompanha cada pacote. Escolha um ponto de partida!'}
+            <p className="text-sm text-[--color-text-muted] leading-relaxed max-w-xl">
+              {heroSubtitle}
             </p>
-            <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2.5 mt-5">
               <Link to={heroCta.to}>
-                <Button variant={heroCta.variant} size="sm">
-                  {heroCta.label} <ArrowRight size={14} />
-                </Button>
-              </Link>
-              <Link to="/viagem">
-                <Button variant="outline" size="sm">
-                  <GraduationCap size={14} /> A Viagem do Pacote
+                <Button variant={heroCta.variant}>
+                  {heroCta.label} <ArrowRight size={15} />
                 </Button>
               </Link>
             </div>
-            <div className="flex flex-wrap items-center gap-2 mt-4">
-              {statPills.map((p) => (
-                <span
-                  key={p.label}
-                  className="inline-flex items-center gap-2 rounded-full border border-[--color-border-primary]/60 bg-[#0A0E1A]/60 px-3 py-1.5"
-                  title={p.detail}
-                >
-                  <span className={clsx('h-1.5 w-1.5 rounded-full shrink-0', p.dot)} />
-                  <span className="text-[11px] font-medium text-[--color-text-secondary] whitespace-nowrap">
-                    {p.label}
-                  </span>
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex shrink-0 items-center justify-center">
-            <svg
-              viewBox="0 0 80 80"
-              className="h-24 w-24"
-              role="img"
-              aria-label={`Progresso geral: ${overall}%`}
-            >
-              <circle
-                cx="40"
-                cy="40"
-                r="34"
-                fill="#0D1424"
-                stroke="rgba(255,255,255,0.07)"
-                strokeWidth="7"
-              />
-              <circle
-                cx="40"
-                cy="40"
-                r="34"
-                fill="none"
-                stroke="var(--color-accent-blue)"
-                strokeWidth="7"
-                strokeLinecap="round"
-                strokeDasharray={`${(overall / 100) * 213.6} 213.6`}
-                transform="rotate(-90 40 40)"
-              />
-              <text
-                x="40"
-                y="42"
-                textAnchor="middle"
-                fontSize="18"
-                fontWeight="700"
-                fill="var(--color-text-primary)"
-                fontFamily="JetBrains Mono, ui-monospace, monospace"
-              >
-                {overall}%
-              </text>
-              <text
-                x="40"
-                y="57"
-                textAnchor="middle"
-                fontSize="7"
-                fill="var(--color-text-muted)"
-                letterSpacing="1.5"
-              >
-                GERAL
-              </text>
-            </svg>
           </div>
         </div>
+
+        {/* Card próxima etapa */}
+        <Link
+          to={stepCard.to}
+          className="card-flair packet-flow group relative rounded-2xl border border-[--color-border-primary]/45 bg-[--color-bg-card]/70 backdrop-blur-sm card-shadow flex flex-col justify-between overflow-hidden p-5 transition-all duration-150 hover:border-[--color-accent-blue]/50 hover:-translate-y-0.5"
+        >
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-[--color-accent-cyan]">
+              {stepCard.kicker}
+            </p>
+            <h3 className="text-lg font-bold text-[--color-text-primary] leading-snug mt-1.5">
+              {stepCard.title}
+            </h3>
+            <p className="text-xs text-[--color-text-muted] leading-relaxed mt-1.5">
+              {stepCard.description}
+            </p>
+          </div>
+          <div className="mt-4">
+            <div className="flex items-center justify-between text-[11px] text-[--color-text-muted] mb-1.5">
+              <span>Progresso geral</span>
+              <span className="font-semibold text-[--color-text-secondary]">{overall}%</span>
+            </div>
+            <ProgressBar
+              value={overall}
+              colorClass="bg-gradient-to-r from-[--color-accent-blue] to-[--color-accent-cyan]"
+            />
+            <div className="flex items-center justify-between mt-4">
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[--color-accent-blue]">
+                {stepCard.cta} <ArrowRight size={13} />
+              </span>
+              <span className="flex items-center gap-1 text-[10px] text-[--color-text-muted]">
+                <Clock size={11} /> ~10 min
+              </span>
+            </div>
+          </div>
+        </Link>
+      </section>
+
+      {/* F3 — Meta de hoje */}
+      <DailyGoalCard />
+
+      {/* F9 — Revisar hoje (fixo, perto do topo) */}
+      {dueReview.length > 0 && <ReviewToday concepts={dueReview} />}
+
+      {/* Zona 2 — 4 KPIs limpos */}
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3" style={stagger(1)}>
+        {kpis.map((k) => {
+          const Icon = k.icon;
+          return (
+            <div
+              key={k.label}
+              className="card-flair rounded-2xl border border-[--color-border-primary]/45 bg-[--color-bg-card]/70 backdrop-blur-sm card-shadow p-4 transition-colors hover:border-[--color-border-primary]/80"
+            >
+              <div className="flex items-center justify-between">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[--color-accent-blue]/10 text-[--color-accent-blue]">
+                  <Icon size={16} />
+                </span>
+                <span className="text-2xl font-bold text-[--color-text-primary]">
+                  {k.value}
+                </span>
+              </div>
+              <p className="text-xs font-medium text-[--color-text-secondary] mt-2">
+                {k.label}
+              </p>
+              <p className="text-[11px] text-[--color-text-muted]">{k.sub}</p>
+            </div>
+          );
+        })}
+      </section>
+
+      {/* Zona 3 — Continuar estudando (atalhos silenciosos) */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 gap-3" style={stagger(2)}>
+        <Link
+          to="/viagem"
+          className="group flex items-center gap-3 rounded-2xl border border-[--color-border-primary]/45 bg-[--color-bg-card]/70 backdrop-blur-sm card-shadow px-4 py-3 transition-all hover:border-[--color-accent-cyan]/50"
+        >
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[--color-accent-cyan]/10 text-[--color-accent-cyan]">
+            <GraduationCap size={16} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold text-[--color-text-primary]">
+              A Viagem do Pacote
+            </span>
+            <span className="block text-xs text-[--color-text-muted]">
+              Veja os dados do início ao fim
+            </span>
+          </span>
+          <ArrowRight
+            size={14}
+            className="shrink-0 text-[--color-accent-cyan] opacity-0 -translate-x-1 transition-all group-hover:opacity-100 group-hover:translate-x-0"
+          />
+        </Link>
+        <Link
+          to="/questionarios"
+          className="group flex items-center gap-3 rounded-2xl border border-[--color-border-primary]/45 bg-[--color-bg-card]/70 backdrop-blur-sm card-shadow px-4 py-3 transition-all hover:border-[--color-accent-purple]/50"
+        >
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[--color-accent-purple]/10 text-[--color-accent-purple]">
+            <BookOpen size={16} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold text-[--color-text-primary]">
+              Teste com questionários
+            </span>
+            <span className="block text-xs text-[--color-text-muted]">
+              Se errar, o sistema te ensina na hora
+            </span>
+          </span>
+          <ArrowRight
+            size={14}
+            className="shrink-0 text-[--color-accent-purple] opacity-0 -translate-x-1 transition-all group-hover:opacity-100 group-hover:translate-x-0"
+          />
+        </Link>
       </section>
 
       {/* Dica rápida */}
       <TipBanner />
 
-      {/* Nível + progresso por módulo */}
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch" style={stagger(2)}>
-        <Card className="flex flex-col packet-flow">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-sm font-semibold text-[--color-text-primary]">
-              Nível {progress.level}
-            </span>
-            <span className="text-[11px] font-mono text-[--color-accent-blue]">
-              {progress.xp.toLocaleString('pt-BR')} XP
-            </span>
-          </div>
-          <ProgressBar
-            value={(progress.xp % 1000) / 10}
-            colorClass="bg-gradient-to-r from-[#0071D6] to-[--color-accent-cyan]"
-          />
-          <div className="text-[10px] text-[--color-text-muted] mt-1.5">
-            {progress.xp % 1000} / 1000 XP para o próximo nível
-          </div>
-          <div className="grid grid-cols-3 gap-2 mt-auto pt-4 text-center">
-            <div className="rounded-xl bg-[--color-bg-tertiary]/60 border border-white/5 p-3">
-              <div className="text-lg font-bold text-[--color-accent-green]">{masteredCount}</div>
-              <div className="text-[10px] text-[--color-text-muted] uppercase tracking-wider mt-0.5">Dominados</div>
-            </div>
-            <div className="rounded-xl bg-[--color-bg-tertiary]/60 border border-white/5 p-3">
-              <div className="text-lg font-bold text-[--color-accent-yellow]">{quizCount}</div>
-              <div className="text-[10px] text-[--color-text-muted] uppercase tracking-wider mt-0.5">Quizzes</div>
-            </div>
-            <div className="rounded-xl bg-[--color-bg-tertiary]/60 border border-white/5 p-3">
-              <div className="text-lg font-bold text-[--color-accent-cyan]">
-                {progress.achievements.length}
-              </div>
-              <div className="text-[10px] text-[--color-text-muted] uppercase tracking-wider mt-0.5">Conquistas</div>
-            </div>
-          </div>
-        </Card>
+      {/* F14 — Em alta na comunidade */}
+      <CommunitySpotlight />
 
+      {/* Zona 4 — Seus módulos */}
+      <section style={stagger(4)}>
         <Card
-          title="Progresso por módulo"
+          title="Seus módulos"
           subtitle="Sua maestria em cada área do conteúdo"
           icon={<BookOpen size={16} />}
-          className="packet-flow-green"
         >
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
             {MODULE_GROUPS.map((group) => {
               const groupProgress =
                 group.conceptIds.reduce((sum, id) => sum + getMastery(id), 0) /
                 group.conceptIds.length;
+              const colorClass =
+                groupProgress >= 80
+                  ? 'bg-[--color-accent-green]'
+                  : 'bg-[--color-accent-blue]';
               return (
                 <div key={group.name} className="flex items-center gap-3">
-                  <span className={`w-2 h-2 rounded-full shrink-0 ${group.color}`} />
                   <span
-                    className="text-xs font-medium text-[--color-text-secondary] w-24 shrink-0"
+                    className={clsx('h-2 w-2 rounded-full shrink-0', colorClass)}
+                  />
+                  <span
+                    className="text-sm font-medium text-[--color-text-secondary] w-28 shrink-0"
                     title={protocolTip(group.name)}
                   >
                     {group.name}
                   </span>
-                  <ProgressBar value={groupProgress} className="flex-1" />
+                  <ProgressBar value={groupProgress} className="flex-1" colorClass={colorClass} />
+                  <span className="text-[11px] font-mono text-[--color-text-muted] w-9 text-right">
+                    {Math.round(groupProgress)}%
+                  </span>
                 </div>
               );
             })}
@@ -407,13 +639,13 @@ export function DashboardPage() {
         </Card>
       </section>
 
-      {/* Laboratórios + Conquistas */}
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch" style={stagger(3)}>
+      {/* Zona 5 — Laboratórios + Conquistas */}
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch" style={stagger(5)}>
         <Card
           title="Seus Laboratórios"
           icon={<Network size={16} />}
           padding="none"
-          className="packet-flow flex flex-col"
+          className="flex flex-col"
           actions={
             <Link
               to="/labs"
@@ -451,7 +683,7 @@ export function DashboardPage() {
                     <p className="text-xs font-medium text-[--color-text-primary] truncate">
                       {ex.title}
                     </p>
-                    <p className="text-[10px] text-[--color-text-muted]">
+                    <p className="text-[11px] text-[--color-text-muted]">
                       {ex.estimatedTime} min · {ex.xpReward} XP
                     </p>
                   </div>
@@ -466,25 +698,22 @@ export function DashboardPage() {
           </div>
         </Card>
 
-        <div className="card-flair packet-flow relative rounded-xl border border-[--color-border-primary]/45 bg-[--color-bg-card]/70 backdrop-blur-sm card-shadow flex flex-col overflow-hidden">
-          <div className="flex items-center justify-between px-4 pt-3 pb-3 border-b border-[--color-border-primary]/40">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <span className="text-[--color-accent-blue] shrink-0 icon-glow-blue">
-                <Trophy size={16} />
-              </span>
-              <h3 className="text-sm font-semibold text-[--color-text-primary] tracking-tight truncate">
-                Conquistas
-              </h3>
-            </div>
-            {progress.achievements.length > 0 && (
+        <Card
+          title="Conquistas"
+          icon={<Trophy size={16} />}
+          className="flex flex-col"
+          padding="none"
+          actions={
+            progress.achievements.length > 0 ? (
               <Link
                 to="/conquistas"
-                className="text-xs text-[--color-accent-blue] hover:text-[--color-text-primary] flex items-center gap-1 shrink-0"
+                className="text-xs text-[--color-accent-blue] hover:text-[--color-text-primary] flex items-center gap-1"
               >
                 Ver todas <ArrowRight size={12} />
               </Link>
-            )}
-          </div>
+            ) : undefined
+          }
+        >
           {progress.achievements.length === 0 ? (
             <div className="flex flex-col items-center justify-center flex-1 p-6 text-center min-h-[180px]">
               <div className="flex justify-center gap-2 mb-3 opacity-40">
@@ -515,11 +744,11 @@ export function DashboardPage() {
                       <p className="text-xs font-medium text-[--color-text-primary]">
                         {a.name}
                       </p>
-                      <p className="text-[10px] text-[--color-text-muted]">
+                      <p className="text-[11px] text-[--color-text-muted]">
                         {a.description}
                       </p>
                     </div>
-                    <span className="text-[10px] text-[--color-accent-blue] font-mono">
+                    <span className="text-[11px] text-[--color-accent-blue]">
                       +{a.xpReward} XP
                     </span>
                   </div>
@@ -535,18 +764,17 @@ export function DashboardPage() {
               </div>
             </div>
           )}
-        </div>
+        </Card>
       </section>
 
-      {/* Precisa revisar */}
-      {weakConcepts.length > 0 && (
-        <section style={stagger(4)}>
+      {/* Zona 6 — Precisa revisar (somente com histórico) */}
+      {hasProgress && weakConcepts.length > 0 && (
+        <section style={stagger(6)}>
           <Card
             title="Precisa revisar"
             subtitle="Conceitos que merecem mais atenção"
             icon={<Target size={16} />}
             padding="none"
-            className="packet-flow-green"
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-x-4">
               {weakConcepts.map((c) => (
@@ -556,7 +784,7 @@ export function DashboardPage() {
                     <p className="text-xs font-medium text-[--color-text-primary] truncate">
                       {CONCEPT_DEFINITIONS[c.id]?.name ?? c.id}
                     </p>
-                    <p className="text-[10px] text-[--color-text-muted]">
+                    <p className="text-[11px] text-[--color-text-muted]">
                       {c.mastery === 0
                         ? 'Não iniciado'
                         : c.mastery < 40

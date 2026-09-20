@@ -79,15 +79,24 @@ export function AchievementsPage() {
           return (
             <Card
               key={ach.id}
+              padding="sm"
               className={clsx(
-                '!p-3.5 transition-all duration-200',
+                'transition-all duration-200',
                 unlocked
                   ? 'hover:border-[--color-accent-yellow]/40'
                   : 'opacity-60',
               )}
             >
               <div className="flex items-center gap-3">
-                <span className={clsx('text-2xl', !unlocked && 'opacity-60')}>
+                <span
+                  className={clsx(
+                    'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border text-xl',
+                    unlocked
+                      ? 'bg-[--color-accent-yellow]/10 border-[--color-accent-yellow]/30'
+                      : 'bg-[--color-bg-tertiary] border-[--color-border-primary]/50 grayscale opacity-70',
+                  )}
+                  title={unlocked ? ach.description : `Como desbloquear: ${ach.description}`}
+                >
                   {ach.icon}
                 </span>
                 <div className="flex-1 min-w-0">
@@ -99,13 +108,14 @@ export function AchievementsPage() {
                   </p>
                 </div>
                 {unlocked ? (
-                  <span className="text-[10px] text-[--color-accent-green] font-mono shrink-0">
+                  <span className="text-[11px] text-[--color-accent-green] shrink-0">
                     +{ach.xpReward} XP
                   </span>
                 ) : (
                   <Lock
                     size={16}
                     className="text-[--color-text-muted]/60 shrink-0"
+                    aria-label="Bloqueado"
                   />
                 )}
               </div>

@@ -246,7 +246,159 @@ const ROUTING: ScenarioDraft = {
   ],
 };
 
-const DRAFTS = [OFFICE, SECTORS, INTERNET, ROUTING];
+const BRANCH: ScenarioDraft = {
+  id: 'brk-branch',
+  title: 'Matriz e Filial',
+  description: 'Matriz e filial conectadas por dois roteadores em série. Um servidor na filial precisa ser alcançado da matriz.',
+  difficulty: 3,
+  concepts: ['routing-basics', 'static-routing', 'gateway'],
+  estimatedTime: 20,
+  xpReward: 130,
+  generalHints: [
+    'Teste hop a hop: ping no gateway local, depois no link entre roteadores, depois no servidor.',
+    'Use route print em R-01 e R-02 para ver quais redes cada um conhece.',
+    'Toda rede distante precisa de rota de ida e de volta.',
+  ],
+  rawHealth: {
+    id: 'brk-branch-health',
+    name: 'Matriz e Filial (sadio)',
+    devices: [
+      device('pc-a', 'pc', 'PC-A', 80, 160, [iface('eth0', '192.168.1.10', { mask: '255.255.255.0', gw: '192.168.1.1' })]),
+      device('sw-a', 'switch', 'SW-A', 220, 160, []),
+      device('r1', 'router', 'R-01', 360, 160, [
+        iface('eth0', '192.168.1.1', { mask: '255.255.255.0' }),
+        iface('eth1', '10.0.0.1', { mask: '255.255.255.0' }),
+      ], [route('192.168.2.0', '255.255.255.0', '10.0.0.2')]),
+      device('r2', 'router', 'R-02', 520, 160, [
+        iface('eth0', '10.0.0.2', { mask: '255.255.255.0' }),
+        iface('eth1', '192.168.2.1', { mask: '255.255.255.0' }),
+      ], [route('192.168.1.0', '255.255.255.0', '10.0.0.1')]),
+      device('sw-b', 'switch', 'SW-B', 660, 160, []),
+      device('pc-b', 'pc', 'PC-B', 780, 100, [iface('eth0', '192.168.2.20', { mask: '255.255.255.0', gw: '192.168.2.1' })]),
+      device('srv', 'server', 'SRV-01', 780, 220, [iface('eth0', '192.168.2.30', { mask: '255.255.255.0', gw: '192.168.2.1' })]),
+    ],
+    connections: [
+      conn('pc-a', 'eth0', 'sw-a', 'f0/1'),
+      conn('sw-a', 'f0/2', 'r1', 'eth0'),
+      conn('r1', 'eth1', 'r2', 'eth0'),
+      conn('r2', 'eth1', 'sw-b', 'f0/1'),
+      conn('sw-b', 'f0/2', 'pc-b', 'eth0'),
+      conn('sw-b', 'f0/3', 'srv', 'eth0'),
+    ],
+  },
+  validation: [
+    { type: 'config', target: 'pc-a/eth0/gateway', expected: '192.168.1.1', description: 'Gateway de PC-A deve ser 192.168.1.1' },
+    { type: 'config', target: 'srv/eth0/ip', expected: '192.168.2.30', description: 'O servidor deve ter IP 192.168.2.30' },
+    { type: 'route', target: 'r1|192.168.2.0', expected: '10.0.0.2', description: 'R-01 deve ter rota para a filial via R-02' },
+    { type: 'route', target: 'r2|192.168.1.0', expected: '10.0.0.1', description: 'R-02 deve ter rota de volta para a matriz via R-01' },
+    { type: 'connectivity', target: 'pc-a -> 192.168.2.30', expected: 'success', description: 'PC-A deve alcançar o servidor da filial' },
+  ],
+  variants: [
+    variant('missing-route-r1', 'missing-route', 'PC-A alcança o roteador, mas R-01 não sabe chegar à filial.', 'Adicione em R-01 a rota estática 192.168.2.0/24 via 10.0.0.2.', { target: { deviceId: 'r1' }, routeDest: '192.168.2.0' }),
+    variant('wrong-route-r2', 'wrong-route', 'PC-A alcança a filial, mas a resposta não volta: rota errada em R-02.', 'Corrija a rota de R-02 para 192.168.1.0/24 via 10.0.0.1.', { target: { deviceId: 'r2' }, routeDest: '192.168.1.0', wrongRouteGateway: '10.0.0.99' }),
+    variant('interface-down-r1-eth0', 'interface-down', 'A matriz inteira ficou isolada: o link do roteador R-01 caiu.', 'Reative a interface eth0 de R-01.', { target: { deviceId: 'r1', interfaceId: 'eth0' } }),
+    variant('wrong-ip-srv', 'wrong-ip', 'O servidor da filial não é alcançado da matriz.', 'Restabeleça o IP do servidor para 192.168.2.30.', { target: { deviceId: 'srv', interfaceId: 'eth0' }, wrongIp: '192.168.3.30' }),
+  ],
+};
+
+const PHONE: ScenarioDraft = {
+  id: 'brk-phone',
+  title: 'Escritório com Telefonia',
+  description: 'Uma rede local com computador, telefone IP e servidor no mesmo segmento. Todos precisam se enxergar.',
+  difficulty: 2,
+  concepts: ['ipv4-basics', 'ethernet-basics', 'arp'],
+  estimatedTime: 12,
+  xpReward: 75,
+  generalHints: [
+    'Compare os IPs e máscaras dos três equipamentos com ipconfig.',
+    'Ping no equipamento vizinho antes de testar o servidor.',
+    'Um IP duplicado derruba a comunicação de ambos os envolvidos.',
+  ],
+  rawHealth: {
+    id: 'brk-phone-health',
+    name: 'Telefonia (sadio)',
+    devices: [
+      device('pc-a', 'pc', 'PC-A', 90, 160, [iface('eth0', '192.168.1.10', { mask: '255.255.255.0' })]),
+      device('sw1', 'switch', 'SW-01', 260, 160, []),
+      device('phone', 'ip_phone', 'IP-PHONE', 420, 160, [iface('eth0', '192.168.1.21', { mask: '255.255.255.0' })]),
+      device('srv', 'server', 'SRV-01', 580, 160, [iface('eth0', '192.168.1.30', { mask: '255.255.255.0' })]),
+    ],
+    connections: [
+      conn('pc-a', 'eth0', 'sw1', 'f0/1'),
+      conn('sw1', 'f0/2', 'phone', 'eth0'),
+      conn('sw1', 'f0/3', 'srv', 'eth0'),
+    ],
+  },
+  validation: [
+    { type: 'config', target: 'pc-a/eth0/ip', expected: '192.168.1.10', description: 'PC-A deve ter IP 192.168.1.10' },
+    { type: 'config', target: 'phone/eth0/ip', expected: '192.168.1.21', description: 'O telefone deve ter IP 192.168.1.21' },
+    { type: 'config', target: 'srv/eth0/ip', expected: '192.168.1.30', description: 'O servidor deve ter IP 192.168.1.30' },
+    { type: 'connectivity', target: 'pc-a -> phone', expected: 'success', description: 'PC-A deve pingar o telefone IP' },
+    { type: 'connectivity', target: 'pc-a -> srv', expected: 'success', description: 'PC-A deve pingar o servidor' },
+  ],
+  variants: [
+    variant('wrong-ip-phone', 'wrong-ip', 'O telefone está em outra rede e ninguém responde a ele.', 'Restabeleça o IP do telefone para 192.168.1.21.', { target: { deviceId: 'phone', interfaceId: 'eth0' }, wrongIp: '192.168.1.99' }),
+    variant('wrong-mask-phone', 'wrong-mask', 'O telefone não conversa com ninguém no segmento.', 'Restabeleça a máscara do telefone para 255.255.255.0.', { target: { deviceId: 'phone', interfaceId: 'eth0' }, wrongMask: '255.255.255.252' }),
+    variant('duplicate-ip-phone', 'duplicate-ip', 'O telefone e o computador entraram em conflito de endereço.', 'Restaure o IP do telefone para 192.168.1.21 (ele duplicou o de PC-A).', { target: { deviceId: 'phone', interfaceId: 'eth0' }, copyFrom: { deviceId: 'pc-a', interfaceId: 'eth0' } }),
+    variant('interface-down-phone', 'interface-down', 'O telefone está sem registro no switch: a placa não sobe.', 'Reative a interface eth0 do telefone.', { target: { deviceId: 'phone', interfaceId: 'eth0' } }),
+  ],
+};
+
+const BACKBONE: ScenarioDraft = {
+  id: 'brk-backbone',
+  title: 'Backbone',
+  description: 'Três roteadores em cadeia ligando dois pontos de rede. Comunicação fim a fim depende de rotas em todos os saltos.',
+  difficulty: 4,
+  concepts: ['routing-basics', 'static-routing', 'subnetting'],
+  estimatedTime: 25,
+  xpReward: 170,
+  generalHints: [
+    'Trace o caminho: PC-A → R-1 → R-2 → R-3 → PC-B.',
+    'Confira a tabela de rotas de cada roteador com route print.',
+    'Se um salto não conhece o destino, o pacote morre ali — teste cada hop.',
+  ],
+  rawHealth: {
+    id: 'brk-backbone-health',
+    name: 'Backbone (sadio)',
+    devices: [
+      device('pc-a', 'pc', 'PC-A', 70, 160, [iface('eth0', '10.10.10.10', { mask: '255.255.255.0', gw: '10.10.10.1' })]),
+      device('r1', 'router', 'R-1', 240, 160, [
+        iface('eth0', '10.10.10.1', { mask: '255.255.255.0' }),
+        iface('eth1', '10.20.0.1', { mask: '255.255.255.252' }),
+      ], [route('192.168.50.0', '255.255.255.0', '10.20.0.2')]),
+      device('r2', 'router', 'R-2', 410, 160, [
+        iface('eth0', '10.20.0.2', { mask: '255.255.255.252' }),
+        iface('eth1', '10.30.0.1', { mask: '255.255.255.252' }),
+      ], [route('10.10.10.0', '255.255.255.0', '10.20.0.1'), route('192.168.50.0', '255.255.255.0', '10.30.0.2')]),
+      device('r3', 'router', 'R-3', 580, 160, [
+        iface('eth0', '10.30.0.2', { mask: '255.255.255.252' }),
+        iface('eth1', '192.168.50.1', { mask: '255.255.255.0' }),
+      ], [route('10.10.10.0', '255.255.255.0', '10.30.0.1')]),
+      device('pc-b', 'pc', 'PC-B', 740, 160, [iface('eth0', '192.168.50.50', { mask: '255.255.255.0', gw: '192.168.50.1' })]),
+    ],
+    connections: [
+      conn('pc-a', 'eth0', 'r1', 'eth0'),
+      conn('r1', 'eth1', 'r2', 'eth0'),
+      conn('r2', 'eth1', 'r3', 'eth0'),
+      conn('r3', 'eth1', 'pc-b', 'eth0'),
+    ],
+  },
+  validation: [
+    { type: 'config', target: 'pc-a/eth0/gateway', expected: '10.10.10.1', description: 'Gateway de PC-A deve ser 10.10.10.1' },
+    { type: 'route', target: 'r1|192.168.50.0', expected: '10.20.0.2', description: 'R-1 deve ter rota para a rede de PC-B via R-2' },
+    { type: 'route', target: 'r2|10.10.10.0', expected: '10.20.0.1', description: 'R-2 deve ter rota de volta para PC-A via R-1' },
+    { type: 'route', target: 'r3|10.10.10.0', expected: '10.30.0.1', description: 'R-3 deve ter rota de volta para a rede de PC-A via R-2' },
+    { type: 'connectivity', target: 'pc-a -> pc-b', expected: 'success', description: 'PC-A deve pingar PC-B através do backbone' },
+  ],
+  variants: [
+    variant('missing-route-r1', 'missing-route', 'PC-A sai de casa, mas R-1 não conhece a rede de destino.', 'Adicione em R-1 a rota estática 192.168.50.0/24 via 10.20.0.2.', { target: { deviceId: 'r1' }, routeDest: '192.168.50.0' }),
+    variant('wrong-route-r3', 'wrong-route', 'PC-A chega a PC-B, mas a resposta não volta: rota errada em R-3.', 'Corrija a rota de R-3 para 10.10.10.0/24 via 10.30.0.1.', { target: { deviceId: 'r3' }, routeDest: '10.10.10.0', wrongRouteGateway: '10.30.0.99' }),
+    variant('interface-down-r2-eth1', 'interface-down', 'O backbone parou no meio: o link entre R-2 e R-3 caiu.', 'Reative a interface eth1 de R-2.', { target: { deviceId: 'r2', interfaceId: 'eth1' } }),
+    variant('wrong-ip-r3-eth1', 'wrong-ip', 'PC-B perdeu o gateway: a interface de R-3 mudou de endereço.', 'Restabeleça a interface eth1 de R-3 para 192.168.50.1.', { target: { deviceId: 'r3', interfaceId: 'eth1' }, wrongIp: '192.168.51.1' }),
+  ],
+};
+
+const DRAFTS = [OFFICE, SECTORS, INTERNET, ROUTING, BRANCH, PHONE, BACKBONE];
 
 export const BREAK_SCENARIOS: BreakScenario[] = DRAFTS.map(d => ({
   id: d.id,

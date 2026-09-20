@@ -20,7 +20,7 @@ export function Card({ title, subtitle, icon, actions, padding = 'md', className
   return (
     <div
       className={clsx(
-        'card-flair relative rounded-xl border border-[--color-border-primary]/45 bg-[--color-bg-card]/70 backdrop-blur-sm',
+        'card-flair relative rounded-2xl border border-[--color-border-primary]/45 bg-[--color-bg-card]/70 backdrop-blur-sm',
         'card-shadow',
         'hover:border-[--color-border-primary]/80 transition-colors duration-150',
         className
