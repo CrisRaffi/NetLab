@@ -188,6 +188,7 @@ h1,h2,h3,h4,h5,h6 { font-size: inherit; font-weight: inherit; letter-spacing: in
 .grid-cols-2 { grid-template-columns: repeat(2, 1fr) }
 .grid-cols-3 { grid-template-columns: repeat(3, 1fr) }
 .col-span-2 { grid-column: span 2 / span 2 }
+.col-span-3 { grid-column: span 3 / span 3 }
 
 /* ─── Gap ─── */
 .gap-1 { gap: 4px }

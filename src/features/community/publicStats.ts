@@ -8,6 +8,7 @@ export interface PublicStats {
   mastered: number;
   achievements: number;
   labsDone: number;
+  minutes: number;
   updatedAt: number;
 }
 
@@ -18,6 +19,7 @@ export function computePublicStats(progress: UserProgress): PublicStats {
     mastered: progress.concepts.filter((c) => c.mastery >= 80).length,
     achievements: progress.achievements.length,
     labsDone: progress.completedExercises.length,
+    minutes: progress.stats.totalTime,
     updatedAt: Date.now(),
   };
 }

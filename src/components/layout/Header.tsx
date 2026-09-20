@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ChevronDown,
@@ -11,11 +11,31 @@ import { useAuth } from '../../features/auth/AuthContext';
 import { logAuthEvent } from '../../features/auth/authLog';
 import { CommandSearch } from './CommandSearch';
 import { StreakBadge } from './StreakBadge';
+import { UserAvatar } from '../common/UserAvatar';
+import {
+  loadProfile,
+  type UserProfile,
+} from '../../features/community/firestoreProfile';
 
 export function Header({ onOpenMenu }: { onOpenMenu?: () => void }) {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const [myProfile, setMyProfile] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    if (!user?.uid) {
+      setMyProfile(null);
+      return;
+    }
+    let active = true;
+    void loadProfile(user.uid).then((p) => {
+      if (active) setMyProfile(p);
+    });
+    return () => {
+      active = false;
+    };
+  }, [user?.uid]);
 
   async function handleSignOut() {
     setShowUserMenu(false);
@@ -52,11 +72,12 @@ export function Header({ onOpenMenu }: { onOpenMenu?: () => void }) {
               className="flex items-center gap-2.5 pl-3 ml-1.5 border-l border-[--color-border-primary]/25 cursor-pointer"
               aria-label="Menu da conta"
             >
-              <div className="flex h-9 w-9 rounded-full bg-gradient-to-br from-[--color-border-secondary] to-[#1C2538] border border-[--color-accent-blue]/25 items-center justify-center text-[--color-text-primary] text-xs font-bold">
-                {(user.displayName ?? user.email ?? '?')
-                  .slice(0, 2)
-                  .toUpperCase()}
-              </div>
+              <UserAvatar
+                name={user.displayName ?? 'Aluno'}
+                avatarUrl={myProfile?.avatarUrl}
+                avatarEmoji={myProfile?.avatarEmoji}
+                size={36}
+              />
               <div className="hidden lg:block leading-tight text-left">
                 <p className="text-xs font-semibold text-[--color-text-primary] max-w-[180px] truncate">
                   {user.displayName ?? 'Aluno'}

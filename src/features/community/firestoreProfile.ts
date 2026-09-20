@@ -26,7 +26,11 @@ export async function saveProfile(
   profile: UserProfile,
 ): Promise<void> {
   if (!db || !uid) return;
-  await setDoc(doc(db, 'user-profiles', uid), profile, { merge: true });
+  const clean: Record<string, string> = {};
+  for (const [key, value] of Object.entries(profile)) {
+    if (value !== undefined && value !== '') clean[key] = value;
+  }
+  await setDoc(doc(db, 'user-profiles', uid), clean, { merge: true });
 }
 
 export function loadLocalProfile(): UserProfile | null {

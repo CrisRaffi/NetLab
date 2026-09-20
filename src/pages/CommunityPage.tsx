@@ -21,6 +21,17 @@ import { db } from '../lib/firebase';
 import { toast } from '../stores/useToastStore';
 import { UserHoverCard } from '../components/community/UserHoverCard';
 import {
+  loadProfile,
+  loadLocalProfile,
+  type UserProfile,
+} from '../features/community/firestoreProfile';
+import {
+  loadPublicStats,
+  computePublicStats,
+  type PublicStats,
+} from '../features/community/publicStats';
+import { useProgressStore } from '../stores/useProgressStore';
+import {
   subscribeChat,
   subscribeDoubts,
   sendChatMessage,
@@ -54,7 +65,10 @@ function timeLabel(ts: number): string {
     d.getDate() === now.getDate() &&
     d.getMonth() === now.getMonth() &&
     d.getFullYear() === now.getFullYear();
-  const hh = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const hh = d.toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
   if (sameDay) return hh;
   return `${d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} · ${hh}`;
 }
@@ -77,6 +91,9 @@ function ChatPanel() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [profiles, setProfiles] = useState<Record<string, UserProfile | null>>({});
+  const [statsMap, setStatsMap] = useState<Record<string, PublicStats | null>>({});
+  const fetchedUidsRef = useRef<Set<string>>(new Set());
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(
@@ -87,6 +104,32 @@ function ChatPanel() {
       }),
     [],
   );
+
+  useEffect(() => {
+    const uids = Array.from(
+      new Set(messages.map((m) => m.authorUid).filter(Boolean) as string[]),
+    );
+    const toFetch = uids.filter((u) => !fetchedUidsRef.current.has(u));
+    if (toFetch.length === 0) return;
+    toFetch.forEach((u) => fetchedUidsRef.current.add(u));
+    toFetch.forEach((u) => {
+      void Promise.all([loadProfile(u), loadPublicStats(u)]).then(([p, s]) => {
+        let profile = p;
+        let stats = s;
+        if (u === user?.uid) {
+          if (!profile) profile = loadLocalProfile();
+          if (!stats) stats = computePublicStats(useProgressStore.getState().progress);
+        }
+        setProfiles((prev) => ({ ...prev, [u]: profile }));
+        setStatsMap((prev) => ({ ...prev, [u]: stats }));
+      });
+    });
+  }, [messages, user?.uid]);
+
+  const profileOf = (m: ChatMessage) =>
+    m.authorUid ? profiles[m.authorUid] : undefined;
+  const statsOf = (m: ChatMessage) =>
+    m.authorUid ? statsMap[m.authorUid] : undefined;
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -109,7 +152,9 @@ function ChatPanel() {
       setText('');
       toast('success', 'Mensagem enviada!');
     } catch {
-      setError('Não foi possível enviar. Verifique sua conexão e tente de novo.');
+      setError(
+        'Não foi possível enviar. Verifique sua conexão e tente de novo.',
+      );
     } finally {
       setSending(false);
     }
@@ -147,7 +192,10 @@ function ChatPanel() {
         </span>
       </div>
 
-      <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
+      <div
+        ref={scrollRef}
+        className="flex-1 space-y-3 overflow-y-auto px-4 py-4"
+      >
         {!loaded ? (
           <div className="space-y-3 pt-2">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -169,7 +217,10 @@ function ChatPanel() {
           </div>
         ) : messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center text-center">
-            <MessagesSquare size={28} className="mb-2 text-[--color-text-muted]/50" />
+            <MessagesSquare
+              size={28}
+              className="mb-2 text-[--color-text-muted]/50"
+            />
             <p className="text-xs text-[--color-text-muted]">
               Nenhuma mensagem ainda.
             </p>
@@ -179,11 +230,21 @@ function ChatPanel() {
           </div>
         ) : (
           messages.map((m, i) => {
-            const mine = isOwn(m.authorUid, m.authorEmail, user?.uid, user?.email);
+            const mine = isOwn(
+              m.authorUid,
+              m.authorEmail,
+              user?.uid,
+              user?.email,
+            );
             const prev = messages[i - 1];
             const sameAuthor =
               prev &&
-              isOwn(prev.authorUid, prev.authorEmail, m.authorUid, m.authorEmail);
+              isOwn(
+                prev.authorUid,
+                prev.authorEmail,
+                m.authorUid,
+                m.authorEmail,
+              );
             return (
               <div
                 key={m.id}
@@ -196,7 +257,8 @@ function ChatPanel() {
                   <UserHoverCard
                     uid={m.authorUid}
                     name={m.authorName}
-                    side={mine ? 'right' : 'left'}
+                    profile={profileOf(m)}
+                    stats={statsOf(m)}
                   />
                 )}
                 <div
@@ -214,7 +276,16 @@ function ChatPanel() {
                         mine ? 'text-white/80' : 'text-[--color-accent-cyan]',
                       )}
                     >
-                      {m.authorName}
+                      <UserHoverCard
+                        uid={m.authorUid}
+                        name={m.authorName}
+                        profile={profileOf(m)}
+                        stats={statsOf(m)}
+                      >
+                        <span className="cursor-pointer hover:underline">
+                          {m.authorName}
+                        </span>
+                      </UserHoverCard>
                       {m.authorEmail && (
                         <span className="ml-1 font-normal text-[9px] opacity-60">
                           · {timeLabel(m.createdAt)}
@@ -222,7 +293,9 @@ function ChatPanel() {
                       )}
                     </p>
                   )}
-                  <p className="break-words text-xs leading-relaxed">{m.text}</p>
+                  <p className="break-words text-xs leading-relaxed">
+                    {m.text}
+                  </p>
                 </div>
                 {mine && (
                   <button
@@ -302,12 +375,16 @@ function ChatPanel() {
             </div>
             <div className="mt-1.5 flex items-center justify-between text-[9px] text-[--color-text-muted]/60">
               <span>Enter para enviar · Shift+Enter para quebrar linha</span>
-              <span>{text.length}/{MAX_TEXT}</span>
+              <span>
+                {text.length}/{MAX_TEXT}
+              </span>
             </div>
           </>
         )}
         {error && (
-          <p className="mt-1.5 text-[10px] text-[--color-accent-red]">{error}</p>
+          <p className="mt-1.5 text-[10px] text-[--color-accent-red]">
+            {error}
+          </p>
         )}
       </div>
     </div>
@@ -317,9 +394,13 @@ function ChatPanel() {
 function DoubtCard({
   doubt,
   user,
+  profile,
+  stats,
 }: {
   doubt: Doubt;
   user?: { uid: string; email: string | null } | null;
+  profile?: UserProfile | null;
+  stats?: PublicStats | null;
 }) {
   const [open, setOpen] = useState(false);
   const [reply, setReply] = useState('');
@@ -327,7 +408,12 @@ function DoubtCard({
   const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const mine = isOwn(doubt.authorUid, doubt.authorEmail, user?.uid, user?.email);
+  const mine = isOwn(
+    doubt.authorUid,
+    doubt.authorEmail,
+    user?.uid,
+    user?.email,
+  );
 
   async function handleReply() {
     const trimmed = reply.trim();
@@ -369,16 +455,28 @@ function DoubtCard({
         <UserHoverCard
           uid={doubt.authorUid}
           name={doubt.authorName}
+          profile={profile}
+          stats={stats}
         />
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <span className="text-xs font-semibold text-[--color-text-primary]">
-              {doubt.authorName}
-            </span>
+            <UserHoverCard
+              uid={doubt.authorUid}
+              name={doubt.authorName}
+              profile={profile}
+              stats={stats}
+            >
+              <span className="text-xs font-semibold text-[--color-text-primary] cursor-pointer hover:underline">
+                {doubt.authorName}
+              </span>
+            </UserHoverCard>
             <span className="text-[10px] text-[--color-text-muted]">
               · {timeLabel(doubt.createdAt)}
             </span>
-            <span className="rounded-full border border-[--color-accent-purple]/30 bg-[--color-accent-purple]/10 px-2 py-0.5 text-[10px] font-medium text-[--color-accent-purple]">
+            <span
+              style={{ marginLeft: 5 }}
+              className="rounded-full border border-[--color-accent-purple]/30 bg-[--color-accent-purple]/10 px-2 py-0.5 text-[10px] font-medium text-[--color-accent-purple]"
+            >
               {doubt.topic || 'Geral'}
             </span>
             {doubt.resolved && (
@@ -436,7 +534,9 @@ function DoubtCard({
                   }
                 }}
                 title={
-                  confirmDelete ? 'Clique de novo para confirmar' : 'Excluir dúvida'
+                  confirmDelete
+                    ? 'Clique de novo para confirmar'
+                    : 'Excluir dúvida'
                 }
                 className={clsx(
                   'flex items-center gap-1 text-[10px] font-medium transition-colors cursor-pointer',
@@ -544,6 +644,35 @@ function DoubtsPanel() {
     [],
   );
 
+  const [authorProfiles, setAuthorProfiles] = useState<
+    Record<string, UserProfile | null>
+  >({});
+  const [authorStatsMap, setAuthorStatsMap] = useState<
+    Record<string, PublicStats | null>
+  >({});
+  const fetchedAuthorUidsRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    const uids = Array.from(
+      new Set(doubts.map((d) => d.authorUid).filter(Boolean) as string[]),
+    );
+    const toFetch = uids.filter((u) => !fetchedAuthorUidsRef.current.has(u));
+    if (toFetch.length === 0) return;
+    toFetch.forEach((u) => fetchedAuthorUidsRef.current.add(u));
+    toFetch.forEach((u) => {
+      void Promise.all([loadProfile(u), loadPublicStats(u)]).then(([p, s]) => {
+        let profile = p;
+        let stats = s;
+        if (u === user?.uid) {
+          if (!profile) profile = loadLocalProfile();
+          if (!stats) stats = computePublicStats(useProgressStore.getState().progress);
+        }
+        setAuthorProfiles((prev) => ({ ...prev, [u]: profile }));
+        setAuthorStatsMap((prev) => ({ ...prev, [u]: stats }));
+      });
+    });
+  }, [doubts, user?.uid]);
+
   async function handleSubmit() {
     const t = title.trim();
     const b = body.trim();
@@ -564,7 +693,9 @@ function DoubtsPanel() {
       setBody('');
       toast('success', 'Dúvida publicada!');
     } catch {
-      setError('Não foi possível publicar. Verifique sua conexão e tente de novo.');
+      setError(
+        'Não foi possível publicar. Verifique sua conexão e tente de novo.',
+      );
     } finally {
       setSending(false);
     }
@@ -635,7 +766,9 @@ function DoubtsPanel() {
                 className="w-full resize-none rounded-lg border border-[--color-border-primary]/40 bg-[#0D1424]/80 px-3 py-2 text-xs text-[--color-text-primary] placeholder:text-[--color-text-muted] outline-none focus:border-[--color-accent-purple]/50"
               />
               <div className="mt-1 mb-2 flex items-center justify-between text-[9px] text-[--color-text-muted]/60">
-                <span>{body.length}/{MAX_TEXT}</span>
+                <span>
+                  {body.length}/{MAX_TEXT}
+                </span>
               </div>
               <Button
                 size="sm"
@@ -697,7 +830,13 @@ function DoubtsPanel() {
           </div>
         ) : (
           doubts.map((d) => (
-            <DoubtCard key={d.id} doubt={d} user={user} />
+            <DoubtCard
+              key={d.id}
+              doubt={d}
+              user={user}
+              profile={d.authorUid ? authorProfiles[d.authorUid] : undefined}
+              stats={d.authorUid ? authorStatsMap[d.authorUid] : undefined}
+            />
           ))
         )}
       </div>
@@ -710,11 +849,10 @@ export function CommunityPage() {
   const online = Boolean(db);
 
   const tabs = useMemo(
-    () =>
-      [
-        { id: 'chat' as Tab, label: 'Chat Geral', icon: MessagesSquare },
-        { id: 'duvidas' as Tab, label: 'Dúvidas', icon: MessageCircleQuestion },
-      ],
+    () => [
+      { id: 'chat' as Tab, label: 'Chat Geral', icon: MessagesSquare },
+      { id: 'duvidas' as Tab, label: 'Dúvidas', icon: MessageCircleQuestion },
+    ],
     [],
   );
 
@@ -728,7 +866,10 @@ export function CommunityPage() {
           icon={<MessagesSquare size={19} />}
         />
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[--color-border-primary]/40 py-20 text-center">
-          <AlertTriangle size={26} className="mb-3 text-[--color-accent-yellow]" />
+          <AlertTriangle
+            size={26}
+            className="mb-3 text-[--color-accent-yellow]"
+          />
           <p className="text-sm font-semibold text-[--color-text-primary]">
             Comunidade indisponível
           </p>

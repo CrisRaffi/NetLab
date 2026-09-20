@@ -84,20 +84,25 @@ export function ProfilePage() {
       avatarEmoji: avatarUrl.trim() ? undefined : avatarEmoji || undefined,
       bannerUrl: bannerUrl.trim() || undefined,
     };
+
+    saveLocalProfile(data);
+    setProfile(data);
+
     try {
       if (user?.uid) {
         await saveProfile(user.uid, data);
         toast('success', 'Perfil atualizado!');
       } else {
-        saveLocalProfile(data);
         toast(
           'success',
           'Salvo neste dispositivo. Entre para salvar na nuvem.',
         );
       }
-      setProfile(data);
     } catch {
-      toast('error', 'Não foi possível salvar o perfil.');
+      toast(
+        'error',
+        'Salvo neste dispositivo, mas não na nuvem. Publique as regras do Firestore (user-profiles) para sincronizar.',
+      );
     } finally {
       setSaving(false);
     }
