@@ -44,24 +44,22 @@ export default function StudyAreaPage() {
     startTimer,
     pauseTimer,
     resetTimer,
-    tick,
     setGoal,
     completeSession,
     clearSessions,
   } = useStudyAreaStore();
 
-  const rafRef = useRef<number | null>(null);
   const [goalMinutes, setGoalMinutes] = useState(Math.round(goalSeconds / 60));
   const [showNoteDialog, setShowNoteDialog] = useState(false);
   const [sessionNote, setSessionNote] = useState('');
+  const restoredRef = useRef(false);
 
   useEffect(() => {
-    if (!isRunning) return;
-    rafRef.current = requestAnimationFrame((now) => tick(now));
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, [isRunning, tick]);
+    if (isRunning && !restoredRef.current) {
+      restoredRef.current = true;
+      startTimer();
+    }
+  }, [isRunning, startTimer]);
 
   const progress = goalSeconds > 0 ? (elapsedSeconds / goalSeconds) * 100 : 0;
 
