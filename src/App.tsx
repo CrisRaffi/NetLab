@@ -17,6 +17,7 @@ import { AchievementsPage } from './pages/AchievementsPage';
 import { ConfigPage } from './pages/ConfigPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { CommunityPage } from './pages/CommunityPage';
+import StudyAreaPage from './pages/StudyAreaPage';
 import { PacketJourneyPage } from './features/packet-journey/pages/PacketJourneyPage';
 import { DesktopOnlyGate } from './components/common/DesktopOnlyGate';
 
@@ -71,6 +72,7 @@ export default function App() {
           <Route path="/comunidade" element={<CommunityPage />} />
           <Route path="/config" element={<ConfigPage />} />
           <Route path="/viagem" element={<PacketJourneyPage />} />
+          <Route path="/area-de-estudo" element={<StudyAreaPage />} />
           <Route path="*" element={<div className="text-center py-20 text-[--color-text-muted]">Página não encontrada</div>} />
         </Route>
       </Routes>

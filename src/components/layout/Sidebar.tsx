@@ -20,6 +20,7 @@ import {
   Radio,
   Workflow,
   MessagesSquare,
+  Timer,
 } from 'lucide-react';
 import { useProgressStore } from '../../stores/useProgressStore';
 import { getLevelFromXp } from '../../stores/useProgressStore';
@@ -65,6 +66,16 @@ const NAV_GROUPS: NavGroup[] = [
         to: '/aprender/modelo-osi-tcpip',
         label: 'Modelo OSI e TCP/IP',
         icon: Workflow,
+      },
+      {
+        to: '/aprender/enderecamento-ipv4',
+        label: 'Endereçamento IP e IPv4',
+        icon: Network,
+      },
+      {
+        to: '/area-de-estudo',
+        label: 'Área de Estudo Livre',
+        icon: Timer,
       },
       /* 
       { to: '/materia/fundamentos', label: 'Fundamentos', icon: Braces },
