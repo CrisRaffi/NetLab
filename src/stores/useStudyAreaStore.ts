@@ -15,13 +15,12 @@ export interface StudyAreaState {
   isRunning: boolean;
   elapsedSeconds: number;
   goalSeconds: number;
-  startedAt?: number;
   sessions: StudySession[];
-  intervalRef: ReturnType<typeof setInterval> | null;
 
   startTimer: () => void;
   pauseTimer: () => void;
   resetTimer: () => void;
+  tick: () => void;
   setGoal: (minutes: number) => void;
   completeSession: (note?: string) => void;
   clearSessions: () => void;
@@ -44,49 +43,22 @@ export const useStudyAreaStore = create<StudyAreaState>()(
       isRunning: false,
       elapsedSeconds: 0,
       goalSeconds: DEFAULT_GOAL_SECONDS,
-      startedAt: undefined,
       sessions: [],
-      intervalRef: null,
 
       startTimer: () => {
-        const state = get();
-        const now = Date.now();
-        if (state.intervalRef) clearInterval(state.intervalRef);
-        const ref = setInterval(() => {
-          const s = get();
-          if (!s.isRunning) return;
-          set({ elapsedSeconds: s.elapsedSeconds + 1 });
-        }, 1000);
-        set({
-          isRunning: true,
-          startedAt: now,
-          intervalRef: ref,
-        });
+        set({ isRunning: true });
       },
 
       pauseTimer: () => {
-        const state = get();
-        if (!state.isRunning) return;
-        const now = Date.now();
-        const running = state.startedAt ? Math.floor((now - state.startedAt) / 1000) : 0;
-        if (state.intervalRef) clearInterval(state.intervalRef);
-        set({
-          isRunning: false,
-          elapsedSeconds: state.elapsedSeconds + running,
-          startedAt: undefined,
-          intervalRef: null,
-        });
+        set({ isRunning: false });
       },
 
       resetTimer: () => {
-        const state = get();
-        if (state.intervalRef) clearInterval(state.intervalRef);
-        set({
-          isRunning: false,
-          elapsedSeconds: 0,
-          startedAt: undefined,
-          intervalRef: null,
-        });
+        set({ isRunning: false, elapsedSeconds: 0 });
+      },
+
+      tick: () => {
+        set({ elapsedSeconds: get().elapsedSeconds + 1 });
       },
 
       setGoal: (minutes: number) => {
@@ -95,10 +67,7 @@ export const useStudyAreaStore = create<StudyAreaState>()(
 
       completeSession: (note?: string) => {
         const state = get();
-        const now = Date.now();
-        const running = state.startedAt ? Math.floor((now - state.startedAt) / 1000) : 0;
-        const duration = state.elapsedSeconds + running;
-        if (state.intervalRef) clearInterval(state.intervalRef);
+        const duration = state.elapsedSeconds;
         const session: StudySession = {
           id: newId(),
           startedAt: nowIso(),
@@ -112,8 +81,6 @@ export const useStudyAreaStore = create<StudyAreaState>()(
           sessions: [session, ...state.sessions].slice(0, 200),
           isRunning: false,
           elapsedSeconds: 0,
-          startedAt: undefined,
-          intervalRef: null,
         });
       },
 
@@ -128,7 +95,6 @@ export const useStudyAreaStore = create<StudyAreaState>()(
         goalSeconds: state.goalSeconds,
         isRunning: state.isRunning,
         elapsedSeconds: state.elapsedSeconds,
-        startedAt: state.startedAt,
       }),
     },
   ),

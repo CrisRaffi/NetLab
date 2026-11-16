@@ -48,18 +48,24 @@ export default function StudyAreaPage() {
   const setGoal = useStudyAreaStore((s) => s.setGoal);
   const completeSession = useStudyAreaStore((s) => s.completeSession);
   const clearSessions = useStudyAreaStore((s) => s.clearSessions);
+  const tick = useStudyAreaStore((s) => s.tick);
 
   const [goalMinutes, setGoalMinutes] = useState(Math.round(goalSeconds / 60));
   const [showNoteDialog, setShowNoteDialog] = useState(false);
   const [sessionNote, setSessionNote] = useState('');
-  const restoredRef = useRef(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    if (isRunning && !restoredRef.current) {
-      restoredRef.current = true;
-      startTimer();
+    if (isRunning) {
+      intervalRef.current = setInterval(() => tick(), 1000);
+    } else {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      intervalRef.current = null;
     }
-  }, [isRunning, startTimer]);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [isRunning, tick]);
 
   const progress =
     goalSeconds && goalSeconds > 0
