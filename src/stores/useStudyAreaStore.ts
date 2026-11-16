@@ -1,7 +1,15 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type StudyCategory = 'subnetting' | 'roteamento' | 'ipv6' | 'switching' | 'seguranca' | 'outro';
+export type StudyCategory =
+  | 'subnetting'
+  | 'roteamento'
+  | 'ipv6'
+  | 'switching'
+  | 'seguranca'
+  | 'outro'
+  | 'matematica'
+  | 'programacao';
 
 export interface StudySession {
   id: string;
@@ -45,6 +53,19 @@ const CATEGORY_LABELS: Record<StudyCategory, string> = {
   switching: 'Switching',
   seguranca: 'Segurança',
   outro: 'Outro',
+  matematica: 'Matemática',
+  programacao: 'Programação',
+};
+
+const CATEGORY_COLORS: Record<StudyCategory, string> = {
+  subnetting: '#6366F1',
+  roteamento: '#10B981',
+  ipv6: '#3B82F6',
+  switching: '#8B5CF6',
+  seguranca: '#EF4444',
+  outro: '#94A3B8',
+  matematica: '#F59E0B',
+  programacao: '#EC4899',
 };
 
 function nowIso(): string {
