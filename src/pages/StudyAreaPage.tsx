@@ -61,7 +61,10 @@ export default function StudyAreaPage() {
     }
   }, [isRunning, startTimer]);
 
-  const progress = goalSeconds > 0 ? (elapsedSeconds / goalSeconds) * 100 : 0;
+  const progress =
+    goalSeconds && goalSeconds > 0
+      ? (Number(elapsedSeconds || 0) / Number(goalSeconds)) * 100
+      : 0;
 
   const handleStartPause = () => {
     if (isRunning) pauseTimer();
@@ -132,7 +135,7 @@ export default function StudyAreaPage() {
         >
           <div className="space-y-4">
             <ProgressBar
-              value={progress.toFixed(1)}
+              value={progress}
               showLabel
               colorClass="bg-gradient-to-r from-[#6366F1] to-[#4F46E5]"
             />
