@@ -17,10 +17,12 @@ import { clsx } from 'clsx';
 import { useStudyAreaStore } from '../stores/useStudyAreaStore';
 
 function formatTime(seconds: number): string {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = seconds % 60;
-  if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  const total = Math.floor(seconds);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  if (h > 0)
+    return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
@@ -88,13 +90,17 @@ export default function StudyAreaPage() {
           subtitle="Acompanhe o tempo da sua sessão livre"
           icon={<Timer size={18} strokeWidth={2.5} />}
         >
-            <div className="flex flex-col items-center justify-center pt-4">
-              <div className="flex flex-col items-center justify-center">
-                <Timer size={32} strokeWidth={2.5} className="text-[--color-text-muted] mb-2" />
-                <span className="font-mono text-[--color-text-primary] tracking-tighter text-2xl">
-                  {formatTime(elapsedSeconds)}
-                </span>
-              </div>
+          <div className="flex flex-col items-center justify-center pt-4">
+            <div className="flex flex-col items-center justify-center">
+              <Timer
+                size={32}
+                strokeWidth={2.5}
+                className="text-[--color-text-muted] mb-2"
+              />
+              <span className="font-mono text-[--color-text-primary] tracking-tighter text-2xl">
+                {formatTime(elapsedSeconds)}
+              </span>
+            </div>
             <div className="mt-6 flex items-center gap-3">
               <Button
                 variant={isRunning ? 'danger' : 'success'}
@@ -122,16 +128,25 @@ export default function StudyAreaPage() {
         </Card>
 
         {/* Meta */}
-        <Card title="Meta de tempo" subtitle="Defina quanto pretende estudar nesta sessão">
+        <Card
+          title="Meta de tempo"
+          subtitle="Defina quanto pretende estudar nesta sessão"
+        >
           <div className="space-y-4">
-            <ProgressBar value={progress} showLabel colorClass="bg-gradient-to-r from-[#6366F1] to-[#4F46E5]" />
+            <ProgressBar
+              value={progress}
+              showLabel
+              colorClass="bg-gradient-to-r from-[#6366F1] to-[#4F46E5]"
+            />
             <div className="flex items-center gap-3 text-sm">
               <span className="text-[--color-text-secondary]">Meta:</span>
               <input
                 type="number"
                 min="1"
                 value={goalMinutes}
-                onChange={(e) => setGoalMinutes(Math.max(1, parseInt(e.target.value) || 1))}
+                onChange={(e) =>
+                  setGoalMinutes(Math.max(1, parseInt(e.target.value) || 1))
+                }
                 className="w-16 bg-[#0D1424]/60 border border-[--color-border-primary]/40 rounded-lg px-2 py-1.5 text-xs text-[--color-text-primary] outline-none focus:border-[--color-accent-blue]/50"
               />
               <span className="text-[--color-text-muted]">minutos</span>
@@ -153,19 +168,32 @@ export default function StudyAreaPage() {
         </Card>
 
         {/* Resumo rápido */}
-        <Card title="Sessão atual" subtitle={formatTime(elapsedSeconds) + ' acumulados'}>
+        <Card
+          title="Sessão atual"
+          subtitle={formatTime(elapsedSeconds) + ' acumulados'}
+        >
           <div className="space-y-3">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-[--color-text-secondary]">Tempo decorrido</span>
-              <span className="font-mono text-[--color-text-primary]">{formatTime(elapsedSeconds)}</span>
+              <span className="text-[--color-text-secondary]">
+                Tempo decorrido
+              </span>
+              <span className="font-mono text-[--color-text-primary]">
+                {formatTime(elapsedSeconds)}
+              </span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-[--color-text-secondary]">Meta definida</span>
-              <span className="font-mono text-[--color-text-primary]">{formatTime(goalSeconds)}</span>
+              <span className="text-[--color-text-secondary]">
+                Meta definida
+              </span>
+              <span className="font-mono text-[--color-text-primary]">
+                {formatTime(goalSeconds)}
+              </span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-[--color-text-secondary]">Avanço</span>
-              <span className="font-mono text-[--color-text-primary]">{Math.min(100, progress).toFixed(0)}%</span>
+              <span className="font-mono text-[--color-text-primary]">
+                {Math.min(100, progress).toFixed(0)}%
+              </span>
             </div>
             <Button
               variant="accent"
@@ -181,13 +209,19 @@ export default function StudyAreaPage() {
       </div>
 
       {/* Histórico */}
-      <Card title="Histórico de sessões" subtitle={sessions.length + ' sessões registradas'}>
+      <Card
+        title="Histórico de sessões"
+        subtitle={sessions.length + ' sessões registradas'}
+      >
         <div className={sessions.length === 0 ? 'text-center py-10' : ''}>
           {sessions.length === 0 && (
             <div className="flex flex-col items-center gap-3 text-[--color-text-muted]">
               <Clock size={32} opacity={0.5} />
               <p>Nenhuma sessão registrada ainda.</p>
-              <p className="text-xs">Inicie o cronômetro e finalize uma sessão para acompanhar seu progresso.</p>
+              <p className="text-xs">
+                Inicie o cronômetro e finalize uma sessão para acompanhar seu
+                progresso.
+              </p>
             </div>
           )}
           {sessions.length > 0 && (
@@ -201,7 +235,9 @@ export default function StudyAreaPage() {
                     <CheckCircle
                       size={14}
                       className={clsx(
-                        session.completed ? 'text-[#10B981]' : 'text-[--color-text-muted]',
+                        session.completed
+                          ? 'text-[#10B981]'
+                          : 'text-[--color-text-muted]',
                       )}
                     />
                     <div className="min-w-0">
@@ -215,20 +251,27 @@ export default function StudyAreaPage() {
                           : 'sem meta'}
                       </div>
                       {session.note && (
-                        <p className="text-[10px] text-[--color-text-muted] truncate mt-0.5" title={session.note}>
+                        <p
+                          className="text-[10px] text-[--color-text-muted] truncate mt-0.5"
+                          title={session.note}
+                        >
                           "{session.note}"
                         </p>
                       )}
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className={clsx(
-                      'font-mono text-xs ' +
-                        (session.completed
-                          ? 'text-[#10B981]'
-                          : 'text-[--color-text-secondary]'),
-                    )}>
-                      {session.completed ? 'Meta atingida' : formatTime(session.durationSeconds)}
+                    <span
+                      className={clsx(
+                        'font-mono text-xs ' +
+                          (session.completed
+                            ? 'text-[#10B981]'
+                            : 'text-[--color-text-secondary]'),
+                      )}
+                    >
+                      {session.completed
+                        ? 'Meta atingida'
+                        : formatTime(session.durationSeconds)}
                     </span>
                   </div>
                 </div>
@@ -263,7 +306,11 @@ export default function StudyAreaPage() {
               className="w-full min-h-[100px] bg-[#020A14]/60 border border-[--color-border-primary]/40 rounded-lg px-3 py-2 text-sm text-[--color-text-primary] outline-none focus:border-[--color-accent-blue]/50 resize-y"
             />
             <div className="mt-5 flex items-center justify-end gap-2">
-              <Button variant="ghost" size="sm" onClick={() => setShowNoteDialog(false)}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowNoteDialog(false)}
+              >
                 Cancelar
               </Button>
               <Button
