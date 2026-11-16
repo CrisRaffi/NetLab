@@ -38,18 +38,16 @@ function formatSessionDate(iso: string): string {
 
 export default function StudyAreaPage() {
   const navigate = useNavigate();
-  const {
-    isRunning,
-    elapsedSeconds,
-    goalSeconds,
-    sessions,
-    startTimer,
-    pauseTimer,
-    resetTimer,
-    setGoal,
-    completeSession,
-    clearSessions,
-  } = useStudyAreaStore();
+  const isRunning = useStudyAreaStore((s) => s.isRunning);
+  const elapsedSeconds = useStudyAreaStore((s) => s.elapsedSeconds);
+  const goalSeconds = useStudyAreaStore((s) => s.goalSeconds);
+  const sessions = useStudyAreaStore((s) => s.sessions);
+  const startTimer = useStudyAreaStore((s) => s.startTimer);
+  const pauseTimer = useStudyAreaStore((s) => s.pauseTimer);
+  const resetTimer = useStudyAreaStore((s) => s.resetTimer);
+  const setGoal = useStudyAreaStore((s) => s.setGoal);
+  const completeSession = useStudyAreaStore((s) => s.completeSession);
+  const clearSessions = useStudyAreaStore((s) => s.clearSessions);
 
   const [goalMinutes, setGoalMinutes] = useState(Math.round(goalSeconds / 60));
   const [showNoteDialog, setShowNoteDialog] = useState(false);
@@ -134,7 +132,7 @@ export default function StudyAreaPage() {
         >
           <div className="space-y-4">
             <ProgressBar
-              value={progress}
+              value={progress.toFixed(1)}
               showLabel
               colorClass="bg-gradient-to-r from-[#6366F1] to-[#4F46E5]"
             />
