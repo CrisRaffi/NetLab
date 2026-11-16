@@ -12,17 +12,11 @@ export interface StudySession {
 }
 
 export interface StudyAreaState {
-  isRunning: boolean;
-  elapsedSeconds: number;
   goalSeconds: number;
   sessions: StudySession[];
 
-  startTimer: () => void;
-  pauseTimer: () => void;
-  resetTimer: () => void;
-  tick: () => void;
   setGoal: (minutes: number) => void;
-  completeSession: (note?: string) => void;
+  completeSession: (durationSeconds: number, note?: string) => void;
   clearSessions: () => void;
 }
 
@@ -40,47 +34,26 @@ function newId(): string {
 export const useStudyAreaStore = create<StudyAreaState>()(
   persist(
     (set, get) => ({
-      isRunning: false,
-      elapsedSeconds: 0,
       goalSeconds: DEFAULT_GOAL_SECONDS,
       sessions: [],
-
-      startTimer: () => {
-        set({ isRunning: true });
-      },
-
-      pauseTimer: () => {
-        set({ isRunning: false });
-      },
-
-      resetTimer: () => {
-        set({ isRunning: false, elapsedSeconds: 0 });
-      },
-
-      tick: () => {
-        set({ elapsedSeconds: get().elapsedSeconds + 1 });
-      },
 
       setGoal: (minutes: number) => {
         set({ goalSeconds: Math.max(1, minutes) * 60 });
       },
 
-      completeSession: (note?: string) => {
+      completeSession: (durationSeconds: number, note?: string) => {
         const state = get();
-        const duration = state.elapsedSeconds;
         const session: StudySession = {
           id: newId(),
           startedAt: nowIso(),
           endedAt: nowIso(),
-          durationSeconds: Math.max(0, duration),
+          durationSeconds: Math.max(0, durationSeconds),
           goalSeconds: state.goalSeconds,
-          completed: state.goalSeconds > 0 && duration >= state.goalSeconds,
+          completed: state.goalSeconds > 0 && durationSeconds >= state.goalSeconds,
           ...(note ? { note } : {}),
         };
         set({
           sessions: [session, ...state.sessions].slice(0, 200),
-          isRunning: false,
-          elapsedSeconds: 0,
         });
       },
 
@@ -93,8 +66,6 @@ export const useStudyAreaStore = create<StudyAreaState>()(
       partialize: (state) => ({
         sessions: state.sessions,
         goalSeconds: state.goalSeconds,
-        isRunning: state.isRunning,
-        elapsedSeconds: state.elapsedSeconds,
       }),
     },
   ),

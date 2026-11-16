@@ -21,8 +21,7 @@ function formatTime(seconds: number): string {
   const h = Math.floor(total / 3600);
   const m = Math.floor((total % 3600) / 60);
   const s = total % 60;
-  if (h > 0)
-    return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
@@ -38,26 +37,25 @@ function formatSessionDate(iso: string): string {
 
 export default function StudyAreaPage() {
   const navigate = useNavigate();
-  const isRunning = useStudyAreaStore((s) => s.isRunning);
-  const elapsedSeconds = useStudyAreaStore((s) => s.elapsedSeconds);
   const goalSeconds = useStudyAreaStore((s) => s.goalSeconds);
   const sessions = useStudyAreaStore((s) => s.sessions);
-  const startTimer = useStudyAreaStore((s) => s.startTimer);
-  const pauseTimer = useStudyAreaStore((s) => s.pauseTimer);
-  const resetTimer = useStudyAreaStore((s) => s.resetTimer);
   const setGoal = useStudyAreaStore((s) => s.setGoal);
   const completeSession = useStudyAreaStore((s) => s.completeSession);
   const clearSessions = useStudyAreaStore((s) => s.clearSessions);
-  const tick = useStudyAreaStore((s) => s.tick);
 
   const [goalMinutes, setGoalMinutes] = useState(Math.round(goalSeconds / 60));
+  const [isRunning, setIsRunning] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [showNoteDialog, setShowNoteDialog] = useState(false);
   const [sessionNote, setSessionNote] = useState('');
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const startedAtRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (isRunning) {
-      intervalRef.current = setInterval(() => tick(), 1000);
+    if (isRunning && startedAtRef.current) {
+      intervalRef.current = setInterval(() => {
+        setElapsedSeconds((prev) => prev + 1);
+      }, 1000);
     } else {
       if (intervalRef.current) clearInterval(intervalRef.current);
       intervalRef.current = null;
@@ -65,7 +63,7 @@ export default function StudyAreaPage() {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [isRunning, tick]);
+  }, [isRunning]);
 
   const progress =
     goalSeconds && goalSeconds > 0
@@ -73,13 +71,41 @@ export default function StudyAreaPage() {
       : 0;
 
   const handleStartPause = () => {
-    if (isRunning) pauseTimer();
-    else startTimer();
+    if (isRunning) {
+      setIsRunning(false);
+    } else {
+      setIsRunning(true);
+      startedAtRef.current = Date.now();
+    }
+  };
+
+  const handleReset = () => {
+    setIsRunning(false);
+    setElapsedSeconds(0);
+    startedAtRef.current = null;
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = null;
   };
 
   const handleSaveGoal = () => {
     const minutes = Math.max(1, Math.round(goalMinutes));
     setGoal(minutes);
+    setGoalMinutes(minutes);
+  };
+
+  const handleComplete = () => {
+    setShowNoteDialog(true);
+  };
+
+  const handleSaveSession = () => {
+    completeSession(elapsedSeconds, sessionNote.trim() || undefined);
+    setShowNoteDialog(false);
+    setSessionNote('');
+    setIsRunning(false);
+    setElapsedSeconds(0);
+    startedAtRef.current = null;
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = null;
   };
 
   return (
@@ -124,7 +150,7 @@ export default function StudyAreaPage() {
                   </>
                 )}
               </Button>
-              <Button variant="outline" size="lg" onClick={resetTimer}>
+              <Button variant="outline" size="lg" onClick={handleReset}>
                 <RefreshCw size={16} /> Reiniciar
               </Button>
             </div>
@@ -181,31 +207,21 @@ export default function StudyAreaPage() {
         >
           <div className="space-y-3">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-[--color-text-secondary]">
-                Tempo decorrido
-              </span>
-              <span className="font-mono text-[--color-text-primary]">
-                {formatTime(elapsedSeconds)}
-              </span>
+              <span className="text-[--color-text-secondary]">Tempo decorrido</span>
+              <span className="font-mono text-[--color-text-primary]">{formatTime(elapsedSeconds)}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-[--color-text-secondary]">
-                Meta definida
-              </span>
-              <span className="font-mono text-[--color-text-primary]">
-                {formatTime(goalSeconds)}
-              </span>
+              <span className="text-[--color-text-secondary]">Meta definida</span>
+              <span className="font-mono text-[--color-text-primary]">{formatTime(goalSeconds)}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-[--color-text-secondary]">Avanço</span>
-              <span className="font-mono text-[--color-text-primary]">
-                {Math.min(100, progress).toFixed(0)}%
-              </span>
+              <span className="font-mono text-[--color-text-primary]">{Math.min(100, progress).toFixed(0)}%</span>
             </div>
             <Button
               variant="accent"
               size="sm"
-              onClick={() => setShowNoteDialog(true)}
+              onClick={handleComplete}
               disabled={elapsedSeconds === 0}
               className="w-full"
             >
@@ -225,10 +241,7 @@ export default function StudyAreaPage() {
             <div className="flex flex-col items-center gap-3 text-[--color-text-muted]">
               <Clock size={32} opacity={0.5} />
               <p>Nenhuma sessão registrada ainda.</p>
-              <p className="text-xs">
-                Inicie o cronômetro e finalize uma sessão para acompanhar seu
-                progresso.
-              </p>
+              <p className="text-xs">Inicie o cronômetro e finalize uma sessão para acompanhar seu progresso.</p>
             </div>
           )}
           {sessions.length > 0 && (
@@ -242,9 +255,7 @@ export default function StudyAreaPage() {
                     <CheckCircle
                       size={14}
                       className={clsx(
-                        session.completed
-                          ? 'text-[#10B981]'
-                          : 'text-[--color-text-muted]',
+                        session.completed ? 'text-[#10B981]' : 'text-[--color-text-muted]',
                       )}
                     />
                     <div className="min-w-0">
@@ -258,27 +269,20 @@ export default function StudyAreaPage() {
                           : 'sem meta'}
                       </div>
                       {session.note && (
-                        <p
-                          className="text-[10px] text-[--color-text-muted] truncate mt-0.5"
-                          title={session.note}
-                        >
+                        <p className="text-[10px] text-[--color-text-muted] truncate mt-0.5" title={session.note}>
                           "{session.note}"
                         </p>
                       )}
                     </div>
                   </div>
                   <div className="text-right">
-                    <span
-                      className={clsx(
-                        'font-mono text-xs ' +
-                          (session.completed
-                            ? 'text-[#10B981]'
-                            : 'text-[--color-text-secondary]'),
-                      )}
-                    >
-                      {session.completed
-                        ? 'Meta atingida'
-                        : formatTime(session.durationSeconds)}
+                    <span className={clsx(
+                      'font-mono text-xs ' +
+                        (session.completed
+                          ? 'text-[#10B981]'
+                          : 'text-[--color-text-secondary]'),
+                    )}>
+                      {session.completed ? 'Meta atingida' : formatTime(session.durationSeconds)}
                     </span>
                   </div>
                 </div>
@@ -313,21 +317,13 @@ export default function StudyAreaPage() {
               className="w-full min-h-[100px] bg-[#020A14]/60 border border-[--color-border-primary]/40 rounded-lg px-3 py-2 text-sm text-[--color-text-primary] outline-none focus:border-[--color-accent-blue]/50 resize-y"
             />
             <div className="mt-5 flex items-center justify-end gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowNoteDialog(false)}
-              >
+              <Button variant="ghost" size="sm" onClick={() => setShowNoteDialog(false)}>
                 Cancelar
               </Button>
               <Button
                 variant="primary"
                 size="sm"
-                onClick={() => {
-                  completeSession(sessionNote.trim() || undefined);
-                  setShowNoteDialog(false);
-                  setSessionNote('');
-                }}
+                onClick={handleSaveSession}
               >
                 Salvar sessão
               </Button>
