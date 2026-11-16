@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+export type StudyCategory = 'subnetting' | 'roteamento' | 'ipv6' | 'switching' | 'seguranca' | 'outro';
+
 export interface StudySession {
   id: string;
   startedAt: string;
@@ -9,19 +11,41 @@ export interface StudySession {
   goalSeconds?: number;
   completed: boolean;
   note?: string;
+  category?: StudyCategory;
 }
 
 export interface StudyAreaState {
+  isRunning: boolean;
+  elapsedSeconds: number;
   goalSeconds: number;
+  weeklyGoalSeconds: number;
   sessions: StudySession[];
+  currentCategory?: StudyCategory;
 
+  startTimer: () => void;
+  pauseTimer: () => void;
+  resetTimer: () => void;
+  tick: () => void;
   setGoal: (minutes: number) => void;
-  completeSession: (durationSeconds: number, note?: string) => void;
+  setWeeklyGoal: (minutes: number) => void;
+  setCategory: (category?: StudyCategory) => void;
+  completeSession: (durationSeconds: number, note?: string, category?: StudyCategory) => void;
+  updateSession: (sessionId: string, updates: Partial<StudySession>) => void;
   clearSessions: () => void;
 }
 
 const SESSION_KEY = 'netlab:study-area';
 const DEFAULT_GOAL_SECONDS = 50 * 60;
+const DEFAULT_WEEKLY_GOAL_SECONDS = 5 * 60 * 60;
+
+const CATEGORY_LABELS: Record<StudyCategory, string> = {
+  subnetting: 'Subnetting',
+  roteamento: 'Roteamento',
+  ipv6: 'IPv6',
+  switching: 'Switching',
+  seguranca: 'Segurança',
+  outro: 'Outro',
+};
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -34,14 +58,42 @@ function newId(): string {
 export const useStudyAreaStore = create<StudyAreaState>()(
   persist(
     (set, get) => ({
+      isRunning: false,
+      elapsedSeconds: 0,
       goalSeconds: DEFAULT_GOAL_SECONDS,
+      weeklyGoalSeconds: DEFAULT_WEEKLY_GOAL_SECONDS,
       sessions: [],
+      currentCategory: undefined,
+
+      startTimer: () => {
+        set({ isRunning: true });
+      },
+
+      pauseTimer: () => {
+        set({ isRunning: false });
+      },
+
+      resetTimer: () => {
+        set({ isRunning: false, elapsedSeconds: 0 });
+      },
+
+      tick: () => {
+        set({ elapsedSeconds: get().elapsedSeconds + 1 });
+      },
 
       setGoal: (minutes: number) => {
         set({ goalSeconds: Math.max(1, minutes) * 60 });
       },
 
-      completeSession: (durationSeconds: number, note?: string) => {
+      setWeeklyGoal: (minutes: number) => {
+        set({ weeklyGoalSeconds: Math.max(1, minutes) * 60 });
+      },
+
+      setCategory: (category?: StudyCategory) => {
+        set({ currentCategory: category });
+      },
+
+      completeSession: (durationSeconds: number, note?: string, category?: StudyCategory) => {
         const state = get();
         const session: StudySession = {
           id: newId(),
@@ -51,10 +103,22 @@ export const useStudyAreaStore = create<StudyAreaState>()(
           goalSeconds: state.goalSeconds,
           completed: state.goalSeconds > 0 && durationSeconds >= state.goalSeconds,
           ...(note ? { note } : {}),
+          ...(category ? { category } : {}),
         };
         set({
           sessions: [session, ...state.sessions].slice(0, 200),
+          isRunning: false,
+          elapsedSeconds: 0,
+          currentCategory: undefined,
         });
+      },
+
+      updateSession: (sessionId: string, updates: Partial<StudySession>) => {
+        set((state) => ({
+          sessions: state.sessions.map((s) =>
+            s.id === sessionId ? { ...s, ...updates } : s
+          ),
+        }));
       },
 
       clearSessions: () => {
@@ -66,7 +130,12 @@ export const useStudyAreaStore = create<StudyAreaState>()(
       partialize: (state) => ({
         sessions: state.sessions,
         goalSeconds: state.goalSeconds,
+        weeklyGoalSeconds: state.weeklyGoalSeconds,
+        isRunning: state.isRunning,
+        elapsedSeconds: state.elapsedSeconds,
       }),
     },
   ),
 );
+
+export { CATEGORY_LABELS };
