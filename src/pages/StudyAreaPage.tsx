@@ -67,8 +67,9 @@ export default function StudyAreaPage() {
 
   const progress =
     goalSeconds && goalSeconds > 0
-      ? (Number(elapsedSeconds || 0) / Number(goalSeconds)) * 100
+      ? Math.max(0, Math.min(100, (Number(elapsedSeconds || 0) / Number(goalSeconds)) * 100))
       : 0;
+  console.log('[StudyArea] progress:', progress, 'elapsed:', elapsedSeconds, 'goal:', goalSeconds);
 
   const handleStartPause = () => {
     if (isRunning) {
